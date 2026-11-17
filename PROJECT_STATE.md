@@ -11,7 +11,7 @@
 - **Current phase:** Phase 04 — Premium jewellery Design Vault.
 - **Status:** IN PROGRESS — SNAPSHOT FOR GITHUB, 2026-11-17. Phase 04 implementation exists, but final browser/build/performance sign-off is pending. Latest TypeScript and lint checks PASS; this is not a completed Phase 04 release.
 - **Next responsible agent:** Codex; all future handoffs go to the next Codex session. No Claude review is required or claimed.
-- **Next action:** User explicitly requested pushing existing work first to https://github.com/sameeerrkhann/Raja-Shahid-jewellers.git. Save a truthful in-progress snapshot, excluding secrets/build/reports. Then, only when asked to resume, rebuild the latest source, resolve remaining browser failures in an exclusive session, rerun all 79 tests and measure after-optimization LCP. Stop before Phase 05.
+- **Next action:** Existing work was pushed to https://github.com/sameeerrkhann/Raja-Shahid-jewellers.git on main; source snapshot de822c85a46602d3e3234274dd83b8b88506bf10 verified against remote. Wait for permission to resume Phase 04 verification: rebuild latest source, resolve remaining browser failures in an exclusive session, rerun all79 tests and measure after-optimization LCP. Stop before Phase 05.
 - **Blockers / missing decisions:** O-01–O-11 remain relevant to dependent phases. The user approved the frontend stack/direction and Phase 02; no provider/hosting/retention/shop-policy approval is inferred. Final brand/contact/catalogue imagery, actual stock, manufacturing policies, AI budget/access, gold feed and worker hosting remain pending. Workflow PDF absent; section 7 remains the process reference summary.
 - **Brand spelling check:** User said "Shahid" but dictated `H-A-H-I-D` (without an initial S). Work with display name **Raja Shahid Jewellers** provisionally (`S-H-A-H-I-D`); do not permanently finalize branded media before the official spelling is confirmed. Use a centralized branding configuration so edits are easy.
 - **Assistant working name:** **AURIA — Personal Jewellery Concierge**, separate from the owner's/father's name. Provisional pending owner approval; use centrally configured strings.
@@ -256,6 +256,14 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 ## 9. Implementation log (append only; newest first)
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
+
+### 2026-11-17 — Codex — GitHub publication result
+
+- User explicitly requested publishing existing work before more implementation. Sole-writer ownership confirmed by user. No additional application code was changed and no later phase was started.
+- Added origin https://github.com/sameeerrkhann/Raja-Shahid-jewellers.git after checking the exact target was empty. Created initial snapshot commit de822c85a46602d3e3234274dd83b8b88506bf10, message `chore: snapshot customer demo through Phase 04 work in progress`; all118 audited source/docs/image files included. No force push, global Git ownership exemption, TLS disablement, secret or generated report included.
+- `git diff --cached --check` PASS; inspected staged diff/stat/file list. `pnpm.cmd typecheck` and `pnpm.cmd lint` PASS. `.env.example` is the only included environment file. Full build/browser tests intentionally not rerun for the push-first request; unresolved Phase04 verification is documented below.
+- `git -c http.sslBackend=schannel push -u origin main` PASS exit0, authenticated through the existing Git credential mechanism despite gh CLI itself being unauthenticated. Local HEAD and remote refs/heads/main both verified as de822c85a46602d3e3234274dd83b8b88506bf10 via ls-remote. Working tree was clean and main tracked origin/main immediately afterward. Ordinary Windows LF/CRLF conversion warnings during staging were not whitespace failures.
+- This follow-up modifies only PROJECT_STATE.md to record the observed publication result/current handoff and is to be committed/pushed as documentation. Publication is source backup, NOT hosting/deployment or Phase04 completion. Phase04 remains IN PROGRESS; no Phase05 work authorized. Next task, only when assigned: finish the clean rebuild, isolated79-test regression/debugging and before/after performance evidence described below.
 
 ### 2026-11-17 — Codex — Phase 04 partial implementation and user-requested GitHub snapshot
 
@@ -554,6 +562,7 @@ No customer requirement or journey is missing from the Phase 01 baseline. Remain
 
 - **Last agent:** Codex; user confirmed other development session stopped. No delegation or independent review.
 - **Authorization:** Push current code to https://github.com/sameeerrkhann/Raja-Shahid-jewellers.git before further implementation. Do not represent the push as a completed Phase 04 or deployment.
+- **Git publication:** Source snapshot de822c85a46602d3e3234274dd83b8b88506bf10 pushed to origin/main and exact remote SHA verified;118 files. This follow-up tracking-only change records that observed result. Continue using command-scoped Windows schannel for Git HTTPS here; gh CLI login is not required for the existing working Git credential mechanism.
 - **Current work:** 118 publishable files, 11 original image-backed SAMPLE designs, 14 unpublished drafts, catalogue/collection routes and five read-only API families, query/filter/sort/cursor/mobile presentation. No admin or connected AI/voice/gold. Latest types/lint PASS; final rebuilt browser validation pending.
 - **Phase status:** 00–03 complete for their earlier scopes; 04 IN PROGRESS — NOT SIGNED OFF; 05–10 NOT STARTED. Preserve Phase 02 preview, homepage scenes, tokens, original assets and historical logs.
 - **Preview when started locally:** pnpm.cmd dev then http://127.0.0.1:3000/, /designs, /collections, /collections/the-bridal-edit and /design-preview. No live dev server is asserted at this snapshot.
