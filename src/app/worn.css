@@ -1,0 +1,55 @@
+/* Scene 01b — the chosen piece, worn.
+   Three custom properties carry the scroll choreography (see worn-story.tsx). Their defaults are the
+   finished state; HomepageMotion only rewinds and scrubs them on desktop. */
+.worn { --open: 1; --travel: 0; --reveal: 1; position: relative; background: var(--color-obsidian); color: var(--text); overflow: clip; }
+.worn__layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(40px, 6vw, 96px); align-items: center; min-height: calc(100svh - 76px); padding-block: 56px; }
+
+/* The portrait frame opens from a medallion (the hero's shape) into a 4:5 frame. */
+.worn__frame { margin: 0; display: grid; gap: 14px; justify-items: center; }
+.worn__canvas { position: relative; width: min(100%, calc((100svh - 76px - 150px) * .8)); aspect-ratio: 4 / 5; container-type: size;
+  background: radial-gradient(120% 90% at 50% 38%, #2a2018 0%, #17130f 55%, #101011 100%);
+  clip-path: inset(calc((1 - var(--open)) * 20%) calc((1 - var(--open)) * 14%) round calc((1 - var(--open)) * 50%)); }
+.worn__canvas::after { content: ""; position: absolute; inset: 14px; border: 1px solid rgb(232 213 166 / 14%); opacity: var(--open); pointer-events: none; }
+.worn__study { position: absolute; inset: 0; display: grid; place-items: center; color: var(--color-champagne); opacity: calc(.15 + .85 * var(--open)); }
+.wear-figure { width: 100%; height: 100%; }
+.worn__photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: var(--open); }
+
+/* The piece travels from the centre of the frame to where it is worn. */
+.worn__piece { position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); width: calc(var(--size) * 1cqw); aspect-ratio: 1; border-radius: 50%; overflow: hidden;
+  box-shadow: 0 0 0 1px rgb(232 213 166 / 45%), 0 24px 60px rgb(0 0 0 / 45%);
+  transform: translate(-50%, -50%) translate(calc((50 - var(--x)) * 1cqw * var(--travel)), calc((50 - var(--y)) * 1cqh * var(--travel))) scale(calc(1 + var(--travel) * (100 / var(--size) * .62 - 1)));
+  will-change: transform; }
+.worn__piece img { width: 100%; height: 100%; object-fit: cover; display: block; animation: worn-swap .5s var(--ease-editorial); }
+.worn__frame:has(.worn__photo) .worn__piece { left: auto; right: 6%; top: auto; bottom: 6%; width: 26cqw; transform: none; }
+.worn__frame figcaption { max-width: 46ch; font-size: 12px; line-height: 1.6; color: var(--muted); text-align: center; opacity: var(--open); }
+
+/* Details arrive after the piece settles. */
+.worn__copy { max-width: 520px; opacity: var(--reveal); transform: translateY(calc((1 - var(--reveal)) * 28px)); }
+.worn__title { font-size: clamp(2.6rem, 4.6vw, 4.4rem); line-height: 1; letter-spacing: -.025em; }
+.worn__placement { margin-top: 14px; font-family: var(--font-editorial), Georgia, serif; font-style: italic; font-size: 22px; color: var(--color-champagne); }
+.worn__description { margin-top: 18px; max-width: 46ch; font-size: 15px; line-height: 1.85; color: var(--muted); }
+.worn__facts { margin: 28px 0 0; border-top: 1px solid var(--line); }
+.worn__facts div { display: grid; grid-template-columns: 9.5rem 1fr; gap: 16px; padding-block: 11px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.worn__facts dt { color: var(--muted); }
+.worn__facts dd { margin: 0; }
+.worn__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; margin-top: 30px; }
+.worn__switch { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 34px; }
+.worn__switch button { width: 44px; height: 44px; padding: 0; border: 1px solid transparent; border-radius: 50%; overflow: hidden; background: none; opacity: .55; transition: opacity var(--duration-fast), border-color var(--duration-fast); }
+.worn__switch button:hover, .worn__switch button[aria-pressed="true"] { opacity: 1; border-color: var(--color-gold); }
+.worn__switch img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+@keyframes worn-swap { from { opacity: 0; transform: scale(1.06); } }
+
+@media (max-width: 1023px) {
+  .worn__layout { grid-template-columns: 1fr; min-height: 0; padding-block: 48px 64px; gap: 36px; }
+  .worn__canvas { width: min(100%, 460px); }
+  .worn__copy { max-width: none; }
+}
+@media (max-width: 767px) {
+  .worn__layout { padding-block: 36px 56px; }
+  .worn__facts div { grid-template-columns: 7.5rem 1fr; }
+  .worn__actions { gap: 18px; }
+  .worn__switch button { width: 40px; height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { .worn__piece img { animation: none; } }
+html[data-reduce-motion="true"] .worn__piece img { animation: none; }

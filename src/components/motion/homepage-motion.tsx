@@ -25,6 +25,8 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
         const [{ gsap }, { ScrollTrigger }] = await Promise.all([import("gsap"), import("gsap/ScrollTrigger")]);
         if (disposed || current !== generation) return;
         gsap.registerPlugin(ScrollTrigger);
+        // House easing for reveals: cubic-bezier(0.22, 1, 0.36, 1), a long, quiet settle with no overshoot.
+        if (!gsap.parseEase("luxe")) gsap.registerEase("luxe", (t: number) => { let lo = 0, hi = 1; for (let i = 0; i < 18; i++) { const m = (lo + hi) / 2; const x = 3 * .22 * m * (1 - m) ** 2 + 3 * .36 * m * m * (1 - m) + m ** 3; if (x < t) lo = m; else hi = m; } const m = (lo + hi) / 2; return 3 * m * (1 - m) ** 2 + 3 * m * m * (1 - m) + m ** 3; });
         const media = gsap.matchMedia();
         removeMotion = () => {
           media.revert();
@@ -62,9 +64,21 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
             } else {
               gsap.to(root!.querySelector("[data-hero-visual]"), { scale: 1.03, yPercent: 2, ease: "none", scrollTrigger: { trigger: "#entrance", start: "top top", end: "bottom top", scrub: .5 } });
             }
-            gsap.timeline({ scrollTrigger: { id: "home-craft", trigger: craft, start: () => `top ${headerHeight()}`, end: () => `+=${innerHeight * .8}`, pin: true, pinSpacing: true, scrub: .5, invalidateOnRefresh: true, onRefresh: (self) => { craft.dataset.pinTravel = String(self.end - self.start); } } })
-              .fromTo(root!.querySelector("[data-craft-media]"), { scale: 1, yPercent: 0 }, { scale: 1.03, yPercent: -4, ease: "none" })
-              .fromTo(root!.querySelector(".craft-frame-line"), { scaleY: .4 }, { scaleY: 1, ease: "none" }, 0);
+            const worn = root!.querySelector<HTMLElement>("[data-worn-pin]");
+            if (worn) {
+              // Scene 01b: the frame opens, the chosen piece travels to where it is worn, then the details arrive.
+              gsap.timeline({ scrollTrigger: { id: "home-worn", trigger: worn, start: () => `top ${headerHeight()}`, end: () => `+=${innerHeight * 1.1}`, pin: true, pinSpacing: true, scrub: .5, invalidateOnRefresh: true,
+                onRefresh: (self) => { worn.dataset.scrollStart = String(self.start); worn.dataset.scrollEnd = String(self.end); } } })
+                .fromTo(worn, { "--open": 0, "--travel": 1 }, { "--open": 1, "--travel": 0, ease: "none", duration: .55 })
+                .fromTo(worn, { "--reveal": 0 }, { "--reveal": 1, ease: "none", duration: .3 }, .5)
+                .to({}, { duration: .2 });
+              cleanups.push(() => { delete worn.dataset.scrollStart; delete worn.dataset.scrollEnd; worn.style.removeProperty("--open"); worn.style.removeProperty("--travel"); worn.style.removeProperty("--reveal"); });
+            }
+            // Scene 02: while pinned, scroll walks the loupe through its three details.
+            let craftStop = -1;
+            ScrollTrigger.create({ id: "home-craft", trigger: craft, start: () => `top ${headerHeight()}`, end: () => `+=${innerHeight * .8}`, pin: true, pinSpacing: true, invalidateOnRefresh: true,
+              onRefresh: (self) => { craft.dataset.pinTravel = String(self.end - self.start); },
+              onUpdate: (self) => { const next = Math.min(2, Math.floor(self.progress * 3)); if (next !== craftStop) { craftStop = next; craft.dispatchEvent(new CustomEvent<number>("rsj:craft-stop", { detail: next })); } } });
             gsap.fromTo(root!.querySelector("[data-bridal-media]"), { yPercent: -2, scale: 1.03 }, { yPercent: 2, scale: 1, ease: "none", scrollTrigger: { trigger: "#bridal", start: "top bottom", end: "bottom top", scrub: .6 } });
             const overflow = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
             if (overflow() > 0) {
@@ -93,7 +107,7 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
             gsap.fromTo(root!.querySelector("[data-concept-photo]"), { clipPath: "inset(0 0 0 100%)" }, { clipPath: "inset(0 0 0 0%)", ease: "none", scrollTrigger: { trigger: "#auria", start: "top 70%", end: "center 40%", scrub: .4 } });
           }
           root!.querySelectorAll<HTMLElement>("[data-home-reveal]").forEach((element) => {
-            gsap.fromTo(element, { y: desktop ? 12 : 6 }, { y: 0, duration: .6, ease: "power2.out", clearProps: "transform", scrollTrigger: { trigger: element, start: "top 92%", once: true } });
+            gsap.fromTo(element, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1, ease: "luxe", clearProps: "transform,opacity", scrollTrigger: { trigger: element, start: "top 90%", once: true } });
           });
           // Refresh once after geometry settles, not continuously from a scroll handler.
           let timer: ReturnType<typeof setTimeout>;
