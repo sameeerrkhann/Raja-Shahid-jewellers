@@ -4,14 +4,14 @@
 >
 > Created: 2026-11-16 | Owner: Neural Stack & Co. | Project: **customer-facing interactive demo only**.
 >
-> Phases 00–03 are complete for their assigned scopes (Phase 01 review is internal, not independent). Phase 04 is now authorized and IN PROGRESS: customer-facing Design Vault only, plus measured homepage performance investigation. Phases 05–10 remain NOT STARTED; STOP after Phase 04.
+> Phases 00–04 are complete for their assigned scopes, with the explicit demo/asset/device limits below. Phase 01 and later Codex reviews are internal, not independent. Phase 04 Design Vault is verified with the user-approved eleven-image seed. Phases 05–10 remain NOT STARTED; STOP after Phase 04.
 
 ## 0. Current state and next action
 
 - **Current phase:** Phase 04 — Premium jewellery Design Vault.
-- **Status:** IN PROGRESS — SNAPSHOT FOR GITHUB, 2026-11-17. Phase 04 implementation exists, but final browser/build/performance sign-off is pending. Latest TypeScript and lint checks PASS; this is not a completed Phase 04 release.
+- **Status:** DONE — VERIFIED WITH DISCLOSED LIMITATIONS, 2026-11-17. Final types/lint/production build PASS; latest complete79/79 browser tests PASS, no failed/skipped/flaky cases. This is a customer-facing SAMPLE catalogue, not production inventory or final business/brand approval.
 - **Next responsible agent:** Codex; all future handoffs go to the next Codex session. No Claude review is required or claimed.
-- **Next action:** Existing work was pushed to https://github.com/sameeerrkhann/Raja-Shahid-jewellers.git on main; source snapshot de822c85a46602d3e3234274dd83b8b88506bf10 verified against remote. Wait for permission to resume Phase 04 verification: rebuild latest source, resolve remaining browser failures in an exclusive session, rerun all79 tests and measure after-optimization LCP. Stop before Phase 05.
+- **Next action:** Review the Design Vault, eleven concept images and saved screenshots. Commit/push the verified Phase04 correction and tracking changes under the continuing user request; verify remote SHA. Then STOP. Phase05 requires a separate assignment and its quote-persistence/shop-policy decisions; no product/quote/admin/AI implementation is started by this handoff.
 - **Blockers / missing decisions:** O-01–O-11 remain relevant to dependent phases. The user approved the frontend stack/direction and Phase 02; no provider/hosting/retention/shop-policy approval is inferred. Final brand/contact/catalogue imagery, actual stock, manufacturing policies, AI budget/access, gold feed and worker hosting remain pending. Workflow PDF absent; section 7 remains the process reference summary.
 - **Brand spelling check:** User said "Shahid" but dictated `H-A-H-I-D` (without an initial S). Work with display name **Raja Shahid Jewellers** provisionally (`S-H-A-H-I-D`); do not permanently finalize branded media before the official spelling is confirmed. Use a centralized branding configuration so edits are easy.
 - **Assistant working name:** **AURIA — Personal Jewellery Concierge**, separate from the owner's/father's name. Provisional pending owner approval; use centrally configured strings.
@@ -83,9 +83,9 @@ E. **Voice:** customer allows microphone -> asks for lightweight wedding jewelle
 
 F. **Gold services:** open live-rate board (or explicitly flagged sample feed) -> enter grams + karat -> illustrative estimate -> optional valuation/consultation enquiry.
 
-## 5. Architecture / data — frontend installed, backend still proposed
+## 5. Architecture / data — frontend and public sample reads installed; private backend proposed
 
-Phase 01 detail: `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/API_CONTRACTS.md` and `docs/AI_ARCHITECTURE.md` own coordinated backend proposals/contracts. Next.js/React/TypeScript/Tailwind/GSAP and local test tooling are now installed; see package.json and README. No database, storage, AI, voice, notification or gold provider/account is provisioned or verified connected. Early API/entity lists below are scope context, not implemented endpoints. Backend ownership/pooling/job/privacy checks remain future gates.
+Phase 01 detail: `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/API_CONTRACTS.md` and `docs/AI_ARCHITECTURE.md` own coordinated backend proposals/contracts. Next.js/React/TypeScript/Tailwind/GSAP and local test tooling are installed. Phase04 adds five read-only public catalogue GET route families backed by local typed SAMPLE fixtures, not a database. No storage, AI, voice, notification or gold provider/account is provisioned or verified connected. Only the catalogue subset is implemented; other APIs/entities below remain scope context/proposals. Private-backend ownership/pooling/job/privacy checks remain future gates.
 
 **Preferred stack:** Next.js App Router + React + TypeScript + Tailwind; GSAP + ScrollTrigger; selective Three.js if suitable 3D assets exist; PostgreSQL/Supabase (or adapt if an existing project uses a sound alternative); server-side API layer; approved image + speech model integrations. Inspect actual project before choosing dependencies.
 
@@ -117,7 +117,7 @@ Mark a phase `DONE` only after verifying its acceptance checks and updating the 
 | **01 Define: PRD/UX/architecture/DB/API** | Codex internal review | DONE — INTERNALLY REVIEWED | Eight documents reviewed against all 12 topics; safe inconsistencies resolved. User authorized Phase 02; owner/provider decisions remain gated. No independent review claimed. |
 | **02 Design system & project prep** | Codex | DONE — VERIFIED | Internal review recorded; pinned root project/lockfile, design tokens, responsive shell/cards/dialogs/loading, licensed photo preview and Phase 03 motion/asset specification. Types/lint/build PASS; 15/15 browser tests PASS. Owner visual/brand approval pending. Neural Stack steps 06–09 complete locally; hosted CI deferred. |
 | **03 Cinematic homepage** | Codex | DONE — VERIFIED WITH LIMITATIONS | All six scenes, two bounded desktop pins/<=180vh, native mobile/reduced alternatives, honest category/AURIA/gold/service previews. Types/lint/build PASS; 35/35 browser tests PASS; screenshots inspected. Assets/brand provisional; LCP variability and unperformed device/field checks disclosed below. |
-| **04 Design Vault** | Codex | IN PROGRESS — NOT SIGNED OFF | 11 distinct image-backed sample designs approved by user after image-service failures; 14 unpublished draft briefs. Catalogue/routes/APIs implemented; latest types/lint PASS. Clean final build, full browser regressions and after-LCP evidence still pending. |
+| **04 Design Vault** | Codex | DONE — VERIFIED WITH LIMITATIONS | 11 distinct image-backed SAMPLE designs accepted by user;14 hidden drafts; catalogue/collections, bounded combined URL queries, responsive accessible states and honest stock/design separation. Final types/lint/build and79/79 tests PASS. Local after-LCP1504/480/552ms; original3.08s miss, startup long tasks, reduced seed and absent device/field evidence retained. |
 | **05 Product + made-to-order** | Codex | NOT STARTED | Product pages and variants, quote form, demo lead saved, estimate only when source known; valid validation states. |
 | **06 AI chat + retrieval** | Codex | NOT STARTED | Real chat call and catalogue-grounded product cards; multi-turn memory; clear unknown-handling. |
 | **07 AI image understanding + generation/edit** | Codex | NOT STARTED | REAL prompt-to-image, uploaded reference, edit previous image, preserve history, save concept, functional error states. |
@@ -145,7 +145,7 @@ Source: user-provided `Neural_Stack_Project_Workflow_Simple_15_Steps(3).pdf`. It
 | D-004 | AI branding must NOT use person's name | CONFIRMED |
 | D-005 | Working assistant label AURIA | PROVISIONAL |
 | D-006 | Public brand spelling Raja Shahid Jewellers | PROVISIONAL — confirm initial S |
-| D-007 | Visual concept Royal Gold Atelier | PROVISIONAL DEMO DIRECTION — implemented through Phase 03, not final brand approval |
+| D-007 | Visual concept Royal Gold Atelier | PROVISIONAL DEMO DIRECTION — implemented through Phase04, not final brand approval |
 | D-008 | Gold-backed financing is informational/enquiry-only in demo | CONFIRMED FOR DEMO |
 | D-009 | Demo should be real, interactive; mocks visibly labelled | CONFIRMED |
 | D-010 | Next.js App Router/React/TypeScript/Tailwind, GSAP, pnpm frontend | Pinned in Phase 02; route-local ScrollTrigger implemented/verified in Phase 03; no speculative Three.js dependency |
@@ -175,7 +175,7 @@ Source: user-provided `Neural_Stack_Project_Workflow_Simple_15_Steps(3).pdf`. It
 | `docs/AI_ARCHITECTURE.md` | Unified AURIA, grounded chat/vision, real image edits/versions, server-controlled voice, limits and integration evidence |
 | `docs/ACCEPTANCE.md` | R-01–R-14 traceability; future automated/manual/live checks; active Codex internal review and Phase 02 checks; original Claude brief archived |
 
-Current workflow: steps 01–05 have coordinated definitions and a Codex internal review, with business/provider decisions gated. Steps 06–09 have current rules, README, plan, tooling and the foundation. Step 10 includes Phase 03 and the in-progress Phase 04 catalogue; scoped steps 14/15 verification/debugging do not imply release sign-off. Phases 05–10 are NOT STARTED. User selected the GitHub repository below; hosted CI/deployment remain unimplemented. Earlier logs are historical snapshots. No Claude independent review was executed.
+Current workflow: steps 01–05 have coordinated definitions and a Codex internal review, with business/provider decisions gated. Steps 06–09 have current rules, README, plan, tooling and the foundation. Step10 includes the verified Phase03 homepage and Phase04 catalogue; scoped steps14/15 verification/debugging do not imply whole-product release sign-off. Phases05–10 are NOT STARTED. The user-selected GitHub repository contains earlier snapshots; the verified update is to be pushed below. Hosted CI/deployment remain unimplemented. Earlier logs are historical snapshots. No Claude independent review was executed.
 
 Phase 02 adds `docs/ASSETS.md` as the provenance/requirements ledger, not a duplicate PRD/design document. README owns local commands/source map; DESIGN owns cinematic behavior; this file owns status/results/handoff.
 
@@ -256,6 +256,73 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 ## 9. Implementation log (append only; newest first)
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
+
+### 2026-11-17 — Codex — Phase 04 Design Vault completion and verification
+
+**Outcome / ownership / actual deliverable**
+
+Phase04 DONE — VERIFIED WITH DISCLOSED LIMITATIONS. Codex was the sole writer after the user's exclusive-session confirmation; no subagents, Claude handoff or independent review. Followed the existing Neural Stack scoped feature/check/debug steps. Read mandatory state/instructions, actual Git/source and relevant canonical catalogue/navigation/API/design/acceptance plus installed Next16 guidance. Source snapshot started at41ef0c0 on main. No later-phase work, dependency install, provider integration, secret, database, schema, admin, hosted CI or deployment was added. Historical Phase00–03 log hash was verified unchanged.
+
+Delivered / verified: premium /designs, /collections and four collection pages; original11 image-backed SAMPLE designs; editorial cards, category rail, responsive bounded grid, read-only concept preview and correct sample availability/customization/quotation labels. Search matches ID/name/keywords; category/subcategory/collection/status/style/occasion/purity intersect. Stable sort/cursors, counts, Back/Forward and native URLs/forms work. Filters default12/max48, q<=100; invalid/duplicate/unsupported budget/weight fields and mismatched cursors reject explicitly. Mobile drawer, clear/chips, actual pending skeleton, empty categories, safe API/route errors/retry, aborted-response protection, missing-image composition, keyboard focus, reduced-motion and no-JS browsing are tested. No dead product/quote/admin routes were created. The previous partial-implementation entry records all59 new and20 baseline-modified paths for the whole phase; those files are preserved.
+
+**Data / assets / source honesty**
+
+25 authored briefs,11 PUBLISHED and14 DRAFT excluded from public list/detail. Published categories: bridal4/rings5/bangles2; other roots truthfully empty. Four editorial collections can overlap. Design/variant metadata is separate from individual physical-stock fixtures; purity/stock filters use the same eligible variant. Public sample projection is3 IN_STOCK/6 MADE_TO_ORDER/2 CUSTOM_DESIGN; zero stock does not prohibit sample manufacture. No unsupported UNAVAILABLE record is advertised. Prices, weights and manufacturing times remain null; no delivery promise. AI_GENERATED concept media is independent from SAMPLE inventory and never proves assay/CAD/feasibility.
+
+User explicitly accepted the11 completed original generated concepts after service failures. No padding, scraping or CLI/key fallback. All22 saved480/960px WebPs match manifest checksums/bytes (1,778,670B); original prompts/source hashes remain in src/data/demo/catalogue-assets.json and the ASSETS ledger. Three existing JPEGs and all tokens/package/lock/environment files remain unchanged. Real shop product/stock/rights/brand approval is still needed before authenticity claims or an expanded catalogue.
+
+**Resumed corrections / all files changed since the GitHub snapshot (11)**
+
+- src/components/layout/site-header.tsx — decorative menu ordinals hidden from accessible names; visible names now match navigation actions.
+- src/components/catalogue/design-card.tsx — removed redundant overriding image-link label; meaningful alt plus visible provenance/action now provide its natural accessible name. No axe rule suppression.
+- src/components/catalogue/catalogue-browser.tsx — no-script refinement column resets to normal flow, preventing sticky overlap over designs. JavaScript layouts unchanged.
+- tests/catalogue-domain.spec.ts — assert petal legitimately matches two designs; do not change correct search behavior to satisfy a one-result test.
+- tests/catalogue.spec.ts — unambiguous ID fixtures, catalogue-scoped error assertions distinct from Next's route announcer, useful scrolled state screenshots, and390/1440 no-JS geometry checks. Existing assertions retained.
+- tests/homepage.spec.ts — category dialog now checks its real filtered men's destination and sample disclosure; focus/visibility regression retained instead of the obsolete Phase04-coming-soon text.
+- README.md — real GitHub destination, current isolated report command, no simultaneous writers.
+- docs/API_CONTRACTS.md — table/detail now agree with actual separate variantStatuses projection.
+- docs/DESIGN.md and docs/ACCEPTANCE.md — no-JS normal-flow and non-overlap/useful-state-capture contract.
+- PROJECT_STATE.md — current statuses, preserved failure/correction history, actual final evidence and next-phase handoff. No files deleted or recreated; still118 publishable files.
+
+**Commands / tests / results**
+
+| Check | Actual final result |
+|---|---|
+| pnpm.cmd check after last app fix | PASS exit0: TypeScript, strict ESLint zero warnings, Next16.4.6 production build; source unchanged afterward except documentation. Standalone types/lint also passed. |
+| CI=1; PLAYWRIGHT_JSON_OUTPUT_FILE=artifacts/phase04/verified-final-results.json; pnpm.cmd test --output=artifacts/phase04/verified-final --reporter=list,html,json | PASS exit0,79/79 expected,0 failed/skipped/flaky,364.964s. Includes14 domain +30 catalogue +15 Phase02 preview +20 Phase03 home tests. Installed headless Edge157 on Windows, one worker, local production3100. |
+| Targeted corrections | Earlier4/8 and76/79 failures retained in the correction trail below. After fixes3/3 accessibility/home-focus passed; earlier full79/79 passed before screenshot QA; state recapture5/5 passed; visual review exposed/fixed no-JS overlap, focused1/1 passed, then the latest complete79/79 rerun passed. No failed assertion was suppressed. |
+| Responsive/media/accessibility | PASS tested320/375/390/768/1024/1440, all catalogue images decoded/no document overflow, drawer/menu/focus/clear/apply, axe WCAG2/2.1 A/AA page/preview/drawer at390/1440, reduced motion, actual errors/loading/empty/image fallback and native no-JS forms/non-overlap. All35 earlier regressions retained and passing. |
+| Route/header check against final production3101 | PASS /, /designs, /collections, all4 collection slugs, /design-preview and list/categories/collections APIs200; /admin and unbuilt product slug404. All checked responses noindex/nofollow. Detail/query faults additionally exercised by the suite. |
+| Saved-tree/provenance audit | PASS118 scoped files;13 Markdown files/33 local links resolve, fences balanced; no known secret-pattern hits,22 asset checksums/bytes match. This is not a comprehensive security certification. Repeat whitespace/diff/ignore/remote checks at publication. |
+| Teardown | Playwright-managed3100 stops after each suite; both owned temporary3101 sessions explicitly stopped with Ctrl-C (expected exit1 on intentional stop). No running local preview is promised. Start pnpm.cmd dev for3000. |
+
+Evidence: artifacts/phase04/verified-final-results.json, artifacts/phase04/verified-final/, playwright-report/index.html. Screenshot set:35 PNGs under artifacts/phase04/final/ (six-width hero/grid/full/footer plus collections/collection, preview, drawer, empty/loading/error/image failure/route error and no-JS390/1440). Inspected actual390/768/1440 compositions, grid/drawer/collections/preview and useful state/no-JS captures; no serious final defect observed. Screenshots are ignored local evidence, not deployed assets. Screenshots exposed the no-JS defect even when earlier functional checks passed; the new geometry assertion protects it.
+
+**Final measured performance / honest limits**
+
+Final suite fresh1440×1000 context, unthrottled loopback Edge:
+
+- Home: total initial transfer416,250B, all fetched JS201,475B, CLS0.0002388112, LCP556ms. Startup long tasks295/142/98/53/104ms remain; zero >50ms tasks observed only in the measured scene-scroll window, not overall.
+- Catalogue: transfer735,237B, JS157,616B, CLS0.0003582160, LCP620ms,11 DOM cards (bounded default<=12). Transfer<=1.5MB/JS<=250KB/CLS<=0.1 budgets pass in this local lab sample.
+- Separate10k in-memory fixture:1,818 matches,11.41ms; public inventory remains11. This is a pure domain smoke measurement, not production DB/load/scale proof.
+
+Homepage bottleneck investigation: historical Phase03 full-suite LCP3080ms remains a disclosed miss, not reproduced or erased. Before-profile LCP1836/684/400ms; slow-sample dynamic hero request1285.9ms was the largest measured request cost, plus292.3ms render delay. Static responsive768/1280/1920 WebPs safely bypass that transform request without changing the photograph or scene. Final exact-build after samples1504/480/552ms; hero request333.4/231.3/45.2ms, render delay593/207.2/452.8ms. All final local samples meet2.5s, but no causal guarantee for the historical3.08s sample or field/p75 claim. Current1280 resource transfer52,874B versus baseline29,605B is a23,269B byte tradeoff for prebuilt delivery, not a claimed bandwidth reduction. Startup/render work and host/cache variability remain. The profiler's early fontsReady marker does not prove all declared fonts loaded and was not used as root-cause evidence.
+
+Commands: node scripts/profile-home.mjs http://127.0.0.1:3101 before 3 (original baseline), after 3 (intermediate), after-final 3 (latest build); JSONs preserved under artifacts/phase04/performance/. The profiler resource-transfer sum excludes document bytes; use suite totals above for the initial-transfer budget. No CPU/network throttle, real mobile/Safari/Firefox/WebKit, screen reader, text/zoom matrix, INP/field/p75 or deployed-host certification. No database/private ownership/storage/jobs/live AI/voice/gold/provider tests; those features remain absent. Final brand/contact/shop policies, imagery rights/legal/client approval and authentic stock/manufacturing remain pending. Budget/weight filters deliberately absent without verified facts.
+
+**Stop / handoff**
+
+Review this demo and media; Phase04 is complete only for the assigned local customer-facing scope and eleven-image decision, not production/whole-product completion. Commit/push the verified changes under the user's continuing request, record the observed publication separately, and STOP. Phase05 is NOT STARTED. When explicitly assigned, begin with the product-detail/quotation definition and persistence/guest-ownership/shop-policy gates in the active handoff; no admin or provider provisioning by inference.
+
+### 2026-11-17 — Codex — Phase 04 resumed verification preflight
+
+- Resumed correction/evidence trail (Codex internal review, not independent): first exclusive targeted run4/8 passed; explicit labels and opener focus already worked. Remaining causes were decorative mobile ordinals in link names, ambiguous petal search matching bothRSJ-D005/011, and global alert selectors also matching Next's route announcer. Hide decorative ordinals; use uniqueID fixtures and catalogue-scoped assertions. Added the two-result petal domain assertion instead of altering correct search behavior.
+- First exclusive full run76/79 passed (498.7s), saved artifacts/phase04/resume-full-results.json: both catalogue axe scans found image-link label/content mismatch, plus one old homepage expectation still said Phase04 browsing was future. Removed the redundant image-link name override, exposed its visible closer-look text and natural spacing; kept image alt/provenance. Updated the home test to verify the actual filtered men's link and synthetic disclosure while retaining focus assertions. Focused correction3/3 passed (38.2s), no accessibility rule suppressed.
+- Next full run79/79 passed (368.2s), artifacts/phase04/final-results.json. Screenshot review then found that state captures showed the hero rather than results. Improved existing test captures; five affected tests5/5 passed (40.7s). Inspecting the now-useful no-JS image exposed a genuine sticky-filter overlap not detected by prior functional assertions. Set only the no-script sidebar to position:static, added mobile/desktop overlap geometry checks and1440px evidence. Fresh pnpm.cmd check PASS; focused no-JS regression1/1 PASS (26.0s), both images inspected with no overlap. No app source changed after this correction; final complete rerun is in progress at this entry, reported in the completion record when finished.
+- The initial after profile on the pre-noJS-correction build returned LCP1104/412/564ms; artifacts/phase04/performance/after.json is retained, not field evidence. Final exact-build attribution will be measured separately after its full suite. Startup long tasks remain. Original Phase03's3080ms miss remains historical and must not be erased.
+- User said continue after the successful GitHub snapshot. Scope remains Phase04 only, not an authorization for Phase05/admin/provider work. Read AGENTS/full state/current source and canonical catalogue UX/API/acceptance sections; checked installed Next16 navigation/error guidance. Working tree started clean at41ef0c082b96a54aa2c14fc207a6bb6434d46163 on main tracking origin/main; no repository-local Node dev/test process found. User's exclusive-session confirmation remains the active ownership instruction. No subagent or independent review.
+- Intended edits are limited to observed catalogue/shell bugs, appropriate regression tests and canonical documentation/state. No new imagery, dependencies, database, AI/voice/gold credentials or deployment. Existing eleven-image decision retained. Run one verification writer, isolated targeted report/output paths, then the complete suite; do not trust the old overlapping-run artifacts.
+- Resumed pnpm.cmd check launched; results pending at this entry. Finish results/change/handoff record below before stopping, even if checks fail.
 
 ### 2026-11-17 — Codex — GitHub publication result
 
@@ -558,19 +625,18 @@ No customer requirement or journey is missing from the Phase 01 baseline. Remain
 
 ## 10. Handoff snapshot (UPDATE AT EVERY HANDOFF)
 
-### Active snapshot — Phase 04 in progress / publish existing work first
+### Active snapshot — Phase 04 verified / STOP before Phase 05
 
-- **Last agent:** Codex; user confirmed other development session stopped. No delegation or independent review.
-- **Authorization:** Push current code to https://github.com/sameeerrkhann/Raja-Shahid-jewellers.git before further implementation. Do not represent the push as a completed Phase 04 or deployment.
-- **Git publication:** Source snapshot de822c85a46602d3e3234274dd83b8b88506bf10 pushed to origin/main and exact remote SHA verified;118 files. This follow-up tracking-only change records that observed result. Continue using command-scoped Windows schannel for Git HTTPS here; gh CLI login is not required for the existing working Git credential mechanism.
-- **Current work:** 118 publishable files, 11 original image-backed SAMPLE designs, 14 unpublished drafts, catalogue/collection routes and five read-only API families, query/filter/sort/cursor/mobile presentation. No admin or connected AI/voice/gold. Latest types/lint PASS; final rebuilt browser validation pending.
-- **Phase status:** 00–03 complete for their earlier scopes; 04 IN PROGRESS — NOT SIGNED OFF; 05–10 NOT STARTED. Preserve Phase 02 preview, homepage scenes, tokens, original assets and historical logs.
-- **Preview when started locally:** pnpm.cmd dev then http://127.0.0.1:3000/, /designs, /collections, /collections/the-bridal-edit and /design-preview. No live dev server is asserted at this snapshot.
-- **Exact next verification task when assigned:** Confirm exclusive ownership; reread this state/source/Git, inspect current changes, run pnpm.cmd check; reproduce unresolved navigation/loading/retry cases plus verify explicit labels and modal focus against the new build; fix causes without weakening tests. Then run all79 tests, inspect actual responsive/screenshots/axe/reduced/no-JS evidence and measure homepage after-LCP plus catalogue budgets. Record actual failures and misses. Do not mark04 DONE before evidence exists.
-- **Performance:** Original Phase03 3.08s LCP miss retained. Three Phase04 baseline samples 1.836/0.684/0.400s; dynamic hero delivery was largest slow-sample request cost. Responsive static hero derivatives implemented; after-performance unmeasured. No field/device certification.
-- **Git safety:** User authorizes current snapshot commit/push only, no force/reset or remote history overwrite. Exclude .env/secrets, node_modules/.next/artifacts/test-results/playwright-report. Command-scoped safe.directory and Windows schannel are used; never disable TLS checks globally. Verify remote branch SHA after push; authentication is not yet proven by a public ls-remote.
-- **Future Phase05 handoff:** Only after Phase04 verification and a separate assignment, implement real product detail/variants and made-to-order quotation workflow per canonical docs; unknown stock, weight, price, purity/lead-time remain unverified. Do not build that phase during publication.
-- **Pending approvals:** Brand spelling/logo/name/contact/rights, actual shop catalogue/stock/feasibility/policies, providers/budgets/privacy/security/hosting remain unresolved. User accepted the available11 images, not final business authenticity or production rollout.
+- **Last agent:** Codex, sole writer after user confirmation; internal review/QA only, no delegation or independent review.
+- **Completed scope:** Phase04 customer-facing Design Vault.118 publishable files;11 original image-backed SAMPLE designs,14 unpublished drafts; /designs, /collections,4 collection slugs and five read-only API route families. No full product/quotation/admin/AI/voice/gold backend. Preserve all Phase02/03 functionality and prior logs/assets.
+- **Status / evidence:** Phase00–04 DONE for assigned scopes, with documented asset/brand/device/production limitations. Phase05–10 NOT STARTED. Latest pnpm.cmd check PASS; final79/79 tests PASS with0 skipped/flaky/failed,364.964s. Evidence: artifacts/phase04/verified-final-results.json, artifacts/phase04/verified-final/, playwright-report/index.html;35 screenshots in artifacts/phase04/final/ (ignored local artifacts).
+- **Important fixes to retain:** Explicit filter labels and modal opener focus; decorative nav ordinals hidden; card name from actual content/alt; scoped alert tests/uniqueID fixtures; real category links; no-JS filters position:static in normal flow, with390/1440 non-overlap regression. Do not reintroduce a global loading boundary or sticky no-JS overlay.
+- **Local preview:** pnpm.cmd dev then http://127.0.0.1:3000/, /designs, /collections, /collections/the-bridal-edit and /design-preview. Final production3101 routes returned200/noindex; deliberately unbuilt /admin and product slug404. Owned test/profile servers are stopped; recheck availability instead of assuming one remains running.
+- **Performance:** Final home transfer416,250B/JS201,475B/CLS0.000239/LCP556ms; catalogue735,237B/JS157,616B/CLS0.000358/LCP620ms. Isolated final home LCP1504/480/552ms; before1836/684/400ms and historical3080ms miss retained. Static hero avoids dynamic transform, at a23,269B request-byte increase. Startup long tasks remain; no real-device/throttled/field/p75 certification.
+- **Git publication:** main tracks the exact user-selected https://github.com/sameeerrkhann/Raja-Shahid-jewellers.git; earlier41ef0c0 snapshot verified. The continuing complete/push request covers this verified Phase04 update; observed push result will be logged next. Source publication is not hosted deployment. Use per-command safe.directory and Windows schannel; existing Git credentials work even though gh CLI is unauthenticated. No force push/reset/global ownership or TLS bypass, secrets or generated reports.
+- **Exact next Phase05 task — ONLY after a separate assignment:** Confirm one writer, read full state/AGENTS and current Git/source, then review PRD/UX/DATA_MODEL/API_CONTRACTS/ARCHITECTURE/ACCEPTANCE for product detail + made-to-order quotes. Resolve O-03 shop facts/policies and O-04/O-05 guest ownership/persistence before saving private enquiries; do not silently provision a provider. Implement /designs/[slug] product detail/variants/gallery and the authorized quotation flow, starting with validated source/option snapshots and unknown-safe copy. New quotes end SUBMITTED, never a reservation, binding acceptance, delivery guarantee or falsely sent notification. Private cookie/CSRF/ownership/storage/pooling gates and tests remain mandatory if that backend is introduced. No admin.
+- **Pending approvals / limits:** Actual shop photography/specifications/stock/manufacturability, official spelling/logo/AURIA name/contact/rights/policies; provider/model budgets, privacy/retention/ownership, gold source and hosting. Eleven-image approval is a demo-count decision, not authenticity, final legal clearance or production approval. No verified budget/weight/lead-time values, so no unsupported filters or promises. Most categories beyond bridal/rings/bangles remain empty in the sample set.
+- **STOP:** Report Phase04 results/review needs and wait. Do not begin Phase05 or any later integration automatically.
 
 ### Historical Phase 03 handoff — superseded by the active snapshot above
 

@@ -87,7 +87,8 @@ test("offscreen category focus remains visible and opens an honest study", async
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Men’s Jewellery — a direction to explore" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText(/Catalogue browsing arrives in Phase 04/)).toBeVisible();
+  await expect(dialog.getByText(/clearly labelled synthetic samples/)).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Browse Men’s Jewellery sample designs" })).toHaveAttribute("href", "/designs?category=mens");
   await page.keyboard.press("Escape");
   await expect(last).toBeFocused();
 });

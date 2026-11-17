@@ -80,6 +80,7 @@ test("all search and facet filters intersect, including subcategory and collecti
 test("name, ID and keyword search is case-insensitive and token-based", () => {
   expect(matchingDesigns(sampleDesigns, sampleStock, query({ q: "rSj-d005" })).map((item) => item.title)).toEqual(["Petal Seal Ring"]);
   expect(matchingDesigns(sampleDesigns, sampleStock, query({ q: "fold SATIN" })).map((item) => item.designCode)).toEqual(["RSJ-D006"]);
+  expect(matchingDesigns(sampleDesigns, sampleStock, query({ q: "petal" })).map((item) => item.designCode)).toEqual(["RSJ-D005", "RSJ-D011"]);
   expect(matchingDesigns(sampleDesigns, sampleStock, query({ q: "not-a-real-match" }))).toHaveLength(0);
 });
 

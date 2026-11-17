@@ -6,6 +6,9 @@ import { mkdir } from "node:fs/promises";
 const screenshots = "artifacts/phase04/final";
 const cards = (page: Page) => page.locator(".design-card");
 const summary = (page: Page) => page.locator(".catalogue-result-summary [role=status]");
+async function showResults(page: Page) {
+  await page.locator("#design-results").evaluate((element) => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY - document.querySelector(".site-header")!.getBoundingClientRect().height - 16, behavior: "instant" }));
+}
 async function ready(page: Page, path = "/designs") {
   await page.goto(path);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -104,7 +107,7 @@ for (const width of [320, 375, 390, 768, 1024, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     await mkdir(screenshots, { recursive: true });
     await page.screenshot({ path: `${screenshots}/vault-hero-${width}.png` });
-    await page.locator("#design-results").evaluate((element) => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY - document.querySelector(".site-header")!.getBoundingClientRect().height - 16, behavior: "instant" }));
+    await showResults(page);
     await page.screenshot({ path: `${screenshots}/vault-grid-${width}.png` });
     await page.screenshot({ path: `${screenshots}/vault-full-${width}.png`, fullPage: true });
     await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }));
@@ -182,6 +185,7 @@ test("empty search and unpopulated categories explain the actual sample limitati
   await page.getByRole("navigation", { name: "Browse categories" }).getByRole("link", { name: /Necklaces/ }).click();
   await expect(page.getByText(/No image-backed samples are published/)).toBeVisible();
   await expect(summary(page)).toHaveText("0 sample designs found");
+  await showResults(page);
   await page.screenshot({ path: `${screenshots}/empty-category-1440.png` });
 });
 
@@ -271,9 +275,10 @@ test("pending filter request shows a real skeleton, not a fabricated delay", asy
   let release = () => {};
   const gate = new Promise<void>((resolve) => { release = resolve; });
   await page.route("**/api/designs?*", async (route) => { await gate; await route.continue(); });
-  await page.getByRole("searchbox", { name: "Search designs", exact: true }).fill("petal");
+  await page.getByRole("searchbox", { name: "Search designs", exact: true }).fill("RSJ-D005");
   await expect(page.getByRole("status", { name: "Loading designs", exact: true })).toBeVisible();
   await expect(page.locator("#design-results")).toHaveAttribute("aria-busy", "true");
+  await showResults(page);
   await page.screenshot({ path: `${screenshots}/loading-1440.png` });
   release();
   await expect(summary(page)).toHaveText("1 sample design found");
@@ -284,9 +289,10 @@ test("API failure retains URL selection and a working retry", async ({ page }) =
   await ready(page);
   let fail = true;
   await page.route("**/api/designs?*", (route) => fail ? route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: { message: "The selection is temporarily unavailable.", retryable: true } }) }) : route.continue());
-  await page.getByRole("searchbox", { name: "Search designs", exact: true }).fill("petal");
-  await expect(page.getByRole("alert")).toContainText("The selection is temporarily unavailable.");
-  await expect(page).toHaveURL(/q=petal/);
+  await page.getByRole("searchbox", { name: "Search designs", exact: true }).fill("RSJ-D005");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("The selection is temporarily unavailable.");
+  await expect(page).toHaveURL(/q=RSJ-D005/);
+  await showResults(page);
   await page.screenshot({ path: `${screenshots}/error-1440.png` });
   fail = false;
   await page.getByRole("button", { name: "Try again", exact: true }).click();
@@ -318,12 +324,13 @@ test("failed concept imagery has a designed fallback and retained information", 
   await expect(page.locator('.design-card [data-image-failed="true"]')).toBeVisible();
   await expect(cards(page).first()).toContainText("Petal Seal Ring");
   await expect(cards(page).first()).toContainText("Concept image unavailable.");
+  await showResults(page);
   await page.screenshot({ path: `${screenshots}/missing-concept-1440.png` });
 });
 
 test("invalid deep link is recoverable, never a silent filter reset", async ({ page }) => {
   await ready(page, "/designs?budget=100");
-  await expect(page.getByRole("alert")).toContainText("Unsupported filter");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("Unsupported filter");
   await page.getByRole("button", { name: "Reset selection", exact: true }).click();
   await expect(summary(page)).toHaveText("11 sample designs found");
 });
@@ -368,7 +375,14 @@ test("no-JavaScript catalogue has visible cards and functional native filtering"
     await page.locator(".design-card__image").click();
     await expect(page).toHaveURL(/q=RSJ-D005/);
     await expect(cards(page).first()).toContainText("Petal Seal Ring");
+    await showResults(page);
+    const noOverlap = async () => expect(await sidebar.evaluate((element) => element.getBoundingClientRect().bottom)).toBeLessThanOrEqual(await page.locator("#design-results").evaluate((element) => element.getBoundingClientRect().top) + 1);
+    await noOverlap();
     await page.screenshot({ path: `${screenshots}/no-js-390.png` });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await showResults(page);
+    await noOverlap();
+    await page.screenshot({ path: `${screenshots}/no-js-1440.png` });
   } finally { await context.close(); }
 });
 
@@ -398,9 +412,9 @@ test("unexpected render fault reaches the real route boundary and retry recovers
     if (corrupt && body.data.items[0]) body.data.items[0].thumbnail = null;
     await route.fulfill({ response, json: body });
   });
-  await page.getByRole("searchbox", { name: "Search designs", exact: true }).fill("petal");
+  await page.getByRole("searchbox", { name: "Search designs", exact: true }).fill("RSJ-D005");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("An interruption.");
-  await expect(page.getByRole("alert")).not.toContainText("TypeError");
+  await expect(page.getByRole("main").getByRole("alert")).not.toContainText("TypeError");
   await page.screenshot({ path: `${screenshots}/route-error-1440.png` });
   corrupt = false;
   await page.getByRole("button", { name: "Try this page again", exact: true }).click();
