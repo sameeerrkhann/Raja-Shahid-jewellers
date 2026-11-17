@@ -46,7 +46,22 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
           gsap.fromTo(root!.querySelectorAll("[data-entrance-line]"), { y: desktop ? 12 : 6, opacity: .9 }, { y: 0, opacity: 1, duration: .6, stagger: .075, ease: "power2.out", clearProps: "transform,opacity" });
 
           if (desktop) {
-            gsap.to(root!.querySelector("[data-hero-visual]"), { scale: 1.03, yPercent: 2, ease: "none", scrollTrigger: { trigger: "#entrance", start: "top top", end: "bottom top", scrub: .5 } });
+            const showcase = root!.querySelector<HTMLElement>("[data-showcase]");
+            const count = Number(showcase?.dataset.count) || 0;
+            if (showcase && count > 1) {
+              // Scene 01: pin the turning vault; scroll progress turns the orbit and snaps to each design.
+              const travel = () => innerHeight * Math.max(1.4, (count - 1) * .3);
+              const showcaseTween = gsap.fromTo(root!.querySelector("[data-hero-visual]"), { scale: 1 }, { scale: 1.08, ease: "none", scrollTrigger: { id: "home-showcase", trigger: showcase, start: () => `top ${headerHeight()}`, end: () => `+=${travel()}`, pin: true, pinSpacing: true, scrub: .4, invalidateOnRefresh: true,
+                snap: { snapTo: 1 / (count - 1), inertia: false, duration: { min: .25, max: .7 }, delay: .12, ease: "power1.inOut" },
+                onUpdate: (self) => showcase.dispatchEvent(new CustomEvent<number>("rsj:showcase-progress", { detail: self.progress })),
+                onRefresh: (self) => { showcase.dataset.pinned = "true"; showcase.dataset.scrollStart = String(self.start); showcase.dataset.scrollEnd = String(self.end); } } });
+              const showcaseTrigger = showcaseTween.scrollTrigger!;
+              const goto = (event: Event) => { const index = (event as CustomEvent<number>).detail; window.scrollTo({ top: showcaseTrigger.start + (index / (count - 1)) * (showcaseTrigger.end - showcaseTrigger.start), behavior: "smooth" }); };
+              showcase.addEventListener("rsj:showcase-goto", goto);
+              cleanups.push(() => { showcase.removeEventListener("rsj:showcase-goto", goto); delete showcase.dataset.pinned; delete showcase.dataset.scrollStart; delete showcase.dataset.scrollEnd; showcase.dispatchEvent(new CustomEvent("rsj:showcase-release")); });
+            } else {
+              gsap.to(root!.querySelector("[data-hero-visual]"), { scale: 1.03, yPercent: 2, ease: "none", scrollTrigger: { trigger: "#entrance", start: "top top", end: "bottom top", scrub: .5 } });
+            }
             gsap.timeline({ scrollTrigger: { id: "home-craft", trigger: craft, start: () => `top ${headerHeight()}`, end: () => `+=${innerHeight * .8}`, pin: true, pinSpacing: true, scrub: .5, invalidateOnRefresh: true, onRefresh: (self) => { craft.dataset.pinTravel = String(self.end - self.start); } } })
               .fromTo(root!.querySelector("[data-craft-media]"), { scale: 1, yPercent: 0 }, { scale: 1.03, yPercent: -4, ease: "none" })
               .fromTo(root!.querySelector(".craft-frame-line"), { scaleY: .4 }, { scaleY: 1, ease: "none" }, 0);

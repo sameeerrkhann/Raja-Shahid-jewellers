@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { brand, previewNavigation } from "@/config/brand";
@@ -18,16 +18,25 @@ export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+  // Desktop shows three curated destinations; the full chapter list stays in the menu dialog.
+  const primary = isPreview ? previewNavigation.slice(0, 3) : [{ label: "Design Vault", href: "/designs" }, { label: "Collections", href: "/collections" }, { label: "The craft", href: "/#craft" }];
   const inputRef = useRef<HTMLInputElement>(null);
   const matches = referenceStudies.filter((study) => `${study.title} ${study.category}`.toLowerCase().includes(query.trim().toLowerCase()));
 
   return <>
-    <header className="site-header" data-tone="dark">
+    <header className="site-header" data-tone="dark" data-scrolled={scrolled || undefined}>
       <div className="container header-grid">
-        <nav aria-label="Primary" className="desktop-nav">{navigation.slice(0, 2).map((link) => <Link key={link.href} href={link.href} prefetch={false}>{link.label}</Link>)}</nav>
+        <nav aria-label="Primary" className="desktop-nav">{primary.map((link) => <Link key={link.href} href={link.href} prefetch={false} aria-current={pathname === link.href || (link.href !== "/" && !link.href.includes("#") && pathname.startsWith(link.href)) ? "page" : undefined}>{link.label}</Link>)}</nav>
         <button className="icon-button mobile-menu-trigger" type="button" aria-label="Open menu" aria-haspopup="dialog" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}><Icon name="menu" /></button>
-        <Link href="/#top" prefetch={false} className="wordmark"><span>{brand.wordmark}</span><span className="wordmark__sub">JEWELLERS</span></Link>
-        <div className="header-actions"><a className="header-auria" href={`${isPreview ? brand.previewPath : "/"}#auria`}>Meet AURIA</a><button className="icon-button" type="button" aria-label={isPreview ? "Search reference studies" : "Search jewellery designs"} aria-haspopup="dialog" onClick={() => setSearchOpen(true)}><Icon name="search" /></button></div>
+        <Link href="/#top" prefetch={false} className="wordmark"><span>{brand.wordmark}</span><span className="wordmark__sub"><span>JEWELLERS</span></span></Link>
+        <div className="header-actions"><a className="header-auria" href={`${isPreview ? brand.previewPath : "/"}#auria`}><Icon name="sparkle" />Meet AURIA</a><button className="icon-button header-search" type="button" aria-label={isPreview ? "Search reference studies" : "Search jewellery designs"} aria-haspopup="dialog" onClick={() => setSearchOpen(true)}><Icon name="search" /></button></div>
       </div>
     </header>
     <Modal open={menuOpen} onClose={() => setMenuOpen(false)} title="The visual atelier" className="menu-modal">

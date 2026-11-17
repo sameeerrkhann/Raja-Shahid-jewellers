@@ -3,23 +3,22 @@ import { HomeExperience } from "@/components/home/home-experience";
 import { EditorialImage } from "@/components/home/editorial-image";
 import { JewelleryDrawing } from "@/components/home/jewellery-drawing";
 import { VaultGallery } from "@/components/home/vault-gallery";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { ShowcaseHero } from "@/components/home/showcase-hero";
+import { showcaseItems } from "@/lib/catalogue/showcase";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import "./home.css";
+import "./showcase.css";
 
 export const metadata: Metadata = {
   title: { absolute: "Raja Shahid Jewellers — Beyond the Moment" },
-  description: "The provisional Royal Gold Atelier: jewellery, bridal inspiration and the future AURIA atelier. Customer website demo with reference imagery, not actual stock.",
+  description: "The provisional Royal Gold Atelier: turn through sample jewellery designs, bridal inspiration and the future AURIA atelier. Customer website demo with concept imagery, not actual stock.",
   robots: { index: false, follow: false },
 };
 
 export default function Home() {
   return <HomeExperience>
-    <section className="home-hero home-scene" id="entrance" data-scene="01" data-tone="dark" aria-labelledby="entrance-title">
-      <div className="home-hero__visual" data-hero-visual><EditorialImage src="/images/editorial/derivatives/home-hero-1280.webp" sources={[{ media: "(max-width: 767px)", srcSet: "/images/editorial/derivatives/home-hero-768.webp" }, { media: "(min-width: 1536px)", srcSet: "/images/editorial/derivatives/home-hero-1920.webp" }]} alt="Ornate necklace with violet-toned accents against a dark surface; editorial reference by Vaibhav Nagare" fill unoptimized loading="eager" fetchPriority="high" data-hero-image className="home-hero__photo" /><div className="home-hero__light" aria-hidden="true" /></div>
-      <div className="container home-hero__content"><p className="eyebrow" data-entrance-line>The art of being remembered</p><h1 id="entrance-title"><span data-entrance-line>Beyond</span>{" "}<em data-entrance-line>the moment.</em></h1><p className="home-hero__intro" data-entrance-line>Not simply worn.<br />Felt. Remembered. Kept.</p><div className="home-hero__actions" data-entrance-line><ButtonLink href="#vault">Enter the Design Vault <Icon name="arrow" /></ButtonLink><a className="home-underlined-link" href="#auria">Imagine with AURIA</a></div></div>
-      <div className="container home-hero__bottom"><a href="#craft" className="home-scroll-cue"><span className="home-scroll-cue__line" aria-hidden="true" />Scroll to discover <span aria-hidden="true">↓</span></a><p>Editorial reference<br />Not shop inventory</p></div>
-    </section>
+    <ShowcaseHero items={showcaseItems()} />
     <section id="craft" className="home-craft home-scene" data-scene="02" aria-labelledby="craft-title"><div className="home-craft__frame container" data-craft-pin>
       <div className="home-craft__copy"><p className="eyebrow" data-home-reveal>02 / The art of craftsmanship</p><h2 id="craft-title" data-home-reveal>Beauty begins<br />with <em>the detail.</em></h2><p data-home-reveal>A curve. A setting. The rhythm of a thousand little decisions. Look closer, and a piece becomes a world of its own.</p><a className="text-link" href="#bridal">The language of celebration <Icon name="arrow" /></a><div className="craft-notation" aria-hidden="true"><span>Form</span><span>Light</span><span>Feeling</span></div><p className="home-reference-note">A photographic study of ornament—not a claim about the shop’s workshop or making techniques.</p></div>
       <figure className="home-craft__figure"><div className="home-craft__image-frame"><EditorialImage src="/images/editorial/pendant-detail.jpg" alt="Close-up of a circular pendant and beaded necklace; reference photography by Vaibhav Nagare" fill sizes="(max-width: 767px) 100vw, 52vw" quality={85} className="home-craft__photo" data-craft-media /></div><figcaption><span>Study Nº 02 / Ornament, considered</span><span className="craft-coordinate" aria-hidden="true">22° / A closer perspective</span></figcaption><span className="craft-frame-line" aria-hidden="true" /></figure>
