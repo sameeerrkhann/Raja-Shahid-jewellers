@@ -68,6 +68,10 @@ export function ShowcaseHero({ items }: { items: ShowcaseItem[] }) {
   }, [count, glideTo]);
 
   const step = (direction: number) => select(active + direction);
+  const wear = (index: number) => window.dispatchEvent(new CustomEvent<number>("rsj:wear", { detail: index }));
+
+  // Tell the worn story below which piece is at the front.
+  useEffect(() => { window.dispatchEvent(new CustomEvent<number>("rsj:showcase-active", { detail: active })); }, [active]);
 
   // An image can fail before React attaches onError (server-rendered markup); detect that once on mount.
   useEffect(() => {
@@ -134,20 +138,20 @@ export function ShowcaseHero({ items }: { items: ShowcaseItem[] }) {
 
     <div className="container showcase__layout">
       <div className="showcase__copy">
-        <p className="eyebrow" data-entrance-line>The art of being remembered</p>
+        
         <h1 id="entrance-title"><span data-entrance-line>Beyond</span>{" "}<em data-entrance-line>the moment.</em></h1>
         <p className="showcase__intro" data-entrance-line>Not simply worn. Felt. Remembered. Kept.<br /><span>Turn the vault — every piece invites a closer look.</span></p>
         <div className="showcase__actions" data-entrance-line><ButtonLink href="#vault">Enter the Design Vault <Icon name="arrow" /></ButtonLink><a className="home-underlined-link" href="#auria">Imagine with AURIA</a></div>
       </div>
 
       <div className="showcase__theatre">
-        <div ref={stage} className="showcase__stage" style={{ "--n": count, "--pos": 0 } as CSSProperties} role="group" aria-roledescription="carousel" aria-label="Sample designs. Drag, scroll or use the arrow keys to turn the vault; select the front piece to look closer."
+        <div ref={stage} className="showcase__stage" style={{ "--n": count, "--pos": 0 } as CSSProperties} role="group" aria-roledescription="carousel" aria-label="Sample designs. Drag, scroll or use the arrow keys to turn the vault; select the front piece to see it worn."
           onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onKeyDown={keyDown}>
           <span className="showcase__plinth" aria-hidden="true" />
           <ul className="showcase__orbit">
             {items.map((entry, index) => { const distance = Math.min(wrap(index - active, count), wrap(active - index, count)); return <li key={entry.id} className="showcase__slot" style={{ "--i": index } as CSSProperties} inert={distance / count > 0.31 || undefined}>
-              <button type="button" className="showcase__item" aria-current={index === active} aria-label={index === active ? `${entry.title}, ${entry.code} — look closer` : `Turn to ${entry.title}, ${entry.code}`}
-                onClick={() => { if (suppressClick.current) return; if (index === active) setViewer(index); else select(index); }}>
+              <button type="button" className="showcase__item" aria-current={index === active} aria-label={index === active ? `See ${entry.title}, ${entry.code}, worn` : `Turn to ${entry.title}, ${entry.code}`}
+                onClick={() => { if (suppressClick.current) return; if (index === active) wear(index); else select(index); }}>
                 <span className="showcase__medal" data-media-failed={failed[index] || undefined}>
                   {failed[index] ? <span className="showcase__fallback"><em>{entry.title}</em><small>Image unavailable</small></span>
                     // eslint-disable-next-line @next/next/no-img-element -- responsive pre-built WebP derivatives; next/image optimisation is not used for these local assets
@@ -158,7 +162,7 @@ export function ShowcaseHero({ items }: { items: ShowcaseItem[] }) {
               </button>
             </li>; })}
           </ul>
-          <p className="showcase__hint" aria-hidden="true"><span>Drag</span><span>Scroll</span><span>Tap to look closer</span></p>
+          <p className="showcase__hint" aria-hidden="true"><span>Drag<span className="showcase__hint-scroll"> or scroll</span> to turn</span><span>Select the front piece to see it worn</span></p>
         </div>
 
         <div className="showcase__detail">
@@ -170,6 +174,7 @@ export function ShowcaseHero({ items }: { items: ShowcaseItem[] }) {
             <p className="showcase__meta"><span>{item.code}</span><span className="showcase__status">Sample · {item.status}</span></p>
           </div>
           <div className="showcase__controls">
+            <button type="button" className="button button--gold showcase__wear" onClick={() => wear(active)}>See it worn <Icon name="arrow" /></button>
             <button type="button" className="button button--outline showcase__look" onClick={() => setViewer(active)}>Look closer <Icon name="search" /></button>
             <div className="showcase__arrows"><button type="button" className="icon-button" aria-label="Previous design" onClick={() => step(-1)}><Icon name="arrow" className="arrow-back" /></button><button type="button" className="icon-button" aria-label="Next design" onClick={() => step(1)}><Icon name="arrow" /></button></div>
           </div>

@@ -257,6 +257,13 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-18 — Claude (Saad's session) — Worn story, craft loupe, real category samples, lighter header
+- Branch `saad-works-customer-website` (not main). Owner: Saad. Tasks S-07…S-10 in `TEAM_TASKS.md`.
+- Added: worn story scene (`#worn`, fourth desktop pin), craft loupe, category gallery with published sample counts and design links, lighter header, removal of numbered section labels, collections grid of 4:5 frames, reveal/hover/CTA motion per Saad's brief.
+- Honesty: no on-model photographs exist; the worn scene shows an illustrated fitting study and says so. Necklaces, earrings and men's categories still have no published sample images.
+- Verified: typecheck, lint, production build, Playwright 81/81 (Chromium). Tests updated for 7 scenes and 4 pins.
+- Not done / needs decision: Phase 05 product detail pages (category and design links currently open the Design Vault filtered to that design); AURIA section left untouched (AI team scope).
+
 ### 2026-11-17 — Claude (Saad's session) — Showcase hero, premium header, team task board
 
 - **Owner / workflow:** Saad (assigned developer, non-AI customer website) directed this task in a Claude session; Codex was not writing to the tree. Scope follows the pasted handover in `CLAUDE.md` (UI/UX & animation improvements + Phase 04 continuation). No AI/AURIA files, admin, database or later-phase features were touched. Work branch: `saad-works-customer-website` (rebased on `d8773fa`, for team review via pull request; not pushed to `main`).

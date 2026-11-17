@@ -26,7 +26,7 @@ test("homepage has six honest connected scenes and proper metadata", async ({ pa
   await expect(page).toHaveURL(/\/$/);
   await expect(page).toHaveTitle("Raja Shahid Jewellers — Beyond the Moment");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Beyond the moment.");
-  await expect(page.locator("[data-scene]")).toHaveCount(6);
+  await expect(page.locator("[data-scene]")).toHaveCount(7);
   await expect(page.getByText("Illustrative rate preview · Not live")).toBeVisible();
   await expect(page.getByText(/Hand-authored illustration → reference photograph/)).toBeVisible();
   expect((await request.get("/admin")).status()).toBe(404);
@@ -60,10 +60,10 @@ for (const width of [320, 375, 390, 768, 1024, 1440]) {
   });
 }
 
-test("three bounded pins (showcase, craft, vault) and horizontal gallery controls", async ({ page }) => {
+test("four bounded pins (showcase, worn story, craft, vault) and horizontal gallery controls", async ({ page }) => {
   await ready(page);
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "desktop");
-  await expect(page.locator(".pin-spacer")).toHaveCount(3);
+  await expect(page.locator(".pin-spacer")).toHaveCount(4);
   await expect(page.locator("#vault")).toHaveAttribute("data-scroll-start", /\d/);
   const travel = await page.locator("[data-pin-travel]").evaluateAll((elements) => elements.reduce((total, element) => total + Number((element as HTMLElement).dataset.pinTravel), 0));
   expect(travel).toBeLessThanOrEqual(1802);
@@ -126,7 +126,7 @@ test("future AURIA and enquiry CTAs explain availability without submissions", a
 
 test("OS and site reduced-motion preferences remove pins and retain all categories", async ({ page }) => {
   await ready(page);
-  await expect(page.locator(".pin-spacer")).toHaveCount(3);
+  await expect(page.locator(".pin-spacer")).toHaveCount(4);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "reduced");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
@@ -136,24 +136,24 @@ test("OS and site reduced-motion preferences remove pins and retain all categori
   await page.getByRole("checkbox", { name: "Reduce motion", exact: true }).uncheck();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(page.locator(".pin-spacer")).toHaveCount(3);
+  await expect(page.locator(".pin-spacer")).toHaveCount(4);
   await page.getByRole("checkbox", { name: "Reduce motion", exact: true }).check();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
 });
 
 test("resize and short landscape clean up pins without duplicates", async ({ page }) => {
   await ready(page);
-  await expect(page.locator(".pin-spacer")).toHaveCount(3);
+  await expect(page.locator(".pin-spacer")).toHaveCount(4);
   for (const [width, height] of [[390, 844], [1024, 600], [1440, 1000]]) {
     await page.setViewportSize({ width, height });
-    await expect(page.locator(".pin-spacer")).toHaveCount(width === 1440 ? 3 : 0);
+    await expect(page.locator(".pin-spacer")).toHaveCount(width === 1440 ? 4 : 0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   }
 });
 
 test("client navigation removes homepage motion and restores it on return", async ({ page }) => {
   await ready(page);
-  await expect(page.locator(".pin-spacer")).toHaveCount(3);
+  await expect(page.locator(".pin-spacer")).toHaveCount(4);
   await page.evaluate(() => { document.documentElement.dataset.routeSentinel = "same-document"; });
   await page.getByRole("link", { name: "Design preview", exact: true }).click();
   await expect(page).toHaveURL(/\/design-preview$/);
@@ -161,7 +161,7 @@ test("client navigation removes homepage motion and restores it on return", asyn
   await expect(page.locator("html")).toHaveAttribute("data-route-sentinel", "same-document");
   await page.getByRole("link", { name: "Raja Shahid JEWELLERS", exact: true }).click();
   await expect(page).toHaveURL(/\/#top$/);
-  await expect(page.locator(".pin-spacer")).toHaveCount(3);
+  await expect(page.locator(".pin-spacer")).toHaveCount(4);
   await expect(page.locator("html")).not.toHaveAttribute("data-reduce-motion");
 });
 
@@ -170,7 +170,7 @@ test("no-JavaScript story and native links remain readable", async ({ browser })
   try {
     const page = await context.newPage();
     await page.goto("http://127.0.0.1:3100/");
-    await expect(page.locator("[data-scene]")).toHaveCount(6);
+    await expect(page.locator("[data-scene]")).toHaveCount(7);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.locator(".pin-spacer")).toHaveCount(0);
     await page.getByRole("link", { name: "Enter the Design Vault" }).click();
