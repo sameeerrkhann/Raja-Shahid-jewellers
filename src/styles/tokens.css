@@ -1,0 +1,35 @@
+/* Canonical design tokens, exposed as Tailwind v4 utilities. */
+@theme {
+  --color-obsidian: #101011; --color-gold: #c5a15b; --color-gold-ink: #755628;
+  --color-champagne: #e8d5a6; --color-ivory: #f6f1e8; --color-burgundy: #5b202d;
+  --color-paper: #eee7dc; --color-ink-muted: #68625b; --color-dark-muted: #b9b2a7;
+  --breakpoint-sm: 40rem; --breakpoint-md: 48rem; --breakpoint-lg: 64rem; --breakpoint-xl: 80rem;
+  --radius-sm: 2px; --radius-md: 6px;
+  --shadow-soft: 0 16px 48px rgb(16 16 17 / 8%);
+  --shadow-modal: 0 32px 110px rgb(0 0 0 / 28%);
+}
+@theme inline {
+  --font-display: var(--font-editorial), Georgia, serif;
+  --font-sans: var(--font-interface), Arial, sans-serif;
+}
+:root {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
+  --space-24: 96px; --space-32: 128px;
+  --text-body: 1rem; --text-caption: .875rem;
+  --text-display: clamp(3.5rem, 7.2vw, 7rem); --text-heading: clamp(2.5rem, 4.4vw, 4.5rem);
+  --duration-fast: 180ms; --duration-base: 260ms; --duration-reveal: 650ms;
+  --ease-editorial: cubic-bezier(.22, .61, .36, 1); --content-width: 1280px;
+  --surface: var(--color-ivory); --text: var(--color-obsidian); --muted: var(--color-ink-muted);
+  --accent: var(--color-gold-ink); --line: rgb(16 16 17 / 19%); --focus: var(--color-gold-ink);
+  --border-fine: 1px solid var(--line);
+}
+[data-tone="light"] {
+  --surface: var(--color-ivory); --text: var(--color-obsidian); --muted: var(--color-ink-muted);
+  --accent: var(--color-gold-ink); --line: rgb(16 16 17 / 19%); --focus: var(--color-gold-ink);
+}
+[data-tone="dark"] {
+  --surface: var(--color-obsidian); --text: var(--color-ivory); --muted: var(--color-dark-muted);
+  --accent: var(--color-champagne); --line: rgb(232 213 166 / 26%); --focus: var(--color-gold);
+  color: var(--text); background: var(--surface);
+}
