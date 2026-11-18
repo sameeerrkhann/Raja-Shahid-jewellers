@@ -59,7 +59,7 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
             cleanups.push(() => { gsap.ticker.remove(raf); gsap.ticker.lagSmoothing(500, 33); lenis.destroy(); });
 
             if (assembly) {
-              // Scene 01: the section grows by ~760px and its frame sticks; scroll position is the assembly's progress, both ways.
+              // Scene 01: the section grows by ~2000px and its frame sticks; scroll position is the assembly's progress, both ways.
               assembly.dataset.scrub = "desktop";
               ScrollTrigger.create({ id: "home-assembly", trigger: assembly, start: () => `top ${headerHeight()}`, end: "bottom bottom", invalidateOnRefresh: true,
                 onUpdate: (self) => assembly.dispatchEvent(new CustomEvent<number>("rsj:assembly-progress", { detail: self.progress })),

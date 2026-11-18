@@ -257,6 +257,15 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-19 — Claude (Saad's session) — Hero caption bands, legibility and flick test (S-19)
+- Saad approved `docs/DESIGN-PACKAGE.md` (written with the 10k-websites skill, applied to this Next.js site) with two decisions: hero scroll about 2,000px (decision A) and dark velvet with some ivory sections (decision B). Build step 1 of its plan is done.
+- Desktop hero now scrolls exactly 2,000px and carries four caption bands: the headline (settled on load), "Every grain finds its place." (letters scatter in while the dust gathers) then "Then the light tells the truth." (blur to sharp while light uncovers the photograph), the notes, and "Where would you like to begin?" above the collection tiles. Captions are desktop scroll only; phones, reduced motion and no-JS keep the still frame. Screen readers get each line once (visual letters are aria-hidden).
+- Legibility: per-band soft scrims, a three-layer text-shadow token, a scrim behind the headline copy (its gradient cannot take a shadow) and a stronger dust mask on the left. Style writes in the hero loop now happen only when a value changes.
+- Fixed: the "Sample design, concept image" label no longer flickers back during the exit.
+- New `tests/hero-captions.spec.ts`: wheel flicks of 120/240/360px (readable runs at 120px: headline 3, line one 6, line two 4, notes 3, question 7; no beat skipped at 360px), worst-frame audit with glyphs hidden (lowest seen: headline 4.38:1, intro 4.68:1; captions about 15–17:1), and reduced motion in both directions. `tests/homepage.spec.ts` updated for the 2,000px range.
+- Verified: typecheck, lint, build, Playwright 86/86. Headless Chromium only; not checked on real phones or a real trackpad.
+- Next (needs Saad's go-ahead): build step 2, the Dual Portal (Women | Men | Made to order) with the Pexels reference photos, labelled "Reference photography. Not our jewellery."
+
 ### 2026-11-19 — Claude (Saad's session) — Hero 2.0 and velvet palette (S-18)
 - New tokens `--color-kohl`, `--color-oxblood`, `--color-antique-gold`; applied to the hero first.
 - Hero now runs five acts over ~1,100px of desktop scroll (Saad asked for a longer, more detailed scroll than the team brief's 500–800px). Notes describe only what is visible in the image; facts (22K, personalisation, weight/price on request) are read from the RSJ-D001 catalogue record in `page.tsx`.

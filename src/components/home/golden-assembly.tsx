@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import type { HeroNote } from "@/config/hero";
@@ -10,20 +10,47 @@ export type AssemblyCollection = { href: string; title: string; detail: string; 
 export type AssemblyPiece = { title: string; code: string; href: string; facts: string[]; alt: string; cutout: { small: string; large: string }; notes: readonly HeroNote[] };
 
 /* ── Scroll script ────────────────────────────────────────────────────────────────
-   One progress value p (0 → 1) drives five acts. Every number lives here, so the
-   timeline can be retuned without touching the drawing code or the CSS.
-     field     0.00–0.08  loose gold drifts on velvet; the dust shies away from the cursor
-     converge  0.00–0.40  dust spirals into the piece while the camera pushes in
-     reveal    0.34–0.52  the photograph is uncovered behind a band of light
-     detail    0.50–0.84  the piece moves to centre stage; notes draw out to its features
-     exit      0.84–1.00  the piece settles back and the collections rise in        */
-const ACT = { converge: [0, .4], reveal: [.34, .52], copy: [.44, .54], focus: [.5, .64], noteIn: [.6, .72], noteOut: [.8, .86], exit: [.84, 1] } as const;
-const PHASES = [.08, .34, .56, .84];
+   One progress value p (0 → 1), over about 2,000px of scroll (desktop), drives the scene and
+   its captions. Every number lives here, so the timeline can be retuned without touching the
+   drawing code or the CSS. Caption bands (flick-tested in tests/hero-captions.spec.ts):
+     band 1  0.00–0.18  the headline, settled on load; loose gold drifts and starts to gather
+     band 2  0.18–0.60  "Every grain finds its place." while the dust converges, then
+                        "Then the light tells the truth." while light uncovers the photograph
+     band 3  0.62–0.89  the piece moves to centre stage; notes draw out to its features
+     band 4  0.88–1.00  "Where would you like to begin?"; the piece settles, collections rise */
+const ACT = { converge: [0, .36], reveal: [.3, .46], copy: [.14, .18], focus: [.56, .64], noteIn: [.62, .68], noteOut: [.86, .89], exit: [.86, .96] } as const;
+const PHASES = [.18, .3, .62, .88];
 const MOBILE_END = .53;
+
+/** in/out: opacity ramps (smoothstep). k: the entrance (letters gather, words rise, focus sharpens). */
+type CaptionBand = { in: readonly [number, number]; k: readonly [number, number]; out?: readonly [number, number] };
+const CAPTIONS: Record<string, CaptionBand> = {
+  story: { in: [.18, .2], k: [.18, .25], out: [.57, .6] },
+  light: { in: [.3, .32], k: [.3, .38] },
+  begin: { in: [.88, .9], k: [.88, .94] },
+};
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
 const span = (p: number, [from, to]: readonly [number, number]) => clamp((p - from) / (to - from));
+const smooth = (t: number) => t * t * (3 - 2 * t);
 const easeInOut = (t: number) => (t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+
+/** Seeded generator: scattered letters start from the same places on the server and in the browser. */
+const seeded = (seed: number) => { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; };
+
+/** Letters that fly in from scattered offsets and settle, like the dust settling into the piece. */
+function ScatterLine({ text, seed }: { text: string; seed: number }) {
+  const random = seeded(seed);
+  return <span aria-hidden="true">{text.split(" ").map((word, w) => <Fragment key={w}>{w > 0 && " "}<span className="assembly__word">
+    {[...word].map((char, c) => <span key={c} className="assembly__char" style={{ "--th": (random() * .55).toFixed(3), "--jx": `${((random() - .5) * 140).toFixed(1)}px`, "--jy": `${((random() - .5) * 96).toFixed(1)}px`, "--jr": `${((random() - .5) * 56).toFixed(1)}deg` } as CSSProperties}>{char}</span>)}
+  </span></Fragment>)}</span>;
+}
+
+/** Words that rise in reading order. */
+function RiseLine({ text }: { text: string }) {
+  const words = text.split(" ");
+  return <span aria-hidden="true">{words.map((word, w) => <Fragment key={w}>{w > 0 && " "}<span className="assembly__word" style={{ "--th": (w / words.length * .5).toFixed(3) } as CSSProperties}>{word}</span></Fragment>)}</span>;
+}
 
 type Dust = { count: number; sx: Float32Array; sy: Float32Array; tx: Float32Array; ty: Float32Array; delay: Float32Array; spin: Float32Array; size: Float32Array; phase: Float32Array; tone: Uint8Array };
 type Bokeh = { count: number; x: Float32Array; y: Float32Array; r: Float32Array; depth: Float32Array; alpha: Float32Array; speed: Float32Array };
@@ -129,6 +156,16 @@ export function GoldenAssembly({ collections, piece }: { collections: AssemblyCo
     let width = 0, height = 0, ratio = 1;
     // Pointer: raw position, smoothed position, and the tilt/shine it produces (desktop only).
     const pointer = { x: -9999, y: -9999, sx: -9999, sy: -9999, inside: false, tiltX: 0, tiltY: 0, shine: 0 };
+    // Style writes only when a value changes: once the scroll settles, frames cost no style work.
+    const written = new Map<HTMLElement, Map<string, string>>();
+    const write = (element: HTMLElement, name: string, value: string) => {
+      let cache = written.get(element);
+      if (!cache) written.set(element, cache = new Map());
+      if (cache.get(name) === value) return;
+      cache.set(name, value);
+      element.style.setProperty(name, value);
+    };
+    const captions = Array.from(root.querySelectorAll<HTMLElement>("[data-caption]"), (element) => ({ element, band: CAPTIONS[element.dataset.caption ?? ""] })).filter((caption) => caption.band);
 
     const resize = () => {
       ratio = Math.min(devicePixelRatio || 1, lowEnd ? 1.25 : 2);
@@ -205,13 +242,18 @@ export function GoldenAssembly({ collections, piece }: { collections: AssemblyCo
     const apply = (p: number) => {
       const noteIn = span(p, ACT.noteIn), noteOut = span(p, ACT.noteOut);
       const values: Record<string, number> = {
-        "--converge": span(p, ACT.converge), "--sweep": span(p, ACT.reveal), "--copy": 1 - span(p, ACT.copy),
+        "--converge": span(p, ACT.converge), "--sweep": span(p, ACT.reveal), "--copy": 1 - smooth(span(p, ACT.copy)),
         "--focus": easeInOut(span(p, ACT.focus)), "--detail": Math.min(noteIn, 1 - noteOut), "--exit": span(p, ACT.exit), "--cue": 1 - clamp(p / .04),
       };
-      for (const name in values) root.style.setProperty(name, values[name].toFixed(4));
-      root.style.setProperty("--rx", `${pointer.tiltY.toFixed(2)}deg`);
-      root.style.setProperty("--ry", `${pointer.tiltX.toFixed(2)}deg`);
-      root.style.setProperty("--shine", pointer.shine.toFixed(3));
+      for (const name in values) write(root, name, values[name].toFixed(4));
+      write(root, "--rx", `${pointer.tiltY.toFixed(2)}deg`);
+      write(root, "--ry", `${pointer.tiltX.toFixed(2)}deg`);
+      write(root, "--shine", pointer.shine.toFixed(3));
+      // Captions: --o is the band's presence, --k its entrance; both reverse when scrolling back.
+      for (const { element, band } of captions) {
+        write(element, "--o", (smooth(span(p, band.in)) * (band.out ? 1 - smooth(span(p, band.out)) : 1)).toFixed(3));
+        write(element, "--k", span(p, band.k).toFixed(3));
+      }
       const phase = String(PHASES.filter((edge) => p >= edge).length);
       if (root.dataset.phase !== phase) root.dataset.phase = phase;
     };
@@ -235,8 +277,8 @@ export function GoldenAssembly({ collections, piece }: { collections: AssemblyCo
       pointer.tiltX += ((aimX - .5) * 9 - pointer.tiltX) * k * .6;
       pointer.tiltY += (-(aimY - .5) * 6 - pointer.tiltY) * k * .6;
       pointer.shine += ((lit ? 1 : 0) - pointer.shine) * k * .5;
-      root.style.setProperty("--sx", `${(aimX * 100).toFixed(1)}%`);
-      root.style.setProperty("--sy", `${(aimY * 100).toFixed(1)}%`);
+      write(root, "--sx", `${(aimX * 100).toFixed(1)}%`);
+      write(root, "--sy", `${(aimY * 100).toFixed(1)}%`);
       apply(shown);
       draw(shown, now, box, frameBox);
       if (visible && live && !document.hidden) raf = requestAnimationFrame(tick);
@@ -258,6 +300,8 @@ export function GoldenAssembly({ collections, piece }: { collections: AssemblyCo
       live = false; playFrom = -1; cancelAnimationFrame(raf); raf = 0;
       delete root.dataset.live; delete root.dataset.phase;
       ["--converge", "--sweep", "--copy", "--focus", "--detail", "--exit", "--cue", "--rx", "--ry", "--shine", "--sx", "--sy", "--focus-dx"].forEach((name) => root.style.removeProperty(name));
+      captions.forEach(({ element }) => { element.style.removeProperty("--o"); element.style.removeProperty("--k"); });
+      written.clear();
       context.clearRect(0, 0, surface.width, surface.height);
     };
     const onPointerMove = (event: PointerEvent) => {
@@ -336,6 +380,20 @@ export function GoldenAssembly({ collections, piece }: { collections: AssemblyCo
             </div>}
           <figcaption>Sample design, concept image. Not shop stock.</figcaption>
         </figure>
+      </div>
+      {/* Caption bands: shown only while the desktop scroll drives the scene (see CAPTIONS). */}
+      <div className="container assembly__bands">
+        <div className="assembly__band" data-caption="story">
+          <p className="assembly__line"><span className="sr-only">Every grain finds its place.</span><ScatterLine text="Every grain finds its place." seed={916} /></p>
+          <p className="assembly__line assembly__line--light" data-caption="light">
+            <span className="sr-only">Then the light tells the truth.</span>
+            <span className="assembly__soft" aria-hidden="true">Then the light tells the truth.</span>
+            <span className="assembly__sharp" aria-hidden="true">Then the light tells the truth.</span>
+          </p>
+        </div>
+        <div className="assembly__band assembly__band--begin" data-caption="begin">
+          <p className="assembly__line"><span className="sr-only">Where would you like to begin?</span><RiseLine text="Where would you like to begin?" /></p>
+        </div>
       </div>
       <ol className="assembly__rail" aria-hidden="true"><li /><li /><li /><li /><li /></ol>
       <nav className="assembly__collections" aria-label="Browse the Design Vault" style={{ "--tiles": collections.length } as CSSProperties}>

@@ -253,8 +253,8 @@ test("golden assembly scrubs both ways and ends in real collections", async ({ p
   await expect(hero).toHaveAttribute("data-live", "true");
   await expect(hero).toHaveAttribute("data-phase", "0");
   const range = await hero.evaluate((element) => [Number((element as HTMLElement).dataset.scrollStart), Number((element as HTMLElement).dataset.scrollEnd)]);
-  expect(range[1] - range[0]).toBeGreaterThanOrEqual(900);
-  expect(range[1] - range[0]).toBeLessThanOrEqual(1200);
+  expect(range[1] - range[0]).toBeGreaterThanOrEqual(1900);
+  expect(range[1] - range[0]).toBeLessThanOrEqual(2100);
   // Act 4: the piece is presented with notes drawn from the image and facts from the catalogue record.
   await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[0] + (range[1] - range[0]) * .72);
   await expect(hero).toHaveAttribute("data-phase", "3");
@@ -268,8 +268,9 @@ test("golden assembly scrubs both ways and ends in real collections", async ({ p
   await expect(hero).toHaveAttribute("data-phase", "4");
   await expect.poll(exit).toBeGreaterThan(.95);
   await page.screenshot({ path: `${screenshotFolder}/assembly-end-1440.png` });
-  await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[0] + (range[1] - range[0]) * .3);
+  await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[0] + (range[1] - range[0]) * .25);
   await expect(hero).toHaveAttribute("data-phase", "1");
+  await expect(hero.locator("[data-caption='story']")).toHaveCSS("opacity", "1");
   await expect.poll(exit).toBeLessThan(.05);
   await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[1]);
   await expect(hero).toHaveAttribute("data-phase", "4");
@@ -283,6 +284,7 @@ test("mobile assembly plays without pins and keeps collections reachable", async
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   const hero = page.locator("#entrance");
   await expect(hero).not.toHaveAttribute("data-scrub", /./);
+  await expect(hero.locator(".assembly__bands")).toBeHidden();
   await expect.poll(() => hero.evaluate((element) => Number(getComputedStyle(element).getPropertyValue("--sweep"))), { timeout: 8000 }).toBeGreaterThan(.95);
   await expect(hero.getByRole("link", { name: /^Bridal/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
