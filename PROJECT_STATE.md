@@ -257,6 +257,12 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-19 — Claude (Saad's session) — Hero 2.0 and velvet palette (S-18)
+- New tokens `--color-kohl`, `--color-oxblood`, `--color-antique-gold`; applied to the hero first.
+- Hero now runs five acts over ~1,100px of desktop scroll (Saad asked for a longer, more detailed scroll than the team brief's 500–800px). Notes describe only what is visible in the image; facts (22K, personalisation, weight/price on request) are read from the RSJ-D001 catalogue record in `page.tsx`.
+- Cut-out regenerated with a tighter edge. The pearls in the source image cannot be separated reliably, so no note refers to them.
+- Verified: typecheck, lint, build, Playwright 81/81; production LCP (local, headless Chromium) 0.27–0.44s desktop, 0.16–0.22s mobile; ~54fps scrolling the particle act headless without GPU. Not measured on real phones.
+
 ### 2026-11-18 — Claude (Saad's session) — Step 1: remove craft/worn scenes, add reference model photos
 - Agreed six-step plan recorded in `TEAM_TASKS.md` (S-12…S-17). Step 1 done.
 - Removed `craft-loupe.tsx`, `worn-story.tsx`, `wear-figure.tsx`, `worn.css`, `on-model.ts`; homepage scenes 5, desktop pins 1 (vault).

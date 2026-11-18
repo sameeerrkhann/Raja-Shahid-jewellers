@@ -3,7 +3,9 @@ import { HomeExperience } from "@/components/home/home-experience";
 import { EditorialImage } from "@/components/home/editorial-image";
 import { JewelleryDrawing } from "@/components/home/jewellery-drawing";
 import { VaultGallery } from "@/components/home/vault-gallery";
-import { GoldenAssembly, type AssemblyCollection } from "@/components/home/golden-assembly";
+import { GoldenAssembly, type AssemblyCollection, type AssemblyPiece } from "@/components/home/golden-assembly";
+import { heroPiece } from "@/config/hero";
+import { sampleDesigns } from "@/data/demo/catalogue";
 import { categorySamples } from "@/lib/catalogue/showcase";
 import { categoryLabel } from "@/config/catalogue";
 import { Button } from "@/components/ui/button";
@@ -26,8 +28,20 @@ export default function Home() {
     ...Object.entries(samples).map(([slug, entry]) => ({ href: `/designs?category=${slug}`, title: categoryLabel(slug), detail: `${entry.count} sample ${entry.count === 1 ? "design" : "designs"}`, image: entry.images[0]?.src ?? null })),
     { href: "/designs", title: "All designs", detail: `${total} with images, more in preparation`, image: null },
   ];
+  // Facts come from the catalogue record so the hero can never claim more than the Design Vault does.
+  const design = sampleDesigns.find((entry) => entry.designCode === heroPiece.designCode);
+  if (!design) throw new Error(`Hero design ${heroPiece.designCode} is missing from the catalogue`);
+  const karats = design.variants.map((variant) => variant.karat).filter((karat): karat is number => karat !== null);
+  const piece: AssemblyPiece = {
+    title: design.title, code: design.designCode, href: `/designs?q=${encodeURIComponent(design.designCode)}`, alt: heroPiece.alt, cutout: heroPiece.cutout, notes: heroPiece.notes,
+    facts: [
+      karats.length ? `${karats.join("K, ")}K gold` : "Purity under review",
+      design.customizationAvailable ? "Personalisation on request" : "Made as shown",
+      design.weightRange ? "Indicative weight listed" : "Weight and price on request",
+    ],
+  };
   return <HomeExperience>
-    <GoldenAssembly collections={collections} />
+    <GoldenAssembly collections={collections} piece={piece} />
     <section id="bridal" className="home-bridal home-scene" data-scene="03" data-tone="dark" aria-labelledby="bridal-title">
       <div className="home-bridal__image-wrap"><EditorialImage src="/images/editorial/floral-necklace.jpg" alt="Floral necklace used as bridal mood reference rather than an offered product" fill sizes="(max-width: 767px) 100vw, 65vw" quality={85} className="home-bridal__photo" data-bridal-media /><span className="home-bridal__arch" aria-hidden="true" /></div>
       <div className="container home-bridal__content"><div><h2 id="bridal-title" data-home-reveal>A promise.<br /><em>Beautifully</em><br />kept.</h2><p className="home-bridal__intro" data-home-reveal>For the beginning of a new story.<br />For everything you carry into it.</p><a className="home-underlined-link" href="#vault">Explore the bridal direction <Icon name="arrow" /></a></div><p className="home-bridal__caption">Reference styling only. No bridal inventory,<br />heritage date or manufacturing promise is asserted.</p></div><span className="home-bridal__folio" aria-hidden="true">III</span>

@@ -15,6 +15,7 @@
 | # | Date | Task | Status | Main files |
 |---|------|------|--------|------------|
 | S-12 | 2026-11-18 | Step 1 of the agreed plan: removed the craft loupe and worn-story scenes (homepage now 5 scenes, 1 desktop pin); "The craft" nav link replaced by "Bridal edit"; six free Pexels reference model photos (3 women, 3 men) added with credits for the Dual Portal | Done (in review) | `src/app/page.tsx`, `src/app/home.css`, `src/data/demo/model-photography.ts`, `public/images/models/` |
+| S-18 | 2026-11-19 | Hero 2.0 + velvet palette (kohl, oxblood, antique gold): five scroll acts (field → converge with camera push → light-sweep reveal → piece at centre stage with four image-based notes, leader lines and catalogue facts → collections), near/far depth layers, dust that parts around the cursor, cursor tilt and highlight on the gold, ~1100px desktop travel; hero piece configurable in `src/config/hero.ts` | Done (in review) | `src/components/home/golden-assembly.tsx`, `src/app/assembly.css`, `src/config/hero.ts`, `src/styles/tokens.css`, `public/images/hero/` |
 | S-13 | — | Step 2: Dual Portal (Women / Men / Atelier) under the hero | Next | — |
 | S-14 | — | Step 3: pinned horizontal collection cards with gold shimmer | Next | — |
 | S-15 | — | Step 4: product detail drawer (shadcn Sheet), real sample data only | Next | — |

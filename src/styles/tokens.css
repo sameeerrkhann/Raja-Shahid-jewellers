@@ -3,6 +3,8 @@
   --color-obsidian: #101011; --color-gold: #c5a15b; --color-gold-ink: #755628;
   --color-champagne: #e8d5a6; --color-ivory: #f6f1e8; --color-burgundy: #5b202d;
   --color-paper: #eee7dc; --color-ink-muted: #68625b; --color-dark-muted: #b9b2a7;
+  /* Velvet palette (jewellery-box lining): used by the hero first, adopted section by section. */
+  --color-kohl: #0e0b09; --color-oxblood: #3a1219; --color-antique-gold: #c9a253;
   --breakpoint-sm: 40rem; --breakpoint-md: 48rem; --breakpoint-lg: 64rem; --breakpoint-xl: 80rem;
   --radius-sm: 2px; --radius-md: 6px;
   --shadow-soft: 0 16px 48px rgb(16 16 17 / 8%);

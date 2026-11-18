@@ -4,21 +4,32 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import type { HeroNote } from "@/config/hero";
 
 export type AssemblyCollection = { href: string; title: string; detail: string; image: string | null };
+export type AssemblyPiece = { title: string; code: string; href: string; facts: string[]; alt: string; cutout: { small: string; large: string }; notes: readonly HeroNote[] };
 
-const PIECE = { small: "/images/hero/mehr-collar-640.webp", large: "/images/hero/mehr-collar-960.webp" };
+/* ── Scroll script ────────────────────────────────────────────────────────────────
+   One progress value p (0 → 1) drives five acts. Every number lives here, so the
+   timeline can be retuned without touching the drawing code or the CSS.
+     field     0.00–0.08  loose gold drifts on velvet; the dust shies away from the cursor
+     converge  0.00–0.40  dust spirals into the piece while the camera pushes in
+     reveal    0.34–0.52  the photograph is uncovered behind a band of light
+     detail    0.50–0.84  the piece moves to centre stage; notes draw out to its features
+     exit      0.84–1.00  the piece settles back and the collections rise in        */
+const ACT = { converge: [0, .4], reveal: [.34, .52], copy: [.44, .54], focus: [.5, .64], noteIn: [.6, .72], noteOut: [.8, .86], exit: [.84, 1] } as const;
+const PHASES = [.08, .34, .56, .84];
+const MOBILE_END = .53;
 
-// Scroll phases, as fractions of the hero's scroll travel. The same numbers drive the canvas and the CSS.
-const CONVERGE_END = .56, REVEAL_START = .5, REVEAL_END = .74, EXIT_START = .76;
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
+const span = (p: number, [from, to]: readonly [number, number]) => clamp((p - from) / (to - from));
 const easeInOut = (t: number) => (t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-const phaseOf = (p: number) => (p < .12 ? 0 : p < CONVERGE_END ? 1 : p < EXIT_START ? 2 : 3);
 
 type Dust = { count: number; sx: Float32Array; sy: Float32Array; tx: Float32Array; ty: Float32Array; delay: Float32Array; spin: Float32Array; size: Float32Array; phase: Float32Array; tone: Uint8Array };
+type Bokeh = { count: number; x: Float32Array; y: Float32Array; r: Float32Array; depth: Float32Array; alpha: Float32Array; speed: Float32Array };
 const TONES = ["#f6dc9c", "#e9c46f", "#d4a64a", "#b7832f", "#fff1c9"];
 
-/** Sample the cut-out photograph: every particle's resting place is a real gold pixel of the piece. */
+/** Every dust particle comes to rest on a real gold pixel of the cut-out photograph. */
 function buildDust(image: HTMLImageElement, count: number): Dust | null {
   const size = 220;
   const canvas = document.createElement("canvas");
@@ -38,7 +49,7 @@ function buildDust(image: HTMLImageElement, count: number): Dust | null {
     dust.tx[i] = (x + Math.random()) / size;
     dust.ty[i] = (y + Math.random()) / size;
     dust.tone[i] = light > .78 ? 4 : light > .62 ? 0 : light > .5 ? 1 : light > .38 ? 2 : 3;
-    // The field: a wide drifting river of gold dust, denser through the middle band.
+    // The field: a slow river of gold across the frame, with a few loose grains everywhere.
     dust.sx[i] = Math.random() * 1.2 - .1;
     const loose = Math.random() < .22;
     dust.sy[i] = loose ? Math.random() : .52 + Math.sin(dust.sx[i] * 4.2 + .6) * .17 + (Math.random() + Math.random() + Math.random() - 1.5) * .11;
@@ -50,65 +61,141 @@ function buildDust(image: HTMLImageElement, count: number): Dust | null {
   return dust;
 }
 
+/** A second, nearer layer: soft out-of-focus lights that drift faster than the dust (depth). */
+function buildBokeh(count: number): Bokeh {
+  const bokeh: Bokeh = { count, x: new Float32Array(count), y: new Float32Array(count), r: new Float32Array(count), depth: new Float32Array(count), alpha: new Float32Array(count), speed: new Float32Array(count) };
+  for (let i = 0; i < count; i += 1) {
+    bokeh.depth[i] = .35 + Math.random() * .65;
+    bokeh.x[i] = Math.random();
+    bokeh.y[i] = Math.random();
+    bokeh.r[i] = 6 + bokeh.depth[i] ** 2 * 34;
+    bokeh.alpha[i] = .05 + Math.random() * .13;
+    bokeh.speed[i] = .004 + Math.random() * .01;
+  }
+  return bokeh;
+}
+
+function lightSprite() {
+  const sprite = document.createElement("canvas");
+  sprite.width = sprite.height = 64;
+  const context = sprite.getContext("2d");
+  if (context) {
+    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, "rgba(255, 226, 160, 1)");
+    gradient.addColorStop(.35, "rgba(232, 190, 110, .55)");
+    gradient.addColorStop(1, "rgba(200, 150, 70, 0)");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 64, 64);
+  }
+  return sprite;
+}
+
+/** Leader line from a feature to the edge of the frame where its label sits (square 0–100 space). */
+const leader = (note: Pick<HeroNote, "x" | "y" | "labelY" | "side">, unit = 1) => {
+  const elbow = note.side === "left" ? 6 : 94, edge = note.side === "left" ? -4 : 104;
+  const at = (value: number) => (value * unit).toFixed(1);
+  return `M${at(note.x)} ${at(note.y)}L${at(elbow)} ${at(note.labelY)}L${at(edge)} ${at(note.labelY)}`;
+};
+
 /**
- * Scene 01 — golden particles assemble the Mehr Crescent Collar.
- * Desktop: HomepageMotion makes the section tall and sticky and sends scroll progress ("rsj:assembly-progress");
- * the scene is fully reversible. Mobile: the assembly plays once on a timer ("rsj:assembly-play").
- * Without either event (no JS, reduced motion, failed motion) the finished frame is shown: piece and collections.
+ * Scene 01 — gold dust assembles a sample design, then the piece is presented and annotated.
+ * Desktop: HomepageMotion makes the section tall with a sticky frame and sends scroll progress
+ * ("rsj:assembly-progress"); every act reverses when scrolling back. Mobile: the assembly plays once
+ * ("rsj:assembly-play"). Without either (no JS, reduced motion, failed motion) a finished still frame shows.
  */
-export function GoldenAssembly({ collections }: { collections: AssemblyCollection[] }) {
+export function GoldenAssembly({ collections, piece }: { collections: AssemblyCollection[]; piece: AssemblyPiece }) {
   const section = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
-  const piece = useRef<HTMLImageElement>(null);
+  const stage = useRef<HTMLElement>(null);
+  const photo = useRef<HTMLImageElement>(null);
   const [failed, setFailed] = useState(false);
 
   // An image that failed before hydration never fires React's onError; check once on mount.
-  useEffect(() => { const image = piece.current; if (image?.complete && !image.naturalWidth) setFailed(true); }, []);
+  useEffect(() => { const image = photo.current; if (image?.complete && !image.naturalWidth) setFailed(true); }, []);
 
   useEffect(() => {
-    const root = section.current, surface = canvas.current, image = piece.current;
-    if (!root || !surface || !image) return;
+    const root = section.current, surface = canvas.current, image = photo.current, figure = stage.current;
+    const frame = surface?.parentElement;
+    if (!root || !surface || !image || !figure || !frame) return;
     const context = surface.getContext("2d");
     if (!context) return;
+
+    const lowEnd = (navigator.hardwareConcurrency || 8) <= 4;
+    const touch = matchMedia("(max-width: 1023px), (hover: none), (pointer: coarse)").matches;
+    const sprite = lightSprite();
     let dust: Dust | null = null;
-    let target = 1, shown = 1, live = false, visible = true, frame = 0, last = performance.now(), playFrom = -1;
+    const bokeh = buildBokeh(touch ? 22 : lowEnd ? 36 : 60);
+    let target = 1, shown = 1, live = false, visible = true, raf = 0, last = performance.now(), playFrom = -1;
     let width = 0, height = 0, ratio = 1;
+    // Pointer: raw position, smoothed position, and the tilt/shine it produces (desktop only).
+    const pointer = { x: -9999, y: -9999, sx: -9999, sy: -9999, inside: false, tiltX: 0, tiltY: 0, shine: 0 };
 
     const resize = () => {
-      ratio = Math.min(devicePixelRatio || 1, 2);
+      ratio = Math.min(devicePixelRatio || 1, lowEnd ? 1.25 : 2);
       width = surface.clientWidth; height = surface.clientHeight;
       surface.width = Math.round(width * ratio); surface.height = Math.round(height * ratio);
+      // How far the piece travels to reach centre stage. Offsets ignore transforms, so this is stable mid-scroll.
+      const centre = figure.offsetLeft + figure.offsetWidth / 2;
+      root.style.setProperty("--focus-dx", `${Math.round(frame.clientWidth / 2 - centre)}px`);
+      // Leaders are drawn in real pixels (a stretched viewBox would distort the draw-in dash).
+      const leaders = figure.querySelector<SVGSVGElement>(".assembly__leaders"), size = leaders?.parentElement?.offsetWidth ?? 0;
+      if (leaders && size) {
+        leaders.setAttribute("viewBox", `0 0 ${size} ${size}`);
+        leaders.querySelectorAll<SVGPathElement>("path").forEach((path) => {
+          const { x, y, labelY, side } = path.dataset;
+          path.setAttribute("d", leader({ x: Number(x), y: Number(y), labelY: Number(labelY), side: side === "left" ? "left" : "right" }, size / 100));
+        });
+      }
     };
 
-    const draw = (p: number, time: number) => {
+    const draw = (p: number, time: number, box: DOMRect, frameBox: DOMRect) => {
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       context.clearRect(0, 0, width, height);
-      if (!dust) return;
-      const fade = 1 - clamp((p - REVEAL_START) / (REVEAL_END - REVEAL_START)) ** 1.4;
-      if (fade <= .01) return;
-      const box = image.getBoundingClientRect(), frameBox = surface.getBoundingClientRect();
-      // Map against the piece's layout box (ignoring the exit scale, which only starts after the dust has gone).
-      const bx = box.left - frameBox.left, by = box.top - frameBox.top, bw = box.width, bh = box.height;
-      const cx = bx + bw / 2, cy = by + bh / 2;
-      const converge = clamp(p / CONVERGE_END);
       context.globalCompositeOperation = "lighter";
-      for (let tone = 0; tone < TONES.length; tone += 1) {
-        context.fillStyle = TONES[tone];
-        for (let i = 0; i < dust.count; i += 1) {
-          if (dust.tone[i] !== tone) continue;
-          const e = easeInOut(clamp((converge - dust.delay[i] * .45) / .55));
-          const drift = 1 - e;
-          const fx = dust.sx[i] * width + Math.sin(time * .00021 + dust.phase[i]) * 16 + ((time * .012 + dust.phase[i] * 40) % 60) - 30;
-          const fy = dust.sy[i] * height + Math.sin(dust.sx[i] * 7 + time * .00047 + dust.phase[i]) * 22;
-          const gx = bx + dust.tx[i] * bw, gy = by + dust.ty[i] * bh;
-          let x = fx + (gx - fx) * e - cx, y = fy + (gy - fy) * e - cy;
-          // Swirl only while travelling: none in the resting field, none once in place.
-          const angle = dust.spin[i] * Math.sin(Math.PI * e) * .8;
-          if (angle) { const c = Math.cos(angle), s = Math.sin(angle); const rx = x * c - y * s; y = x * s + y * c; x = rx; }
-          const twinkle = .55 + .45 * Math.sin(time * .0023 + dust.phase[i] * 3);
-          context.globalAlpha = fade * (drift * (.28 + .7 * twinkle) + e * .95);
-          const size = dust.size[i] * drift + 1.35 * e;
-          context.fillRect(cx + x - size / 2, cy + y - size / 2, size, size);
+
+      // Near layer: soft lights rising with the scroll and leaning away from the cursor.
+      const reveal = span(p, ACT.reveal);
+      const leanX = pointer.inside ? (pointer.sx / width - .5) : 0, leanY = pointer.inside ? (pointer.sy / height - .5) : 0;
+      for (let i = 0; i < bokeh.count; i += 1) {
+        const depth = bokeh.depth[i];
+        const y = ((bokeh.y[i] - time * bokeh.speed[i] * .00006 - p * .55 * depth) % 1 + 1) % 1;
+        const x = bokeh.x[i] + Math.sin(time * .00012 + i) * .01;
+        const radius = bokeh.r[i];
+        context.globalAlpha = bokeh.alpha[i] * (.55 + .45 * (1 - reveal));
+        context.drawImage(sprite, x * width - leanX * depth * 46 - radius, y * (height + 80) - 40 - leanY * depth * 30 - radius, radius * 2, radius * 2);
+      }
+
+      // Far layer: the dust that becomes the piece.
+      const fade = 1 - reveal ** 1.4;
+      if (dust && fade > .01) {
+        const bx = box.left - frameBox.left, by = box.top - frameBox.top, bw = box.width, bh = box.height;
+        const cx = bx + bw / 2, cy = by + bh / 2;
+        const converge = span(p, ACT.converge);
+        const px = pointer.inside ? pointer.sx : -9999, py = pointer.inside ? pointer.sy : -9999;
+        for (let tone = 0; tone < TONES.length; tone += 1) {
+          context.fillStyle = TONES[tone];
+          for (let i = 0; i < dust.count; i += 1) {
+            if (dust.tone[i] !== tone) continue;
+            const e = easeInOut(clamp((converge - dust.delay[i] * .45) / .55));
+            const drift = 1 - e;
+            const fx = dust.sx[i] * width + Math.sin(time * .00021 + dust.phase[i]) * 16 + ((time * .012 + dust.phase[i] * 40) % 60) - 30;
+            const fy = dust.sy[i] * height + Math.sin(dust.sx[i] * 7 + time * .00047 + dust.phase[i]) * 22;
+            const gx = bx + dust.tx[i] * bw, gy = by + dust.ty[i] * bh;
+            let x = fx + (gx - fx) * e - cx, y = fy + (gy - fy) * e - cy;
+            // Swirl only while travelling: none in the resting field, none once in place.
+            const angle = dust.spin[i] * Math.sin(Math.PI * e) * .8;
+            if (angle) { const c = Math.cos(angle), s = Math.sin(angle); const rx = x * c - y * s; y = x * s + y * c; x = rx; }
+            x += cx; y += cy;
+            // Loose dust parts around the cursor, like breath across gold leaf.
+            if (drift > .2) {
+              const dx = x - px, dy = y - py, d2 = dx * dx + dy * dy;
+              if (d2 < 14400 && d2 > 1) { const d = Math.sqrt(d2), push = (1 - d / 120) ** 2 * 30 * drift; x += dx / d * push; y += dy / d * push; }
+            }
+            const twinkle = .55 + .45 * Math.sin(time * .0023 + dust.phase[i] * 3);
+            context.globalAlpha = fade * (drift * (.28 + .7 * twinkle) + e * .95);
+            const size = dust.size[i] * drift + 1.35 * e;
+            context.fillRect(x - size / 2, y - size / 2, size, size);
+          }
         }
       }
       context.globalAlpha = 1;
@@ -116,59 +203,97 @@ export function GoldenAssembly({ collections }: { collections: AssemblyCollectio
     };
 
     const apply = (p: number) => {
-      root.style.setProperty("--converge", String(clamp(p / CONVERGE_END)));
-      root.style.setProperty("--sweep", String(clamp((p - REVEAL_START) / (REVEAL_END - REVEAL_START))));
-      root.style.setProperty("--exit", String(clamp((p - EXIT_START) / (1 - EXIT_START))));
-      const phase = String(phaseOf(p));
+      const noteIn = span(p, ACT.noteIn), noteOut = span(p, ACT.noteOut);
+      const values: Record<string, number> = {
+        "--converge": span(p, ACT.converge), "--sweep": span(p, ACT.reveal), "--copy": 1 - span(p, ACT.copy),
+        "--focus": easeInOut(span(p, ACT.focus)), "--detail": Math.min(noteIn, 1 - noteOut), "--exit": span(p, ACT.exit), "--cue": 1 - clamp(p / .04),
+      };
+      for (const name in values) root.style.setProperty(name, values[name].toFixed(4));
+      root.style.setProperty("--rx", `${pointer.tiltY.toFixed(2)}deg`);
+      root.style.setProperty("--ry", `${pointer.tiltX.toFixed(2)}deg`);
+      root.style.setProperty("--shine", pointer.shine.toFixed(3));
+      const phase = String(PHASES.filter((edge) => p >= edge).length);
       if (root.dataset.phase !== phase) root.dataset.phase = phase;
     };
 
     const tick = (now: number) => {
-      frame = 0;
+      raf = 0;
       const elapsed = Math.min(64, now - last);
       last = now;
-      if (playFrom >= 0) { const t = clamp((now - playFrom) / 3400); target = t * (REVEAL_END + .01); if (t >= 1) playFrom = -1; }
-      // Frame-rate independent glide toward the scroll position: the same feel at 30 or 144 fps.
-      shown += (target - shown) * (1 - Math.pow(.86, elapsed / 16.667));
+      const k = 1 - Math.pow(.86, elapsed / 16.667); // frame-rate independent smoothing
+      if (playFrom >= 0) { const t = clamp((now - playFrom) / 3400); target = t * MOBILE_END; if (t >= 1) playFrom = -1; }
+      shown += (target - shown) * k;
       if (Math.abs(target - shown) < .0004) shown = target;
+      pointer.sx = pointer.sx < -999 ? pointer.x : pointer.sx + (pointer.x - pointer.sx) * k;
+      pointer.sy = pointer.sy < -999 ? pointer.y : pointer.sy + (pointer.y - pointer.sy) * k;
+
+      // Read layout first, then write styles, then draw: no forced layout inside the frame.
+      const frameBox = surface.getBoundingClientRect(), box = image.getBoundingClientRect();
+      const lit = pointer.inside && !touch && span(shown, ACT.reveal) > .5;
+      const aimX = lit ? clamp((pointer.x - (box.left - frameBox.left)) / box.width) : .5;
+      const aimY = lit ? clamp((pointer.y - (box.top - frameBox.top)) / box.height) : .5;
+      pointer.tiltX += ((aimX - .5) * 9 - pointer.tiltX) * k * .6;
+      pointer.tiltY += (-(aimY - .5) * 6 - pointer.tiltY) * k * .6;
+      pointer.shine += ((lit ? 1 : 0) - pointer.shine) * k * .5;
+      root.style.setProperty("--sx", `${(aimX * 100).toFixed(1)}%`);
+      root.style.setProperty("--sy", `${(aimY * 100).toFixed(1)}%`);
       apply(shown);
-      draw(shown, now);
-      const settled = shown === target && playFrom < 0;
-      const dustVisible = shown < REVEAL_END;
-      if (visible && (!settled || dustVisible)) frame = requestAnimationFrame(tick);
+      draw(shown, now, box, frameBox);
+      if (visible && live && !document.hidden) raf = requestAnimationFrame(tick);
     };
-    const wake = () => { if (!frame && live) { last = performance.now(); frame = requestAnimationFrame(tick); } };
+    const wake = () => { if (!raf && live && visible) { last = performance.now(); raf = requestAnimationFrame(tick); } };
 
     const start = () => {
       if (live) return;
       live = true;
       root.dataset.live = "true";
       shown = target = 0;
-      apply(0);
       resize();
+      apply(0);
       wake();
     };
     const onProgress = (event: Event) => { start(); playFrom = -1; target = (event as CustomEvent<number>).detail; wake(); };
     const onPlay = () => { start(); playFrom = performance.now(); wake(); };
-    const onRelease = () => { live = false; playFrom = -1; cancelAnimationFrame(frame); frame = 0; delete root.dataset.live; delete root.dataset.phase; ["--converge", "--sweep", "--exit"].forEach((name) => root.style.removeProperty(name)); context.clearRect(0, 0, surface.width, surface.height); };
+    const onRelease = () => {
+      live = false; playFrom = -1; cancelAnimationFrame(raf); raf = 0;
+      delete root.dataset.live; delete root.dataset.phase;
+      ["--converge", "--sweep", "--copy", "--focus", "--detail", "--exit", "--cue", "--rx", "--ry", "--shine", "--sx", "--sy", "--focus-dx"].forEach((name) => root.style.removeProperty(name));
+      context.clearRect(0, 0, surface.width, surface.height);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (touch || event.pointerType !== "mouse") return;
+      const rect = surface.getBoundingClientRect();
+      pointer.x = event.clientX - rect.left; pointer.y = event.clientY - rect.top; pointer.inside = true;
+      wake();
+    };
+    const onPointerLeave = () => { pointer.inside = false; };
 
     const ready = () => {
-      const lowEnd = (navigator.hardwareConcurrency || 8) <= 4;
-      const count = Math.round((matchMedia("(max-width: 767px)").matches ? 2200 : 5200) * (lowEnd ? .6 : 1));
-      dust = buildDust(image, count);
-      if (live) wake();
+      dust = buildDust(image, Math.round((touch ? 2200 : 5200) * (lowEnd ? .6 : 1)));
+      wake();
     };
     if (image.complete && image.naturalWidth) ready(); else image.addEventListener("load", ready, { once: true });
 
-    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) wake(); });
+    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; wake(); });
     observer.observe(root);
     const onResize = () => { if (live) { resize(); wake(); } };
+    const onVisibility = () => wake();
     root.addEventListener("rsj:assembly-progress", onProgress);
     root.addEventListener("rsj:assembly-play", onPlay);
     root.addEventListener("rsj:assembly-release", onRelease);
+    frame.addEventListener("pointermove", onPointerMove, { passive: true });
+    frame.addEventListener("pointerleave", onPointerLeave);
     window.addEventListener("resize", onResize);
-    return () => { cancelAnimationFrame(frame); observer.disconnect(); image.removeEventListener("load", ready); root.removeEventListener("rsj:assembly-progress", onProgress); root.removeEventListener("rsj:assembly-play", onPlay); root.removeEventListener("rsj:assembly-release", onRelease); window.removeEventListener("resize", onResize); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      cancelAnimationFrame(raf); observer.disconnect(); image.removeEventListener("load", ready);
+      root.removeEventListener("rsj:assembly-progress", onProgress); root.removeEventListener("rsj:assembly-play", onPlay); root.removeEventListener("rsj:assembly-release", onRelease);
+      frame.removeEventListener("pointermove", onPointerMove); frame.removeEventListener("pointerleave", onPointerLeave);
+      window.removeEventListener("resize", onResize); document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
+
+  const mask = { "--cutout": `url("${piece.cutout.small}")` } as CSSProperties;
 
   return <section ref={section} id="entrance" className="assembly home-scene" data-scene="01" data-tone="dark" data-assembly aria-labelledby="entrance-title">
     <div className="assembly__frame">
@@ -177,24 +302,42 @@ export function GoldenAssembly({ collections }: { collections: AssemblyCollectio
       <div className="container assembly__layout">
         <div className="assembly__copy">
           <h1 id="entrance-title"><span data-entrance-line>Crafted to be</span> <span data-entrance-line>remembered.</span></h1>
-          <p className="assembly__intro" data-entrance-line>Scroll, and loose gold gathers into the Mehr Crescent Collar, one of the sample designs in our Design Vault.</p>
+          <p className="assembly__intro" data-entrance-line>Scroll, and loose gold gathers into the {piece.title}, one of the sample designs in our Design Vault.</p>
           <div className="assembly__actions" data-entrance-line>
             <ButtonLink href="/designs">Explore the Design Vault <Icon name="arrow" /></ButtonLink>
             <button type="button" className="home-underlined-link" data-home-action="appointment">Plan a showroom visit</button>
           </div>
+          <p className="assembly__cue" aria-hidden="true"><span />Scroll to gather the gold</p>
         </div>
-        <figure className="assembly__stage">
+        <figure ref={stage} className="assembly__stage">
           {failed
-            ? <div className="assembly__fallback" data-media-failed><em>Mehr Crescent Collar</em><small>The photograph could not be loaded. The Design Vault still lists every sample design.</small></div>
-            : <span className="assembly__piece">
-              {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized transparent WebP cut-out; the canvas samples its pixels */}
-              <img ref={piece} data-hero-image src={PIECE.small} srcSet={`${PIECE.small} 640w, ${PIECE.large} 960w`} sizes="(min-width: 1024px) 46vw, 88vw" width={960} height={960} alt="Mehr Crescent Collar: a wide gold collar of floral filigree with a beaded fringe" fetchPriority="high" decoding="async" onError={() => setFailed(true)} />
-              <span className="assembly__sweep" aria-hidden="true" />
-            </span>}
+            ? <div className="assembly__fallback" data-media-failed><em>{piece.title}</em><small>The photograph could not be loaded. The Design Vault still lists every sample design.</small></div>
+            : <div className="assembly__piece" style={mask}>
+              <div className="assembly__tilt">
+                {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized transparent WebP cut-out; the canvas samples its pixels */}
+                <img ref={photo} data-hero-image src={piece.cutout.small} srcSet={`${piece.cutout.small} 640w, ${piece.cutout.large} 960w`} sizes="(min-width: 1024px) 46vw, 88vw" width={960} height={960} alt={piece.alt} fetchPriority="high" decoding="async" onError={() => setFailed(true)} />
+                <span className="assembly__sweep" aria-hidden="true" />
+                <span className="assembly__shine" aria-hidden="true" />
+              </div>
+              <svg className="assembly__leaders" viewBox="0 0 100 100" aria-hidden="true">
+                {piece.notes.map((note) => <path key={note.id} d={leader(note)} pathLength={1} data-x={note.x} data-y={note.y} data-label-y={note.labelY} data-side={note.side} />)}
+              </svg>
+              {piece.notes.map((note) => <span key={note.id} className="assembly__point" style={{ left: `${note.x}%`, top: `${note.y}%` }} aria-hidden="true" />)}
+              <ul className="assembly__notes" aria-label={`Details of the ${piece.title}`}>
+                {piece.notes.map((note, index) => <li key={note.id} data-side={note.side} style={{ top: `${note.labelY}%`, "--i": index } as CSSProperties}>
+                  <strong>{note.title}</strong><span>{note.text}</span>
+                </li>)}
+              </ul>
+              <div className="assembly__facts">
+                <span className="assembly__facts-code">{piece.code}</span>
+                {piece.facts.map((fact) => <span key={fact}>{fact}</span>)}
+                <Link href={piece.href} prefetch={false}>Open in the Design Vault <Icon name="arrow" /></Link>
+              </div>
+            </div>}
           <figcaption>Sample design, concept image. Not shop stock.</figcaption>
         </figure>
       </div>
-      <ol className="assembly__rail" aria-hidden="true"><li /><li /><li /><li /></ol>
+      <ol className="assembly__rail" aria-hidden="true"><li /><li /><li /><li /><li /></ol>
       <nav className="assembly__collections" aria-label="Browse the Design Vault" style={{ "--tiles": collections.length } as CSSProperties}>
         <ul className="container">
           {collections.map((item) => <li key={item.href}>
