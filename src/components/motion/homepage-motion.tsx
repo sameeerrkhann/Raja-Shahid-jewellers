@@ -22,7 +22,7 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
         await Promise.all([document.fonts.ready, hero?.decode().catch(() => undefined)]);
         if (disposed || current !== generation) return;
         if (!hero?.naturalWidth) { root!.dataset.motionState = "fallback"; return; }
-        const [{ gsap }, { ScrollTrigger }] = await Promise.all([import("gsap"), import("gsap/ScrollTrigger")]);
+        const [{ gsap }, { ScrollTrigger }, { default: Lenis }] = await Promise.all([import("gsap"), import("gsap/ScrollTrigger"), import("lenis")]);
         if (disposed || current !== generation) return;
         gsap.registerPlugin(ScrollTrigger);
         // House easing for reveals: cubic-bezier(0.22, 1, 0.36, 1), a long, quiet settle with no overshoot.
@@ -44,25 +44,28 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
           const viewport = root!.querySelector<HTMLElement>("[data-vault-viewport]")!;
           const track = root!.querySelector<HTMLElement>("[data-vault-track]")!;
           const cleanups: (() => void)[] = [];
+          const assembly = root!.querySelector<HTMLElement>("[data-assembly]");
+          if (assembly && !desktop) assembly.dispatchEvent(new CustomEvent("rsj:assembly-play"));
+          if (assembly) cleanups.push(() => assembly.dispatchEvent(new CustomEvent("rsj:assembly-release")));
 
           gsap.fromTo(root!.querySelectorAll("[data-entrance-line]"), { y: desktop ? 12 : 6, opacity: .9 }, { y: 0, opacity: 1, duration: .6, stagger: .075, ease: "power2.out", clearProps: "transform,opacity" });
 
           if (desktop) {
-            const showcase = root!.querySelector<HTMLElement>("[data-showcase]");
-            const count = Number(showcase?.dataset.count) || 0;
-            if (showcase && count > 1) {
-              // Scene 01: pin the turning vault; scroll progress turns the orbit and snaps to each design.
-              const travel = () => innerHeight * Math.max(1.4, (count - 1) * .3);
-              const showcaseTween = gsap.fromTo(root!.querySelector("[data-hero-visual]"), { scale: 1 }, { scale: 1.08, ease: "none", scrollTrigger: { id: "home-showcase", trigger: showcase, start: () => `top ${headerHeight()}`, end: () => `+=${travel()}`, pin: true, pinSpacing: true, scrub: .4, invalidateOnRefresh: true,
-                snap: { snapTo: 1 / (count - 1), inertia: false, duration: { min: .25, max: .7 }, delay: .12, ease: "power1.inOut" },
-                onUpdate: (self) => showcase.dispatchEvent(new CustomEvent<number>("rsj:showcase-progress", { detail: self.progress })),
-                onRefresh: (self) => { showcase.dataset.pinned = "true"; showcase.dataset.scrollStart = String(self.start); showcase.dataset.scrollEnd = String(self.end); } } });
-              const showcaseTrigger = showcaseTween.scrollTrigger!;
-              const goto = (event: Event) => { const index = (event as CustomEvent<number>).detail; window.scrollTo({ top: showcaseTrigger.start + (index / (count - 1)) * (showcaseTrigger.end - showcaseTrigger.start), behavior: "smooth" }); };
-              showcase.addEventListener("rsj:showcase-goto", goto);
-              cleanups.push(() => { showcase.removeEventListener("rsj:showcase-goto", goto); delete showcase.dataset.pinned; delete showcase.dataset.scrollStart; delete showcase.dataset.scrollEnd; showcase.dispatchEvent(new CustomEvent("rsj:showcase-release")); });
-            } else {
-              gsap.to(root!.querySelector("[data-hero-visual]"), { scale: 1.03, yPercent: 2, ease: "none", scrollTrigger: { trigger: "#entrance", start: "top top", end: "bottom top", scrub: .5 } });
+            // Smooth, weighted scrolling for the cinematic page (desktop pointer only; touch keeps native scrolling).
+            const lenis = new Lenis({ duration: 1.15, smoothWheel: true, easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+            lenis.on("scroll", ScrollTrigger.update);
+            const raf = (time: number) => lenis.raf(time * 1000);
+            gsap.ticker.add(raf);
+            gsap.ticker.lagSmoothing(0);
+            cleanups.push(() => { gsap.ticker.remove(raf); gsap.ticker.lagSmoothing(500, 33); lenis.destroy(); });
+
+            if (assembly) {
+              // Scene 01: the section grows by ~760px and its frame sticks; scroll position is the assembly's progress, both ways.
+              assembly.dataset.scrub = "desktop";
+              ScrollTrigger.create({ id: "home-assembly", trigger: assembly, start: () => `top ${headerHeight()}`, end: "bottom bottom", invalidateOnRefresh: true,
+                onUpdate: (self) => assembly.dispatchEvent(new CustomEvent<number>("rsj:assembly-progress", { detail: self.progress })),
+                onRefresh: (self) => { assembly.dataset.scrollStart = String(self.start); assembly.dataset.scrollEnd = String(self.end); assembly.dispatchEvent(new CustomEvent<number>("rsj:assembly-progress", { detail: self.progress })); } });
+              cleanups.push(() => { delete assembly.dataset.scrub; delete assembly.dataset.scrollStart; delete assembly.dataset.scrollEnd; });
             }
             const worn = root!.querySelector<HTMLElement>("[data-worn-pin]");
             if (worn) {

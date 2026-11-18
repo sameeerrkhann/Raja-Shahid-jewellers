@@ -1,0 +1,95 @@
+/* The demo strip joins the dark hero instead of cutting a pale band between header and stage. */
+.cinematic-home .home-review-strip { position: relative; background: var(--color-obsidian); color: var(--color-dark-muted); }
+.cinematic-home .home-review-strip input { accent-color: var(--color-gold); }
+
+/* Scene 01 — golden particles assemble the Mehr Crescent Collar.
+   Three variables carry the scroll story; their defaults are the finished frame (no JS, reduced motion):
+     --converge 0 → 1  dust gathers into the piece (canvas) and the glow gathers behind it
+     --sweep    0 → 1  the photograph is uncovered behind a travelling band of light
+     --exit     0 → 1  the piece settles back and the collections rise in */
+.assembly { --converge: 1; --sweep: 1; --exit: 1; --frame-h: max(640px, calc(100svh - 76px)); position: relative; background: var(--color-obsidian); color: var(--text); }
+.assembly__frame { position: relative; isolation: isolate; min-height: var(--frame-h); display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; overflow: clip;
+  background: radial-gradient(70% 60% at 68% 46%, #1d1710 0%, var(--color-obsidian) 70%); }
+
+/* Desktop scroll travel (set by HomepageMotion): the section grows, the frame stays put. */
+.assembly[data-scrub="desktop"] { height: calc(var(--frame-h) + 760px); }
+.assembly[data-scrub="desktop"] .assembly__frame { position: sticky; top: 76px; height: var(--frame-h); }
+
+.assembly__dust { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; -webkit-mask-image: linear-gradient(90deg, rgb(0 0 0 / 30%) 0%, rgb(0 0 0 / 45%) 30%, #000 50%); mask-image: linear-gradient(90deg, rgb(0 0 0 / 30%) 0%, rgb(0 0 0 / 45%) 30%, #000 50%); }
+.assembly__glow { position: absolute; z-index: -2; left: 68%; top: 46%; width: min(64vw, 900px); aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%) scale(calc(.55 + var(--converge) * .45));
+  background: radial-gradient(circle, rgb(212 166 74 / 26%) 0%, rgb(212 166 74 / 8%) 38%, transparent 68%); opacity: calc(.25 + var(--converge) * .75); pointer-events: none; }
+
+.assembly__layout { display: grid; grid-template-columns: minmax(300px, 5fr) minmax(0, 7fr); align-items: center; gap: clamp(24px, 4vw, 64px); padding-block: 48px 24px; }
+.assembly__copy h1 { display: flex; flex-direction: column; font-size: clamp(3.6rem, 6.4vw, 6.6rem); line-height: .94; letter-spacing: -.035em; }
+.assembly__intro { margin-top: 28px; max-width: 36ch; font-size: 15px; line-height: 1.8; color: var(--muted); }
+.assembly__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; margin-top: 32px; }
+.assembly__actions .home-underlined-link { background: none; border-inline: 0; border-top: 0; color: inherit; cursor: pointer; }
+
+/* The piece: hidden behind a soft wipe that travels with the band of light. */
+.assembly__stage { margin: 0; display: grid; justify-items: center; gap: 10px; transform: translateY(calc(var(--exit) * -6%)) scale(calc(1 - var(--exit) * .36)); transform-origin: 50% 10%; }
+.assembly__piece { position: relative; display: block; width: min(100%, calc(var(--frame-h) - 130px)); aspect-ratio: 1; }
+.assembly__piece img { width: 100%; height: 100%; object-fit: contain; display: block;
+  filter: drop-shadow(0 30px 50px rgb(0 0 0 / 55%));
+  -webkit-mask-image: linear-gradient(100deg, #000 calc(var(--sweep) * 140% - 30%), transparent calc(var(--sweep) * 140% - 8%));
+          mask-image: linear-gradient(100deg, #000 calc(var(--sweep) * 140% - 30%), transparent calc(var(--sweep) * 140% - 8%)); }
+/* A band of warm light crosses the gold only (masked by the same cut-out), then is gone. */
+.assembly__sweep { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+  -webkit-mask: url("/images/hero/mehr-collar-640.webp") center / contain no-repeat; mask: url("/images/hero/mehr-collar-640.webp") center / contain no-repeat;
+  background: linear-gradient(100deg, transparent calc(var(--sweep) * 140% - 34%), rgb(255 214 140 / 50%) calc(var(--sweep) * 140% - 20%), transparent calc(var(--sweep) * 140% - 6%));
+  opacity: calc(1 - var(--sweep) * var(--sweep)); }
+.assembly__stage figcaption { font-size: 12px; color: var(--muted); opacity: calc(var(--sweep) - var(--exit)); }
+.assembly:not([data-live]) .assembly__stage figcaption { opacity: 1; }
+.assembly__fallback { display: grid; place-items: center; align-content: center; gap: 12px; width: min(100%, 520px); aspect-ratio: 1; border: 1px solid var(--line); border-radius: 50%; text-align: center; padding: 48px; }
+.assembly__fallback em { font-size: 28px; color: var(--color-champagne); }
+.assembly__fallback small { font-size: 12px; color: var(--muted); max-width: 30ch; }
+
+/* Progress: four quiet points, the current phase in gold. Desktop only. */
+.assembly__rail { display: none; }
+.assembly[data-live] .assembly__rail { position: absolute; right: 32px; top: 50%; transform: translateY(-50%); display: grid; gap: 14px; list-style: none; margin: 0; padding: 0; }
+.assembly__rail li { width: 5px; height: 5px; border-radius: 50%; background: rgb(232 213 166 / 25%); transition: background .5s var(--ease-luxe), transform .5s var(--ease-luxe); }
+.assembly[data-phase="0"] .assembly__rail li:nth-child(1), .assembly[data-phase="1"] .assembly__rail li:nth-child(2),
+.assembly[data-phase="2"] .assembly__rail li:nth-child(3), .assembly[data-phase="3"] .assembly__rail li:nth-child(4) { background: var(--color-gold); transform: scale(1.6); }
+
+/* Exit: the collections rise into the bottom of the frame, so the hero ends in somewhere to go. */
+.assembly__collections { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding-bottom: 28px; opacity: var(--exit); transform: translateY(calc((1 - var(--exit)) * 48px)); }
+.assembly[data-live] .assembly__collections { pointer-events: none; }
+.assembly[data-phase="3"] .assembly__collections, .assembly__collections:focus-within { pointer-events: auto; }
+.assembly__collections:focus-within { opacity: 1; transform: none; }
+.assembly__collections ul { list-style: none; margin: 0 auto; padding-block: 0; display: grid; grid-template-columns: repeat(var(--tiles, 4), minmax(0, 1fr)); gap: 14px; }
+.assembly__collections a { display: flex; align-items: center; gap: 16px; padding: 12px 16px 12px 12px; border: 1px solid rgb(232 213 166 / 14%); border-radius: 999px; background: rgb(16 16 17 / 72%); backdrop-filter: blur(6px);
+  transition: border-color .5s var(--ease-luxe), background .5s var(--ease-luxe); }
+.assembly__tile-image { flex: none; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #2a241d; color: var(--color-champagne); }
+.assembly__tile-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease-luxe); }
+.assembly__tile-copy { display: grid; gap: 2px; min-width: 0; }
+.assembly__tile-title { font-family: var(--font-editorial), Georgia, serif; font-size: 22px; line-height: 1.1; }
+.assembly__tile-detail { font-size: 12px; color: var(--muted); }
+@media (hover: hover) and (pointer: fine) {
+  .assembly__collections a:hover { border-color: var(--color-gold); background: rgb(42 36 29 / 85%); }
+  .assembly__collections a:hover .assembly__tile-image img { transform: scale(1.08); }
+}
+.assembly__collections a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+@media (max-width: 1023px) {
+  .assembly__frame { min-height: 0; background: radial-gradient(90% 50% at 50% 52%, #1d1710 0%, var(--color-obsidian) 75%); }
+  .assembly__layout { grid-template-columns: minmax(0, 1fr); gap: 12px; padding-block: 40px 8px; }
+  .assembly__layout > * { min-width: 0; }
+  .assembly[data-live] .assembly__rail { display: none; }
+  .assembly__glow { left: 50%; top: 58%; width: 120vw; }
+  .assembly__stage { transform: none; }
+  .assembly__piece { width: min(100%, 520px); }
+  /* Collections stay in the flow on touch screens: always visible, swipeable. */
+  .assembly__collections { position: relative; opacity: 1; transform: none; padding-bottom: 36px; }
+  .assembly[data-live] .assembly__collections { pointer-events: auto; }
+  .assembly__collections ul { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; padding-bottom: 6px; scrollbar-width: none; }
+  .assembly__collections li { flex: 0 0 auto; scroll-snap-align: start; }
+}
+@media (max-width: 767px) {
+  .assembly__copy h1 { font-size: clamp(3rem, 13vw, 3.8rem); }
+  .assembly__intro { margin-top: 18px; font-size: 14px; }
+  .assembly__actions { margin-top: 22px; gap: 18px; }
+  .assembly__collections a { padding: 8px 14px 8px 8px; gap: 12px; }
+  .assembly__tile-image { width: 44px; height: 44px; }
+  .assembly__tile-title { font-size: 19px; }
+}
+@media (prefers-reduced-motion: reduce) { .assembly__rail li, .assembly__tile-image img { transition: none; } }
+@media (max-width: 1023px) { .assembly__dust { -webkit-mask-image: none; mask-image: none; } }

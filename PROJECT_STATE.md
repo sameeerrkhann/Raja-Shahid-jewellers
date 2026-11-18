@@ -257,6 +257,12 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-18 — Claude (Saad's session) — Golden Particles Assembly hero
+- Branch `saad-works-customer-website`. Task S-11. Team brief: placement under navigation, scroll-scrubbed and reversible, 500–800px desktop travel, ends in collections, mobile-adapted, reduced-motion fallback.
+- Built with canvas 2D + GSAP ScrollTrigger + Lenis 1.3.27 (MIT, new dependency). Particle targets are sampled from a transparent cut-out of sample design RSJ-D001 (`public/images/hero/`, derived from the existing AI concept image). No 3D assets, no paid generation.
+- Removed: showcase orbit hero and its viewer (`showcase-hero.tsx`, `showcase-viewer.tsx`, `showcase.css`). Desktop pins now 3.
+- Verified: typecheck, lint, build, Playwright 81/81 (Chromium headless). Not measured on real devices or throttled CPU.
+
 ### 2026-11-18 — Claude (Saad's session) — Worn story, craft loupe, real category samples, lighter header
 - Branch `saad-works-customer-website` (not main). Owner: Saad. Tasks S-07…S-10 in `TEAM_TASKS.md`.
 - Added: worn story scene (`#worn`, fourth desktop pin), craft loupe, category gallery with published sample counts and design links, lighter header, removal of numbered section labels, collections grid of 4:5 frames, reveal/hover/CTA motion per Saad's brief.

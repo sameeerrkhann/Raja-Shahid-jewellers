@@ -24,9 +24,6 @@ export function WornStory({ items }: { items: ShowcaseItem[] }) {
   const lockedUntil = useRef(0);
 
   useEffect(() => {
-    // The hero reports every piece it turns to; follow it, except right after an explicit choice,
-    // when the smooth scroll down through the hero would otherwise turn the orbit past it.
-    const follow = (event: Event) => { if (performance.now() > lockedUntil.current) setIndex((event as CustomEvent<number>).detail); };
     const wear = (event: Event) => {
       lockedUntil.current = performance.now() + 2200;
       setIndex((event as CustomEvent<number>).detail);
@@ -38,9 +35,8 @@ export function WornStory({ items }: { items: ShowcaseItem[] }) {
       const top = start && end ? start + (end - start) * .82 : element.getBoundingClientRect().top + window.scrollY - header;
       window.scrollTo({ top, behavior: reducedMotion() ? "auto" : "smooth" });
     };
-    window.addEventListener("rsj:showcase-active", follow);
     window.addEventListener("rsj:wear", wear);
-    return () => { window.removeEventListener("rsj:showcase-active", follow); window.removeEventListener("rsj:wear", wear); };
+    return () => { window.removeEventListener("rsj:wear", wear); };
   }, []);
 
   const item = items[index];
@@ -74,7 +70,7 @@ export function WornStory({ items }: { items: ShowcaseItem[] }) {
         </dl>
         <div className="worn__actions">
           <ButtonLink href={item.href}>View in the Design Vault <Icon name="arrow" /></ButtonLink>
-          <a className="home-underlined-link" href="#entrance">Turn the vault again</a>
+          <a className="home-underlined-link" href="/designs">Browse every sample design</a>
         </div>
         <div className="worn__switch" role="group" aria-label="Choose a piece to see worn">
           {items.map((entry, position) => <button key={entry.id} type="button" aria-pressed={position === index} aria-label={entry.title} onClick={() => { lockedUntil.current = performance.now() + 600; setIndex(position); }}>

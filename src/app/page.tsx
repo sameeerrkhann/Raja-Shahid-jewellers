@@ -3,26 +3,35 @@ import { HomeExperience } from "@/components/home/home-experience";
 import { EditorialImage } from "@/components/home/editorial-image";
 import { JewelleryDrawing } from "@/components/home/jewellery-drawing";
 import { VaultGallery } from "@/components/home/vault-gallery";
-import { ShowcaseHero } from "@/components/home/showcase-hero";
+import { GoldenAssembly, type AssemblyCollection } from "@/components/home/golden-assembly";
 import { WornStory } from "@/components/home/worn-story";
 import { CraftLoupe } from "@/components/home/craft-loupe";
 import { categorySamples, showcaseItems } from "@/lib/catalogue/showcase";
+import { categoryLabel } from "@/config/catalogue";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import "./home.css";
-import "./showcase.css";
+import "lenis/dist/lenis.css";
+import "./assembly.css";
 import "./worn.css";
 
 export const metadata: Metadata = {
   title: { absolute: "Raja Shahid Jewellers — Beyond the Moment" },
-  description: "The provisional Royal Gold Atelier: turn through sample jewellery designs, bridal inspiration and the future AURIA atelier. Customer website demo with concept imagery, not actual stock.",
+  description: "The provisional Royal Gold Atelier: watch gold gather into a sample design, then browse sample jewellery, bridal inspiration and the future AURIA atelier. Customer website demo with concept imagery, not actual stock.",
   robots: { index: false, follow: false },
 };
 
 export default function Home() {
   const items = showcaseItems();
+  const samples = categorySamples();
+  const total = Object.values(samples).reduce((sum, entry) => sum + entry.count, 0);
+  // Only categories with published sample images; the last tile is the whole vault.
+  const collections: AssemblyCollection[] = [
+    ...Object.entries(samples).map(([slug, entry]) => ({ href: `/designs?category=${slug}`, title: categoryLabel(slug), detail: `${entry.count} sample ${entry.count === 1 ? "design" : "designs"}`, image: entry.images[0]?.src ?? null })),
+    { href: "/designs", title: "All designs", detail: `${total} with images, more in preparation`, image: null },
+  ];
   return <HomeExperience>
-    <ShowcaseHero items={items} />
+    <GoldenAssembly collections={collections} />
     <WornStory items={items} />
     <section id="craft" className="home-craft home-scene" data-scene="02" aria-labelledby="craft-title"><CraftLoupe /></section>
     <section id="bridal" className="home-bridal home-scene" data-scene="03" data-tone="dark" aria-labelledby="bridal-title">

@@ -25,7 +25,7 @@ test("homepage has six honest connected scenes and proper metadata", async ({ pa
   await ready(page);
   await expect(page).toHaveURL(/\/$/);
   await expect(page).toHaveTitle("Raja Shahid Jewellers — Beyond the Moment");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Beyond the moment.");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Crafted to be remembered.");
   await expect(page.locator("[data-scene]")).toHaveCount(7);
   await expect(page.getByText("Illustrative rate preview · Not live")).toBeVisible();
   await expect(page.getByText(/Hand-authored illustration → reference photograph/)).toBeVisible();
@@ -60,10 +60,10 @@ for (const width of [320, 375, 390, 768, 1024, 1440]) {
   });
 }
 
-test("four bounded pins (showcase, worn story, craft, vault) and horizontal gallery controls", async ({ page }) => {
+test("three bounded pins (worn story, craft, vault) and horizontal gallery controls", async ({ page }) => {
   await ready(page);
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "desktop");
-  await expect(page.locator(".pin-spacer")).toHaveCount(4);
+  await expect(page.locator(".pin-spacer")).toHaveCount(3);
   await expect(page.locator("#vault")).toHaveAttribute("data-scroll-start", /\d/);
   const travel = await page.locator("[data-pin-travel]").evaluateAll((elements) => elements.reduce((total, element) => total + Number((element as HTMLElement).dataset.pinTravel), 0));
   expect(travel).toBeLessThanOrEqual(1802);
@@ -126,7 +126,7 @@ test("future AURIA and enquiry CTAs explain availability without submissions", a
 
 test("OS and site reduced-motion preferences remove pins and retain all categories", async ({ page }) => {
   await ready(page);
-  await expect(page.locator(".pin-spacer")).toHaveCount(4);
+  await expect(page.locator(".pin-spacer")).toHaveCount(3);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "reduced");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
@@ -136,24 +136,24 @@ test("OS and site reduced-motion preferences remove pins and retain all categori
   await page.getByRole("checkbox", { name: "Reduce motion", exact: true }).uncheck();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(page.locator(".pin-spacer")).toHaveCount(4);
+  await expect(page.locator(".pin-spacer")).toHaveCount(3);
   await page.getByRole("checkbox", { name: "Reduce motion", exact: true }).check();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
 });
 
 test("resize and short landscape clean up pins without duplicates", async ({ page }) => {
   await ready(page);
-  await expect(page.locator(".pin-spacer")).toHaveCount(4);
+  await expect(page.locator(".pin-spacer")).toHaveCount(3);
   for (const [width, height] of [[390, 844], [1024, 600], [1440, 1000]]) {
     await page.setViewportSize({ width, height });
-    await expect(page.locator(".pin-spacer")).toHaveCount(width === 1440 ? 4 : 0);
+    await expect(page.locator(".pin-spacer")).toHaveCount(width === 1440 ? 3 : 0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   }
 });
 
 test("client navigation removes homepage motion and restores it on return", async ({ page }) => {
   await ready(page);
-  await expect(page.locator(".pin-spacer")).toHaveCount(4);
+  await expect(page.locator(".pin-spacer")).toHaveCount(3);
   await page.evaluate(() => { document.documentElement.dataset.routeSentinel = "same-document"; });
   await page.getByRole("link", { name: "Design preview", exact: true }).click();
   await expect(page).toHaveURL(/\/design-preview$/);
@@ -161,7 +161,7 @@ test("client navigation removes homepage motion and restores it on return", asyn
   await expect(page.locator("html")).toHaveAttribute("data-route-sentinel", "same-document");
   await page.getByRole("link", { name: "Raja Shahid JEWELLERS", exact: true }).click();
   await expect(page).toHaveURL(/\/#top$/);
-  await expect(page.locator(".pin-spacer")).toHaveCount(4);
+  await expect(page.locator(".pin-spacer")).toHaveCount(3);
   await expect(page.locator("html")).not.toHaveAttribute("data-reduce-motion");
 });
 
@@ -173,21 +173,22 @@ test("no-JavaScript story and native links remain readable", async ({ browser })
     await expect(page.locator("[data-scene]")).toHaveCount(7);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.locator(".pin-spacer")).toHaveCount(0);
-    await page.getByRole("link", { name: "Enter the Design Vault" }).click();
-    await expect(page).toHaveURL(/#vault$/);
+    await expect(page.locator("#entrance").getByRole("link", { name: /^Bridal/ })).toBeVisible();
+    await page.getByRole("link", { name: "Explore the Design Vault" }).click();
+    await expect(page).toHaveURL(/\/designs$/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     await page.screenshot({ path: `${screenshotFolder}/no-js-mobile.png`, fullPage: true });
   } finally { await context.close(); }
 });
 
 test("missing hero media becomes an honest designed fallback", async ({ page }) => {
-  // The showcase's lead design is the hero media; its failure must disable pins and show a designed fallback.
-  await page.route("**/images/catalogue/design-001*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
+  // The assembled piece is the hero media; its failure must disable motion and show a designed fallback.
+  await page.route("**/images/hero/mehr-collar*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
   await ready(page);
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "fallback");
-  await expect(page.locator(".home-hero [data-media-failed]")).toBeVisible();
+  await expect(page.locator("#entrance [data-media-failed]")).toBeVisible();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Enter the Design Vault" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Explore the Design Vault" })).toBeVisible();
   await page.screenshot({ path: `${screenshotFolder}/missing-media.png` });
 });
 
@@ -205,10 +206,10 @@ for (const width of [390, 1440]) {
 
 test("scrubbed entrance and labelled sketch/reference reveal change with scroll", async ({ page }) => {
   await ready(page);
-  const scale = () => page.locator("[data-hero-visual]").evaluate((element) => new DOMMatrix(getComputedStyle(element).transform).a);
-  const before = await scale();
-  await page.evaluate(() => window.scrollTo({ top: 450, behavior: "instant" }));
-  await expect.poll(scale).toBeGreaterThan(before + .005);
+  const sweep = () => page.locator("#entrance").evaluate((element) => Number(getComputedStyle(element).getPropertyValue("--sweep")));
+  await expect.poll(sweep).toBeLessThan(.05);
+  await page.locator("#entrance").evaluate((element) => { const { scrollStart, scrollEnd } = (element as HTMLElement).dataset; window.scrollTo({ top: Number(scrollStart) + (Number(scrollEnd) - Number(scrollStart)) * .64, behavior: "instant" }); });
+  await expect.poll(sweep).toBeGreaterThan(.3);
   await page.screenshot({ path: `${screenshotFolder}/entrance-transition-1440.png` });
   const geometry = await page.locator("#auria").evaluate((element) => { const r = element.getBoundingClientRect(); const top = r.top + scrollY; return { start: top - innerHeight * .7, end: top + r.height / 2 - innerHeight * .4 }; });
   const masks: string[] = [];
@@ -246,40 +247,35 @@ test("cold local home transfer and animation profiling evidence", async ({ page 
   expect(initial.cls).toBeLessThanOrEqual(.1);
 });
 
-test("showcase orbit turns, describes each sample design and opens a zoomable closer look", async ({ page }) => {
+test("golden assembly scrubs both ways and ends in real collections", async ({ page }) => {
   await ready(page);
-  const title = page.locator(".showcase__title");
-  await expect(title).toHaveText("Mehr Crescent Collar");
-  await expect(page.locator(".showcase__description")).toBeVisible();
-  await page.locator("#entrance").getByRole("button", { name: "Next design", exact: true }).click();
-  await expect(title).toHaveText("Gulzar Medallion Haar");
-  await expect(page.locator("#entrance")).toHaveAttribute("data-pinned", "true");
-  await page.waitForTimeout(1200);
-  await page.getByRole("button", { name: /Look closer/ }).first().click();
-  const dialog = page.getByRole("dialog", { name: "Gulzar Medallion Haar" });
-  await expect(dialog).toBeVisible();
-  await expect(dialog.getByText(/not real stock or a manufacturing promise/)).toBeVisible();
-  const zoom = dialog.getByRole("button", { name: "Zoom in to look closer" });
-  await zoom.click();
-  await expect(dialog.getByRole("button", { name: "Zoom out" })).toHaveAttribute("aria-pressed", "true");
-  await dialog.getByRole("button", { name: "Next design", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "Noor Lattice Choker" })).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const hero = page.locator("#entrance");
+  await expect(hero).toHaveAttribute("data-live", "true");
+  await expect(hero).toHaveAttribute("data-phase", "0");
+  const range = await hero.evaluate((element) => [Number((element as HTMLElement).dataset.scrollStart), Number((element as HTMLElement).dataset.scrollEnd)]);
+  expect(range[1] - range[0]).toBeGreaterThanOrEqual(500);
+  expect(range[1] - range[0]).toBeLessThanOrEqual(800);
+  const exit = () => hero.evaluate((element) => Number(getComputedStyle(element).getPropertyValue("--exit")));
+  await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[1]);
+  await expect(hero).toHaveAttribute("data-phase", "3");
+  await expect.poll(exit).toBeGreaterThan(.95);
+  await page.screenshot({ path: `${screenshotFolder}/assembly-end-1440.png` });
+  await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[0] + (range[1] - range[0]) * .3);
+  await expect(hero).toHaveAttribute("data-phase", "1");
+  await expect.poll(exit).toBeLessThan(.05);
+  await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[1]);
+  await expect(hero).toHaveAttribute("data-phase", "3");
+  await hero.getByRole("link", { name: /^Rings/ }).click();
+  await expect(page).toHaveURL(/\/designs\?category=rings$/);
 });
 
-test("mobile showcase turns by swipe without pins and keeps product copy readable", async ({ page }) => {
+test("mobile assembly plays without pins and keeps collections reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await ready(page);
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
-  const title = page.locator(".showcase__title");
-  await expect(title).toHaveText("Mehr Crescent Collar");
-  const stage = await page.locator(".showcase__stage").boundingBox();
-  await page.mouse.move(stage!.x + stage!.width * .75, stage!.y + stage!.height * .45);
-  await page.mouse.down();
-  await page.mouse.move(stage!.x + stage!.width * .25, stage!.y + stage!.height * .45, { steps: 8 });
-  await page.mouse.up();
-  await expect(title).not.toHaveText("Mehr Crescent Collar");
-  await expect(page.locator(".showcase__description")).toBeVisible();
+  const hero = page.locator("#entrance");
+  await expect(hero).not.toHaveAttribute("data-scrub", /./);
+  await expect.poll(() => hero.evaluate((element) => Number(getComputedStyle(element).getPropertyValue("--sweep"))), { timeout: 8000 }).toBeGreaterThan(.95);
+  await expect(hero.getByRole("link", { name: /^Bridal/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 });
