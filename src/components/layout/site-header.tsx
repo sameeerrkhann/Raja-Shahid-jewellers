@@ -26,7 +26,7 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", update);
   }, []);
   // Desktop shows three curated destinations; the full chapter list stays in the menu dialog.
-  const primary = isPreview ? previewNavigation.slice(0, 3) : [{ label: "Design Vault", href: "/designs" }, { label: "Collections", href: "/collections" }, { label: "The craft", href: "/#craft" }];
+  const primary = isPreview ? previewNavigation.slice(0, 3) : [{ label: "Design Vault", href: "/designs" }, { label: "Collections", href: "/collections" }, { label: "Bridal edit", href: "/collections/the-bridal-edit" }];
   const inputRef = useRef<HTMLInputElement>(null);
   const matches = referenceStudies.filter((study) => `${study.title} ${study.category}`.toLowerCase().includes(query.trim().toLowerCase()));
 

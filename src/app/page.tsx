@@ -4,16 +4,13 @@ import { EditorialImage } from "@/components/home/editorial-image";
 import { JewelleryDrawing } from "@/components/home/jewellery-drawing";
 import { VaultGallery } from "@/components/home/vault-gallery";
 import { GoldenAssembly, type AssemblyCollection } from "@/components/home/golden-assembly";
-import { WornStory } from "@/components/home/worn-story";
-import { CraftLoupe } from "@/components/home/craft-loupe";
-import { categorySamples, showcaseItems } from "@/lib/catalogue/showcase";
+import { categorySamples } from "@/lib/catalogue/showcase";
 import { categoryLabel } from "@/config/catalogue";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import "./home.css";
 import "lenis/dist/lenis.css";
 import "./assembly.css";
-import "./worn.css";
 
 export const metadata: Metadata = {
   title: { absolute: "Raja Shahid Jewellers — Beyond the Moment" },
@@ -22,7 +19,6 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  const items = showcaseItems();
   const samples = categorySamples();
   const total = Object.values(samples).reduce((sum, entry) => sum + entry.count, 0);
   // Only categories with published sample images; the last tile is the whole vault.
@@ -32,8 +28,6 @@ export default function Home() {
   ];
   return <HomeExperience>
     <GoldenAssembly collections={collections} />
-    <WornStory items={items} />
-    <section id="craft" className="home-craft home-scene" data-scene="02" aria-labelledby="craft-title"><CraftLoupe /></section>
     <section id="bridal" className="home-bridal home-scene" data-scene="03" data-tone="dark" aria-labelledby="bridal-title">
       <div className="home-bridal__image-wrap"><EditorialImage src="/images/editorial/floral-necklace.jpg" alt="Floral necklace used as bridal mood reference rather than an offered product" fill sizes="(max-width: 767px) 100vw, 65vw" quality={85} className="home-bridal__photo" data-bridal-media /><span className="home-bridal__arch" aria-hidden="true" /></div>
       <div className="container home-bridal__content"><div><h2 id="bridal-title" data-home-reveal>A promise.<br /><em>Beautifully</em><br />kept.</h2><p className="home-bridal__intro" data-home-reveal>For the beginning of a new story.<br />For everything you carry into it.</p><a className="home-underlined-link" href="#vault">Explore the bridal direction <Icon name="arrow" /></a></div><p className="home-bridal__caption">Reference styling only. No bridal inventory,<br />heritage date or manufacturing promise is asserted.</p></div><span className="home-bridal__folio" aria-hidden="true">III</span>

@@ -39,7 +39,6 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
           const desktop = Boolean(context.conditions?.desktop);
           root!.dataset.motionState = desktop ? "desktop" : "mobile";
           const headerHeight = () => document.querySelector(".site-header")?.getBoundingClientRect().height ?? 108;
-          const craft = root!.querySelector<HTMLElement>("[data-craft-pin]")!;
           const vault = root!.querySelector<HTMLElement>("[data-vault-pin]")!;
           const viewport = root!.querySelector<HTMLElement>("[data-vault-viewport]")!;
           const track = root!.querySelector<HTMLElement>("[data-vault-track]")!;
@@ -67,21 +66,6 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
                 onRefresh: (self) => { assembly.dataset.scrollStart = String(self.start); assembly.dataset.scrollEnd = String(self.end); assembly.dispatchEvent(new CustomEvent<number>("rsj:assembly-progress", { detail: self.progress })); } });
               cleanups.push(() => { delete assembly.dataset.scrub; delete assembly.dataset.scrollStart; delete assembly.dataset.scrollEnd; });
             }
-            const worn = root!.querySelector<HTMLElement>("[data-worn-pin]");
-            if (worn) {
-              // Scene 01b: the frame opens, the chosen piece travels to where it is worn, then the details arrive.
-              gsap.timeline({ scrollTrigger: { id: "home-worn", trigger: worn, start: () => `top ${headerHeight()}`, end: () => `+=${innerHeight * 1.1}`, pin: true, pinSpacing: true, scrub: .5, invalidateOnRefresh: true,
-                onRefresh: (self) => { worn.dataset.scrollStart = String(self.start); worn.dataset.scrollEnd = String(self.end); } } })
-                .fromTo(worn, { "--open": 0, "--travel": 1 }, { "--open": 1, "--travel": 0, ease: "none", duration: .55 })
-                .fromTo(worn, { "--reveal": 0 }, { "--reveal": 1, ease: "none", duration: .3 }, .5)
-                .to({}, { duration: .2 });
-              cleanups.push(() => { delete worn.dataset.scrollStart; delete worn.dataset.scrollEnd; worn.style.removeProperty("--open"); worn.style.removeProperty("--travel"); worn.style.removeProperty("--reveal"); });
-            }
-            // Scene 02: while pinned, scroll walks the loupe through its three details.
-            let craftStop = -1;
-            ScrollTrigger.create({ id: "home-craft", trigger: craft, start: () => `top ${headerHeight()}`, end: () => `+=${innerHeight * .8}`, pin: true, pinSpacing: true, invalidateOnRefresh: true,
-              onRefresh: (self) => { craft.dataset.pinTravel = String(self.end - self.start); },
-              onUpdate: (self) => { const next = Math.min(2, Math.floor(self.progress * 3)); if (next !== craftStop) { craftStop = next; craft.dispatchEvent(new CustomEvent<number>("rsj:craft-stop", { detail: next })); } } });
             gsap.fromTo(root!.querySelector("[data-bridal-media]"), { yPercent: -2, scale: 1.03 }, { yPercent: 2, scale: 1, ease: "none", scrollTrigger: { trigger: "#bridal", start: "top bottom", end: "bottom top", scrub: .6 } });
             const overflow = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
             if (overflow() > 0) {
@@ -117,7 +101,7 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
           const refresh = () => { clearTimeout(timer); timer = setTimeout(() => ScrollTrigger.refresh(), 160); };
           window.addEventListener("resize", refresh);
           refresh();
-          return () => { clearTimeout(timer); window.removeEventListener("resize", refresh); cleanups.forEach((fn) => fn()); delete craft.dataset.pinTravel; };
+          return () => { clearTimeout(timer); window.removeEventListener("resize", refresh); cleanups.forEach((fn) => fn()); };
         }, root!);
       } catch {
         removeMotion();

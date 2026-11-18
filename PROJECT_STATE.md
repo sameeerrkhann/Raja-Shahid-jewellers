@@ -257,6 +257,13 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-18 — Claude (Saad's session) — Step 1: remove craft/worn scenes, add reference model photos
+- Agreed six-step plan recorded in `TEAM_TASKS.md` (S-12…S-17). Step 1 done.
+- Removed `craft-loupe.tsx`, `worn-story.tsx`, `wear-figure.tsx`, `worn.css`, `on-model.ts`; homepage scenes 5, desktop pins 1 (vault).
+- Added six Pexels photos (Pexels License, credits in `src/data/demo/model-photography.ts`). They are reference photography of jewellery not made by the shop and must be labelled as such and replaced before launch. Higgsfield could not be used (0 credits; free generations unavailable through this connector).
+- Also in this session: shadcn/ui added by Saad; its tokens were namespaced so they do not override the site's `--muted`/`--accent`.
+- Verified: typecheck, lint, build, Playwright 81/81.
+
 ### 2026-11-18 — Claude (Saad's session) — Golden Particles Assembly hero
 - Branch `saad-works-customer-website`. Task S-11. Team brief: placement under navigation, scroll-scrubbed and reversible, 500–800px desktop travel, ends in collections, mobile-adapted, reduced-motion fallback.
 - Built with canvas 2D + GSAP ScrollTrigger + Lenis 1.3.27 (MIT, new dependency). Particle targets are sampled from a transparent cut-out of sample design RSJ-D001 (`public/images/hero/`, derived from the existing AI concept image). No 3D assets, no paid generation.

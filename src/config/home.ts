@@ -9,7 +9,6 @@ export const homeCategories = [
 ] as const;
 
 export const homeNavigation = [
-  { label: "The craft", href: "/#craft" },
   { label: "Design Vault", href: "/designs" },
   { label: "Category directions", href: "/#vault" },
   { label: "Bridal heritage", href: "/#bridal" },
