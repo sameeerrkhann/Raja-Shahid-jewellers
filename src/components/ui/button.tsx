@@ -10,3 +10,6 @@ export function Button({ variant = "gold", className = "", type = "button", ...p
 export function ButtonLink({ variant = "gold", className = "", ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & Shared & { href: string }) {
   return <a className={`button button--${variant} ${className}`} {...props} />;
 }
+
+// shadcn/ui components import `buttonVariants` from this path; the shadcn Button itself is in ./shadcn-button.
+export { buttonVariants } from "./shadcn-button";

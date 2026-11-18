@@ -1,5 +1,9 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 120px; }
@@ -275,3 +279,17 @@ section, article { scroll-margin-top: 120px; }
 }
 html[data-reduce-motion="true"], html[data-reduce-motion="true"] * { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 html[data-reduce-motion="true"] .product-card__image:hover img, html[data-reduce-motion="true"] .collection-card:hover img { transform: none; }
+
+/* shadcn/ui tokens. The site's design system already owns --muted and --accent (text colours), so shadcn's
+   surface colours for those two roles are renamed --ui-muted / --ui-accent. Values follow the house palette. */
+@theme inline { --font-heading: var(--font-editorial), Georgia, serif; --font-sans: var(--font-interface), Arial, sans-serif; --color-sidebar-ring: var(--sidebar-ring); --color-sidebar-border: var(--sidebar-border); --color-sidebar-accent-foreground: var(--sidebar-accent-foreground); --color-sidebar-accent: var(--sidebar-accent); --color-sidebar-primary-foreground: var(--sidebar-primary-foreground); --color-sidebar-primary: var(--sidebar-primary); --color-sidebar-foreground: var(--sidebar-foreground); --color-sidebar: var(--sidebar); --color-chart-5: var(--chart-5); --color-chart-4: var(--chart-4); --color-chart-3: var(--chart-3); --color-chart-2: var(--chart-2); --color-chart-1: var(--chart-1); --color-ring: var(--ring); --color-input: var(--input); --color-border: var(--border); --color-destructive: var(--destructive); --color-accent-foreground: var(--accent-foreground); --color-accent: var(--ui-accent); --color-muted-foreground: var(--muted-foreground); --color-muted: var(--ui-muted); --color-secondary-foreground: var(--secondary-foreground); --color-secondary: var(--secondary); --color-primary-foreground: var(--primary-foreground); --color-primary: var(--primary); --color-popover-foreground: var(--popover-foreground); --color-popover: var(--popover); --color-card-foreground: var(--card-foreground); --color-card: var(--card); --color-foreground: var(--foreground); --color-background: var(--background); --radius-sm: calc(var(--radius) * 0.6); --radius-md: calc(var(--radius) * 0.8); --radius-lg: var(--radius); --radius-xl: calc(var(--radius) * 1.4); --radius-2xl: calc(var(--radius) * 1.8); --radius-3xl: calc(var(--radius) * 2.2); --radius-4xl: calc(var(--radius) * 2.6); }
+
+:root { --background: #f6f1e8; --foreground: #101011; --card: #fbf8f2; --card-foreground: #101011; --popover: #fbf8f2; --popover-foreground: #101011; --primary: #101011; --primary-foreground: #f6f1e8; --secondary: #eee7dc; --secondary-foreground: #101011; --ui-muted: #eee7dc; --muted-foreground: #68625b; --ui-accent: #e8d5a6; --accent-foreground: #101011; --destructive: oklch(0.577 0.245 27.325); --border: rgb(16 16 17 / 19%); --input: rgb(16 16 17 / 24%); --ring: #c5a15b; --chart-1: #c5a15b; --chart-2: #755628; --chart-3: #5b202d; --chart-4: #b9b2a7; --chart-5: #68625b; --radius: 0.25rem; --sidebar: #fbf8f2; --sidebar-foreground: #101011; --sidebar-primary: #101011; --sidebar-primary-foreground: #f6f1e8; --sidebar-accent: #e8d5a6; --sidebar-accent-foreground: #101011; --sidebar-border: rgb(16 16 17 / 19%); --sidebar-ring: #c5a15b; }
+
+.dark { --background: #101011; --foreground: #f6f1e8; --card: #19171a; --card-foreground: #f6f1e8; --popover: #19171a; --popover-foreground: #f6f1e8; --primary: #e8d5a6; --primary-foreground: #101011; --secondary: #2a241d; --secondary-foreground: #f6f1e8; --ui-muted: #2a241d; --muted-foreground: #b9b2a7; --ui-accent: #2a241d; --accent-foreground: #f6f1e8; --destructive: oklch(0.704 0.191 22.216); --border: rgb(232 213 166 / 18%); --input: rgb(232 213 166 / 24%); --ring: #c5a15b; --sidebar: #19171a; --sidebar-foreground: #f6f1e8; --sidebar-primary: #e8d5a6; --sidebar-primary-foreground: #101011; --sidebar-accent: #2a241d; --sidebar-accent-foreground: #f6f1e8; --sidebar-border: rgb(232 213 166 / 18%); --sidebar-ring: #c5a15b; }
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
+  html { @apply font-sans; }
+}
