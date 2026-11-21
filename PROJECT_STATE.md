@@ -257,6 +257,18 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-22 — Claude (Saad's session) — Long-scroll homepage showcase and try-on (S-20)
+- Saad reviewed three prototype artifacts (reference reels: a fragrance, a chocolate and a donut scroll site; his own Google Flow ring video) and asked for this direction. The Golden Assembly hero (particles) and its caption bands are removed.
+- New homepage opening (`src/components/home/scroll-showcase.tsx`, `src/app/showcase.css`, config in `src/config/showcase.ts`):
+  - 01 ring film: 95 frames from Saad's Google Flow concept video scrubbed by scroll (blended frames, eased glide, forward-back-forward), big outlined wordmark parting, camera into the stone. Labelled "Concept video made with Google Flow. Not shop stock." Frames load every eighth first, the rest once scrolling starts.
+  - 02 collection arc: five sample pieces as cut-outs on a 3D coverflow; centred or tapped piece is chosen.
+  - 03 lens: dive into the chosen piece, depth blur, light sweep, notes on visible features, catalogue facts, and a product dropdown that swaps the piece in place.
+- 04 Try it on (`src/components/home/try-on.tsx`): Women | Men toggle, all products with images grouped by category, pieces placed where they are worn, view zooms and names the piece, "See the whole look". Models are AI-generated in Saad's Figma (file "RSJ try-on models"); pieces are composited cut-outs, labelled "AI-generated model · preview placement · sample designs". Tikkas, earrings, chains, men's karas and watches show as "Coming with photographs".
+- Closing pills replace the large collection tiles ("Where would you like to begin?").
+- Lower-page images load only when their scene is near (`use-near.ts`); initial transfer stays within the 1.5 MB test budget.
+- Tests: homepage spec rewritten for eight scenes, showcase scrub, dropdown and try-on; `hero-captions.spec.ts` removed with the old hero. Verified: typecheck, lint, build, Playwright 82/82 (headless Chromium only).
+- Waiting on Saad: Google Flow photos of the two models wearing actual catalogue pieces (`public/images/models/tryon/`), after which `tryOnPhotos[*].overlay` becomes false and the slots point at the worn pieces.
+
 ### 2026-11-19 — Claude (Saad's session) — Hero caption bands, legibility and flick test (S-19)
 - Saad approved `docs/DESIGN-PACKAGE.md` (written with the 10k-websites skill, applied to this Next.js site) with two decisions: hero scroll about 2,000px (decision A) and dark velvet with some ivory sections (decision B). Build step 1 of its plan is done.
 - Desktop hero now scrolls exactly 2,000px and carries four caption bands: the headline (settled on load), "Every grain finds its place." (letters scatter in while the dust gathers) then "Then the light tells the truth." (blur to sharp while light uncovers the photograph), the notes, and "Where would you like to begin?" above the collection tiles. Captions are desktop scroll only; phones, reduced motion and no-JS keep the still frame. Screen readers get each line once (visual letters are aria-hidden).

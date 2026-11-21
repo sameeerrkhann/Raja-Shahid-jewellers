@@ -43,9 +43,6 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
           const viewport = root!.querySelector<HTMLElement>("[data-vault-viewport]")!;
           const track = root!.querySelector<HTMLElement>("[data-vault-track]")!;
           const cleanups: (() => void)[] = [];
-          const assembly = root!.querySelector<HTMLElement>("[data-assembly]");
-          if (assembly && !desktop) assembly.dispatchEvent(new CustomEvent("rsj:assembly-play"));
-          if (assembly) cleanups.push(() => assembly.dispatchEvent(new CustomEvent("rsj:assembly-release")));
 
           gsap.fromTo(root!.querySelectorAll("[data-entrance-line]"), { y: desktop ? 12 : 6, opacity: .9 }, { y: 0, opacity: 1, duration: .6, stagger: .075, ease: "power2.out", clearProps: "transform,opacity" });
 
@@ -58,14 +55,6 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
             gsap.ticker.lagSmoothing(0);
             cleanups.push(() => { gsap.ticker.remove(raf); gsap.ticker.lagSmoothing(500, 33); lenis.destroy(); });
 
-            if (assembly) {
-              // Scene 01: the section grows by ~2000px and its frame sticks; scroll position is the assembly's progress, both ways.
-              assembly.dataset.scrub = "desktop";
-              ScrollTrigger.create({ id: "home-assembly", trigger: assembly, start: () => `top ${headerHeight()}`, end: "bottom bottom", invalidateOnRefresh: true,
-                onUpdate: (self) => assembly.dispatchEvent(new CustomEvent<number>("rsj:assembly-progress", { detail: self.progress })),
-                onRefresh: (self) => { assembly.dataset.scrollStart = String(self.start); assembly.dataset.scrollEnd = String(self.end); assembly.dispatchEvent(new CustomEvent<number>("rsj:assembly-progress", { detail: self.progress })); } });
-              cleanups.push(() => { delete assembly.dataset.scrub; delete assembly.dataset.scrollStart; delete assembly.dataset.scrollEnd; });
-            }
             gsap.fromTo(root!.querySelector("[data-bridal-media]"), { yPercent: -2, scale: 1.03 }, { yPercent: 2, scale: 1, ease: "none", scrollTrigger: { trigger: "#bridal", start: "top bottom", end: "bottom top", scrub: .6 } });
             const overflow = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
             if (overflow() > 0) {

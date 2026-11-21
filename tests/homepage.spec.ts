@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { mkdir } from "node:fs/promises";
 
-const scenes = ["entrance", "bridal", "vault", "auria", "gold"];
+const scenes = ["entrance", "collection", "closer", "try-on", "bridal", "vault", "auria", "gold"];
 const screenshotFolder = "artifacts/phase03/final";
 
 async function ready(page: Page) {
@@ -21,12 +21,12 @@ async function scene(page: Page, id: string) {
   await page.waitForTimeout(700); // allow bounded scrub/reveal to settle before a screenshot
 }
 
-test("homepage has five honest connected scenes and proper metadata", async ({ page, request }) => {
+test("homepage has eight honest connected scenes and proper metadata", async ({ page, request }) => {
   await ready(page);
   await expect(page).toHaveURL(/\/$/);
   await expect(page).toHaveTitle("Raja Shahid Jewellers — Beyond the Moment");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Crafted to be remembered.");
-  await expect(page.locator("[data-scene]")).toHaveCount(5);
+  await expect(page.locator("[data-scene]")).toHaveCount(8);
   await expect(page.getByText("Illustrative rate preview · Not live")).toBeVisible();
   await expect(page.getByText(/Hand-authored illustration → reference photograph/)).toBeVisible();
   expect((await request.get("/admin")).status()).toBe(404);
@@ -170,10 +170,10 @@ test("no-JavaScript story and native links remain readable", async ({ browser })
   try {
     const page = await context.newPage();
     await page.goto("http://127.0.0.1:3100/");
-    await expect(page.locator("[data-scene]")).toHaveCount(5);
+    await expect(page.locator("[data-scene]")).toHaveCount(8);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.locator(".pin-spacer")).toHaveCount(0);
-    await expect(page.locator("#entrance").getByRole("link", { name: /^Bridal/ })).toBeVisible();
+    await expect(page.locator(".begin").getByRole("link", { name: /^Bridal/ })).toBeVisible();
     await page.getByRole("link", { name: "Explore the Design Vault" }).click();
     await expect(page).toHaveURL(/\/designs$/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
@@ -182,11 +182,10 @@ test("no-JavaScript story and native links remain readable", async ({ browser })
 });
 
 test("missing hero media becomes an honest designed fallback", async ({ page }) => {
-  // The assembled piece is the hero media; its failure must disable motion and show a designed fallback.
-  await page.route("**/images/hero/mehr-collar*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
+  // The ring film is the hero media; its failure must disable the page motion and keep the story readable.
+  await page.route("**/images/hero/ring/*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
   await ready(page);
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "fallback");
-  await expect(page.locator("#entrance [data-media-failed]")).toBeVisible();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Explore the Design Vault" })).toBeVisible();
   await page.screenshot({ path: `${screenshotFolder}/missing-media.png` });
@@ -206,10 +205,11 @@ for (const width of [390, 1440]) {
 
 test("scrubbed entrance and labelled sketch/reference reveal change with scroll", async ({ page }) => {
   await ready(page);
-  const sweep = () => page.locator("#entrance").evaluate((element) => Number(getComputedStyle(element).getPropertyValue("--sweep")));
-  await expect.poll(sweep).toBeLessThan(.05);
-  await page.locator("#entrance").evaluate((element) => { const { scrollStart, scrollEnd } = (element as HTMLElement).dataset; window.scrollTo({ top: Number(scrollStart) + (Number(scrollEnd) - Number(scrollStart)) * .64, behavior: "instant" }); });
-  await expect.poll(sweep).toBeGreaterThan(.3);
+  const intro = page.locator("[data-film-intro]");
+  await expect(intro).toHaveCSS("opacity", "1");
+  await page.locator("#entrance").evaluate((element) => { const { scrollStart, scrollEnd } = (element as HTMLElement).dataset; window.scrollTo({ top: Number(scrollStart) + (Number(scrollEnd) - Number(scrollStart)) * .45, behavior: "instant" }); });
+  await expect.poll(() => intro.evaluate((element) => Number(getComputedStyle(element).opacity))).toBeLessThan(.05);
+  await expect.poll(() => page.locator("[data-film-caption]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
   await page.screenshot({ path: `${screenshotFolder}/entrance-transition-1440.png` });
   const geometry = await page.locator("#auria").evaluate((element) => { const r = element.getBoundingClientRect(); const top = r.top + scrollY; return { start: top - innerHeight * .7, end: top + r.height / 2 - innerHeight * .4 }; });
   const masks: string[] = [];
@@ -247,45 +247,54 @@ test("cold local home transfer and animation profiling evidence", async ({ page 
   expect(initial.cls).toBeLessThanOrEqual(.1);
 });
 
-test("golden assembly scrubs both ways and ends in real collections", async ({ page }) => {
+test("showcase: ring film, collection arc, lens and dropdown work both ways", async ({ page }) => {
   await ready(page);
-  const hero = page.locator("#entrance");
-  await expect(hero).toHaveAttribute("data-live", "true");
-  await expect(hero).toHaveAttribute("data-phase", "0");
-  const range = await hero.evaluate((element) => [Number((element as HTMLElement).dataset.scrollStart), Number((element as HTMLElement).dataset.scrollEnd)]);
-  expect(range[1] - range[0]).toBeGreaterThanOrEqual(1900);
-  expect(range[1] - range[0]).toBeLessThanOrEqual(2100);
-  // Act 4: the piece is presented with notes drawn from the image and facts from the catalogue record.
-  await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[0] + (range[1] - range[0]) * .72);
-  await expect(hero).toHaveAttribute("data-phase", "3");
-  await expect.poll(() => hero.evaluate((element) => Number(getComputedStyle(element).getPropertyValue("--detail")))).toBeGreaterThan(.95);
-  await expect(hero.getByText("Floral relief")).toBeVisible();
-  await expect(hero.getByText("22K gold")).toBeVisible();
-  await expect(hero.getByRole("link", { name: "Open in the Design Vault" })).toBeVisible();
-  await page.screenshot({ path: `${screenshotFolder}/assembly-detail-1440.png` });
-  const exit = () => hero.evaluate((element) => Number(getComputedStyle(element).getPropertyValue("--exit")));
-  await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[1]);
-  await expect(hero).toHaveAttribute("data-phase", "4");
-  await expect.poll(exit).toBeGreaterThan(.95);
-  await page.screenshot({ path: `${screenshotFolder}/assembly-end-1440.png` });
-  await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[0] + (range[1] - range[0]) * .25);
-  await expect(hero).toHaveAttribute("data-phase", "1");
-  await expect(hero.locator("[data-caption='story']")).toHaveCSS("opacity", "1");
-  await expect.poll(exit).toBeLessThan(.05);
-  await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), range[1]);
-  await expect(hero).toHaveAttribute("data-phase", "4");
-  await hero.getByRole("link", { name: /^Rings/ }).click();
-  await expect(page).toHaveURL(/\/designs\?category=rings$/);
+  await expect(page.locator(".showcase")).toHaveAttribute("data-showcase", "live");
+  const go = (id: string, at: number) => page.locator(`#${id}`).evaluate((element, progress) => { const { scrollStart, scrollEnd } = (element as HTMLElement).dataset; window.scrollTo({ top: Number(scrollStart) + (Number(scrollEnd) - Number(scrollStart)) * progress, behavior: "instant" }); }, at);
+  const range = await page.locator("#entrance").evaluate((element) => Number((element as HTMLElement).dataset.scrollEnd) - Number((element as HTMLElement).dataset.scrollStart));
+  expect(range).toBeGreaterThan(1700);
+  // The collection arc: the centred piece is named and chosen.
+  await go("collection", .15);
+  await expect(page.locator(".showcase-arc__name p")).toHaveText("Mehr Crescent Collar");
+  await go("collection", .85);
+  await expect(page.locator(".showcase-arc__name p")).toHaveText("Lotus Rhythm Kada");
+  await page.screenshot({ path: `${screenshotFolder}/showcase-arc-1440.png` });
+  // The lens: notes and catalogue facts for the chosen piece, then the dropdown swaps the piece.
+  await go("closer", .8);
+  await expect.poll(() => page.locator("[data-notes]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
+  await expect(page.locator("[data-notes]").getByText("Lotus motifs")).toBeVisible();
+  await expect(page.locator("[data-facts]").getByText("22K gold")).toBeVisible();
+  await page.locator("#closer-piece").selectOption({ label: "Petal Seal Ring" });
+  await expect(page.locator("[data-notes]").getByText("Polished centre")).toBeVisible();
+  await expect(page.locator("[data-facts]").getByText("RSJ-D005")).toBeVisible();
+  await page.screenshot({ path: `${screenshotFolder}/showcase-lens-1440.png` });
+  // And back up: the film caption returns.
+  await go("entrance", .4);
+  await expect.poll(() => page.locator("[data-film-caption]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
 });
 
-test("mobile assembly plays without pins and keeps collections reachable", async ({ page }) => {
+test("try it on: pieces go on the right person and the view focuses on them", async ({ page }) => {
+  await ready(page);
+  const section = page.locator("#try-on");
+  await section.scrollIntoViewIfNeeded();
+  await section.getByRole("button", { name: "Mehr Crescent Collar" }).click();
+  await expect(section.locator(".tryon__focus")).toContainText("Necklace");
+  await expect(section.locator(".tryon__camera")).toHaveAttribute("style", /scale\(1\.9\)/);
+  await section.getByRole("button", { name: "Lotus Rhythm Kada" }).click();
+  await expect(section.getByText(/Wearing: .*Mehr Crescent Collar, Lotus Rhythm Kada/)).toBeVisible();
+  await section.getByRole("button", { name: "See the whole look" }).click();
+  await expect(section.locator(".tryon__camera")).toHaveAttribute("style", /scale\(1\)/);
+  await section.getByRole("button", { name: "Men", exact: true }).click();
+  await expect(section.getByRole("button", { name: "Mehr Crescent Collar" })).toHaveCount(0);
+  await expect(section.getByRole("button", { name: "Oval Quiet Signet" })).toBeVisible();
+  await expect(section.getByText("AI-generated model · preview placement · sample designs")).toBeVisible();
+});
+
+test("mobile showcase scrolls without pins and keeps collections reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await ready(page);
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
-  const hero = page.locator("#entrance");
-  await expect(hero).not.toHaveAttribute("data-scrub", /./);
-  await expect(hero.locator(".assembly__bands")).toBeHidden();
-  await expect.poll(() => hero.evaluate((element) => Number(getComputedStyle(element).getPropertyValue("--sweep"))), { timeout: 8000 }).toBeGreaterThan(.95);
-  await expect(hero.getByRole("link", { name: /^Bridal/ })).toBeVisible();
+  await expect(page.locator(".showcase")).toHaveAttribute("data-showcase", "live");
+  await expect(page.locator(".begin").getByRole("link", { name: /^Bridal/ })).toBeAttached();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 });

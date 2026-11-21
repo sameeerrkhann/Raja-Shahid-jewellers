@@ -15,3 +15,5 @@ Thumbs.db
 
 # Third-party skill bundle kept in the working folder; never part of the site
 /10k-websites-skill.zip
+# Raw model photos kept for Google Flow work; the site uses the compressed copies in images/models/tryon
+/public/images/models/tryon-*.png
