@@ -11,7 +11,8 @@ export const homeCategories = [
 export const homeNavigation = [
   { label: "Design Vault", href: "/designs" },
   { label: "Category directions", href: "/#vault" },
-  { label: "Bridal heritage", href: "/#bridal" },
+  { label: "See it on", href: "/#try-on" },
+  { label: "Bridal", href: "/#bridal" },
   { label: "AURIA", href: "/#auria" },
   { label: "Gold & value", href: "/#gold" },
 ] as const;

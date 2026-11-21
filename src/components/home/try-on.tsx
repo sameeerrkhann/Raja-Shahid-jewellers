@@ -1,66 +1,58 @@
 "use client";
-/* eslint-disable @next/next/no-img-element -- layered, transformed photo composites; next/image wrappers would break the stacking. */
+/* eslint-disable @next/next/no-img-element -- the photograph is moved by the camera transform. */
 
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { useNear } from "./use-near";
-import type { TryOnPlacement, TryOnSlot, Wearer } from "@/config/showcase";
-import { tryOnComing, tryOnPhotos, tryOnSlots } from "@/config/showcase";
+import type { Wearer } from "@/config/showcase";
+import { wornLooks } from "@/config/showcase";
 
-export type TryOnItem = { code: string; title: string; group: string; slot: TryOnSlot; wearers: Wearer[]; cutout: string; facts: string };
-
-const SLOT_NAME: Record<TryOnSlot, string> = { neck: "Necklace", long: "Long necklace", finger: "Ring", wrist: "Bangle", ears: "Earrings", forehead: "Tikka" };
-// Necklaces share the neck; everything else has its own place, so a look can combine pieces.
-const place = (slot: TryOnSlot): TryOnSlot => (slot === "long" ? "neck" : slot);
-
-/* Try it on: one woman, one man. Choosing a piece puts it where it is worn, then the camera moves in
-   on that spot and names it; "See the whole look" pulls back. */
-export function TryOn({ items }: { items: TryOnItem[] }) {
+/* See it on: real photographs of jewellery being worn. Pick women or men and a look, then a piece:
+   the camera moves in on where it is worn and names it, with a way into the matching designs. */
+export function TryOn() {
   const [wearer, setWearer] = useState<Wearer>("women");
-  const [worn, setWorn] = useState<Record<Wearer, Partial<Record<TryOnSlot, string>>>>({ women: {}, men: {} });
-  const [focus, setFocus] = useState<{ code: string; at: TryOnPlacement } | null>(null);
-  const frame = useRef<HTMLDivElement>(null);
-  const sectionRef = useRef<HTMLElement>(null);
+  const [lookIndex, setLookIndex] = useState(0);
+  const [spotIndex, setSpotIndex] = useState<number | null>(null);
+  const sectionRef = useRef<HTMLElement>(null), frame = useRef<HTMLDivElement>(null);
   const near = useNear(sectionRef);
-  const photo = tryOnPhotos[wearer];
-  const visible = items.filter((item) => item.wearers.includes(wearer) && tryOnSlots[wearer][item.slot]);
-  const groups = [...new Set(visible.map((item) => item.group))];
-  const wearing = Object.values(worn[wearer]).filter(Boolean).map((code) => items.find((item) => item.code === code)!);
+  const looks = wornLooks[wearer], look = looks[lookIndex], spot = spotIndex === null ? null : look.spots[spotIndex];
 
-  const toggle = (item: TryOnItem) => {
-    const slot = place(item.slot), on = worn[wearer][slot] === item.code;
-    setWorn((state) => ({ ...state, [wearer]: { ...state[wearer], [slot]: on ? undefined : item.code } }));
-    setFocus(on ? null : { code: item.code, at: tryOnSlots[wearer][item.slot]! });
-    // On phones the figure sits above the list: bring it back into view to watch the piece go on.
+  const pickWearer = (next: Wearer) => { setWearer(next); setLookIndex(0); setSpotIndex(null); };
+  const pickLook = (index: number) => { setLookIndex(index); setSpotIndex(null); };
+  const pickSpot = (index: number) => {
+    setSpotIndex((current) => (current === index ? null : index));
+    // On phones the photograph sits above the choices: bring it back into view.
     const box = frame.current?.getBoundingClientRect();
     if (box && window.innerWidth <= 860 && box.top < 0) frame.current!.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const zoom = focus ? focus.at.zoom : 1;
-  const origin = focus ? `${focus.at.x}% ${focus.at.y}%` : "50% 50%";
-  const focused = focus ? items.find((item) => item.code === focus.code) : null;
-
   return <section ref={sectionRef} id="try-on" className="tryon" data-scene="04" data-tone="dark" aria-labelledby="try-on-title">
     <div className="tryon__copy">
       <h2 id="try-on-title">See it on.</h2>
-      <p>Choose who, then tap any piece. It goes where it is worn and the view moves in on it. Tap again to take it off, or combine pieces into one look.</p>
-      <div className="tryon__who" role="group" aria-label="Show pieces on">
-        {(["women", "men"] as const).map((option) => <button key={option} type="button" aria-pressed={wearer === option} onClick={() => { setWearer(option); setFocus(null); }}>{option === "women" ? "Women" : "Men"}</button>)}
+      <p>Choose who and a look, then a piece. The view moves to where it is worn, so you can judge its size and place before you open the designs.</p>
+      <div className="tryon__who" role="group" aria-label="Show looks for">
+        {(["women", "men"] as const).map((option) => <button key={option} type="button" aria-pressed={wearer === option} onClick={() => pickWearer(option)}>{option === "women" ? "Women" : "Men"}</button>)}
       </div>
-      <div className="tryon__shelf">
-        {groups.map((group) => <div key={group}><h3>{group}</h3><ul>{visible.filter((item) => item.group === group).map((item) =>
-          <li key={item.code}><button type="button" className="tryon__item" aria-pressed={worn[wearer][place(item.slot)] === item.code} onClick={() => toggle(item)}>{near && <img src={item.cutout} alt="" />}{item.title}</button></li>)}</ul></div>)}
-        <div><h3>Coming with photographs</h3><ul>{tryOnComing[wearer].map((name) => <li key={name}><button type="button" className="tryon__item" disabled>{name}</button></li>)}</ul></div>
+      <div className="tryon__looks" role="group" aria-label="Choose a look">
+        {looks.map((entry, index) => <button key={entry.id} type="button" className="tryon__look" aria-pressed={index === lookIndex} onClick={() => pickLook(index)}>
+          {near && <img src={entry.thumb} alt="" />}<span>{entry.title}</span></button>)}
       </div>
-      <p className="tryon__wearing" aria-live="polite">{wearing.length ? <>Wearing: <b>{wearing.map((item) => item.title).join(", ")}</b></> : "Nothing on yet. Tap a piece."}</p>
+      <h3 className="tryon__subhead">In this look</h3>
+      <ul className="tryon__spots">
+        {look.spots.map((entry, index) => <li key={entry.name}><button type="button" className="tryon__item" aria-pressed={index === spotIndex} onClick={() => pickSpot(index)}><i aria-hidden="true" />{entry.name}</button></li>)}
+      </ul>
+      <p className="tryon__credit">Photo: {look.credit} on Pexels. Reference photography; the jewellery shown is not shop stock.</p>
     </div>
-    <div className="tryon__frame" ref={frame}>
-      <div className="tryon__camera" style={{ transform: `scale(${zoom})`, transformOrigin: origin }}>
-        {near && <img className="tryon__photo" src={photo.src} alt={photo.alt} />}
-        {photo.overlay && wearing.map((item) => { const at = tryOnSlots[wearer][item.slot]!; return <img key={item.code} className={`tryon__piece tryon__piece--${place(item.slot)}`} src={item.cutout} alt="" style={{ left: `${at.x}%`, top: `${at.y}%`, width: `${at.w}%`, rotate: `${at.r ?? 0}deg` }} />; })}
-        {near && photo.front && <img className="tryon__front" src={photo.front} alt="" aria-hidden="true" loading="lazy" />}
+    <div className="tryon__frame" ref={frame} style={{ aspectRatio: `${look.width} / ${look.height}` }} data-selected={spot ? "true" : undefined}>
+      <div className="tryon__camera" style={{ "--z": spot ? spot.zoom : 1, transform: `scale(${spot ? spot.zoom : 1})`, transformOrigin: spot ? `${spot.x}% ${spot.y}%` : "50% 45%" } as CSSProperties}>
+        {near && <img key={look.id} className="tryon__photo" src={look.src} alt={look.alt} />}
+        {look.spots.map((entry, index) => <button key={entry.name} type="button" className="tryon__dot" style={{ left: `${entry.x}%`, top: `${entry.y}%` }} aria-label={`Focus on the ${entry.name.toLowerCase()}`} aria-pressed={index === spotIndex} onClick={() => pickSpot(index)} />)}
       </div>
-      {focused && <div className="tryon__focus" aria-live="polite"><span>{SLOT_NAME[focused.slot]}</span><strong>{focused.title}</strong><small>{focused.facts}</small><button type="button" onClick={() => setFocus(null)}>See the whole look</button></div>}
-      <span className="tryon__tag">AI-generated model · preview placement · sample designs</span>
+      {spot && <div key={`${look.id}-${spot.name}`} className="tryon__focus" aria-live="polite">
+        <span>In this look</span><strong>{spot.name}</strong>
+        <a href={`/designs?q=${encodeURIComponent(spot.search)}`}>See {spot.vault.toLowerCase()} in the Design Vault</a>
+        <button type="button" onClick={() => setSpotIndex(null)}>See the whole look</button>
+      </div>}
+      <span className="tryon__tag">Reference photography. Not our jewellery.</span>
     </div>
   </section>;
 }

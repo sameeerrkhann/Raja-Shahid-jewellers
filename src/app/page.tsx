@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { HomeExperience } from "@/components/home/home-experience";
 import { EditorialImage } from "@/components/home/editorial-image";
-import { JewelleryDrawing } from "@/components/home/jewellery-drawing";
 import { VaultGallery } from "@/components/home/vault-gallery";
 import { ScrollShowcase, type ShowcasePiece } from "@/components/home/scroll-showcase";
-import { TryOn, type TryOnItem } from "@/components/home/try-on";
-import { showcase, tryOnCatalogue } from "@/config/showcase";
+import { TryOn } from "@/components/home/try-on";
+import { BridalBox, type BridalPiece } from "@/components/home/bridal-box";
+import { showcase } from "@/config/showcase";
 import { sampleDesigns } from "@/data/demo/catalogue";
 import { categorySamples } from "@/lib/catalogue/showcase";
 import { categoryLabel } from "@/config/catalogue";
@@ -38,25 +38,38 @@ export default function Home() {
     code: entry.code, title: design.title, kind: entry.kind, focus: entry.focus, notes: entry.notes, href: `/designs?q=${encodeURIComponent(entry.code)}`,
     photo: `/images/catalogue/design-${number(entry.code)}.webp`, cutout: `/images/catalogue/cut/design-${number(entry.code)}.webp`,
     facts: [karatText(entry.code), design.customizationAvailable ? "Personalisation on request" : "Made as shown", "Weight and price on request"] }; });
-  const tryOnItems: TryOnItem[] = tryOnCatalogue.map((entry) => { const design = record(entry.code); return {
-    code: entry.code, title: design.title, slot: entry.slot, wearers: entry.wearers, cutout: `/images/catalogue/cut/wear-${number(entry.code)}.webp`,
-    group: { neck: "Necklaces and sets", long: "Necklaces and sets", finger: "Rings", wrist: "Bangles and karas", ears: "Earrings", forehead: "Tikkas" }[entry.slot],
-    facts: `${entry.code} · ${karatText(entry.code)} · weight and price on request` }; });
+  const bridal: BridalPiece[] = ["RSJ-D001", "RSJ-D002", "RSJ-D003", "RSJ-D004"].map((code) => ({ code, title: record(code).title, cutout: `/images/catalogue/cut/${code === "RSJ-D001" || code === "RSJ-D002" ? "design" : "wear"}-${number(code)}.webp` }));
   return <HomeExperience>
     <ScrollShowcase pieces={pieces} />
-    <TryOn items={tryOnItems} />
+    <TryOn />
+    <BridalBox pieces={bridal} />
     <section className="begin" aria-labelledby="begin-title"><h2 id="begin-title">Where would you like to begin?</h2>
       <ul>{collections.map((entry) => <li key={entry.href}><a href={entry.href}>{entry.image ? <img src={entry.image} alt="" loading="lazy" /> : <span className="begin__more" aria-hidden="true">→</span>}<strong>{entry.title}</strong><em>{entry.count}</em></a></li>)}</ul>
     </section>
-    <section id="bridal" className="home-bridal home-scene" data-scene="05" data-tone="dark" aria-labelledby="bridal-title">
-      <div className="home-bridal__image-wrap"><EditorialImage src="/images/editorial/floral-necklace.jpg" alt="Floral necklace used as bridal mood reference rather than an offered product" fill sizes="(max-width: 767px) 100vw, 65vw" quality={85} className="home-bridal__photo" data-bridal-media /><span className="home-bridal__arch" aria-hidden="true" /></div>
-      <div className="container home-bridal__content"><div><h2 id="bridal-title" data-home-reveal>A promise.<br /><em>Beautifully</em><br />kept.</h2><p className="home-bridal__intro" data-home-reveal>For the beginning of a new story.<br />For everything you carry into it.</p><a className="home-underlined-link" href="#vault">Explore the bridal direction <Icon name="arrow" /></a></div><p className="home-bridal__caption">Reference styling only. No bridal inventory,<br />heritage date or manufacturing promise is asserted.</p></div><span className="home-bridal__folio" aria-hidden="true">III</span>
-    </section>
     <section id="vault" className="home-vault home-scene" data-scene="06" data-vault-pin aria-labelledby="vault-title"><div className="container home-vault__heading"><div><h2 id="vault-title" data-home-reveal>A world of <em>possibility.</em></h2></div><p>Six ways into the Design Vault.<br />Each shows the sample designs published so far.</p></div><VaultGallery samples={categorySamples()} /></section>
-    <section id="auria" className="home-auria home-scene" data-scene="07" aria-labelledby="auria-title"><div className="container">
-      <div className="home-auria__heading"><p className="home-status-label"><span aria-hidden="true" />Visual introduction / Not connected</p></div>
-      <div className="home-auria__grid"><div className="home-concept-study"><div className="home-concept-study__stage"><div className="home-concept-study__sketch"><JewelleryDrawing kind="necklace" /><span>01 / Sketch study</span></div><div className="home-concept-study__photo" data-concept-photo><EditorialImage src="/images/editorial/floral-necklace.jpg" alt="Reference necklace photograph beside an original line illustration; not an AI-generated result" fill sizes="(max-width: 767px) 100vw, 50vw" quality={85} /><span className="home-concept-study__reference-label">02 / Reference</span></div><span className="home-concept-study__crosshair" aria-hidden="true">+</span></div><p className="home-reference-note">Hand-authored illustration → reference photograph.<br />A visual metaphor, not AI output, CAD or a manufacturing guarantee.</p></div>
-        <div className="home-auria__copy"><h2 id="auria-title" data-home-reveal>First, a thought.<br /><em>Then, something</em><br />entirely you.</h2><p data-home-reveal>A future space for your inspiration. A conversation about a feeling, a silhouette, a piece that could be yours.</p><div className="home-auria__interface"><div><Icon name="sparkle" /><span>AURIA</span><small>Interface study</small></div><p>“Something meaningful.<br /><em>Something like no other.”</em></p><span>Illustrative prompt / No messages can be sent</span></div><Button data-home-action="auria">Design with AURIA <Icon name="arrow" /></Button><p className="home-reference-note">AI chat, generation and voice are not connected.</p></div>
+    <section id="auria" className="auria home-scene" data-scene="07" data-tone="dark" aria-labelledby="auria-title"><div className="container auria__grid">
+      <div className="auria__copy">
+        <p className="auria__badge"><Icon name="sparkle" />AURIA · in development</p>
+        <h2 id="auria-title" data-home-reveal>Describe it.<br /><em>We will find it.</em></h2>
+        <p data-home-reveal>AURIA will be your jewellery concierge: tell it the occasion, the feeling or a photo you love, and it suggests pieces from the Design Vault or starts a custom request with our team.</p>
+        <ul className="auria__abilities">
+          <li><strong>Ideas into pieces</strong><span>From a few words to designs you can open.</span></li>
+          <li><strong>Custom requests</strong><span>Shape a made-to-order idea before you visit.</span></li>
+          <li><strong>Voice, later</strong><span>Speak instead of typing, when it is ready.</span></li>
+        </ul>
+        <div className="auria__actions"><Button data-home-action="auria">Preview AURIA <Icon name="arrow" /></Button><Button data-home-action="appointment" variant="outline">Talk to our team <Icon name="arrow" /></Button></div>
+        <p className="auria__note">Not connected yet. No message, photo or voice leaves this page.</p>
+      </div>
+      <div className="auria__device" aria-label="Illustrative AURIA conversation, not connected" role="img">
+        <div className="auria__orb" aria-hidden="true" />
+        <div className="auria__thread" aria-hidden="true">
+          <p className="auria__msg auria__msg--you">A bridal set in 22K, light enough for a long day.</p>
+          <p className="auria__msg auria__msg--auria"><span className="auria__typing"><i /><i /><i /></span><span className="auria__reply">Three directions from the Design Vault, each lighter at the back:</span></p>
+          <div className="auria__picks"><img src="/images/catalogue/cut/design-001.webp" alt="" loading="lazy" /><img src="/images/catalogue/cut/design-002.webp" alt="" loading="lazy" /><img src="/images/catalogue/cut/wear-003.webp" alt="" loading="lazy" /></div>
+          <div className="auria__chips"><span>Something for my mother</span><span>Match my outfit</span><span>A ring with a story</span></div>
+          <div className="auria__input"><span>Ask AURIA…</span><Icon name="sparkle" /></div>
+        </div>
+        <span className="auria__label">Illustrative conversation · not connected</span>
       </div>
     </div></section>
     <section id="gold" className="home-gold home-scene" data-scene="08" data-tone="dark" aria-labelledby="gold-title"><div className="container">

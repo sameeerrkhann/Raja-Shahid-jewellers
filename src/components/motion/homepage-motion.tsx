@@ -55,7 +55,6 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
             gsap.ticker.lagSmoothing(0);
             cleanups.push(() => { gsap.ticker.remove(raf); gsap.ticker.lagSmoothing(500, 33); lenis.destroy(); });
 
-            gsap.fromTo(root!.querySelector("[data-bridal-media]"), { yPercent: -2, scale: 1.03 }, { yPercent: 2, scale: 1, ease: "none", scrollTrigger: { trigger: "#bridal", start: "top bottom", end: "bottom top", scrub: .6 } });
             const overflow = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
             if (overflow() > 0) {
               viewport.scrollLeft = 0;
@@ -79,8 +78,6 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
               viewport.addEventListener("focusin", focus);
               cleanups.push(() => { viewport.removeEventListener("rsj:gallery-step", step); viewport.removeEventListener("focusin", focus); delete vault.dataset.pinned; delete vault.dataset.pinTravel; delete vault.dataset.scrollStart; delete vault.dataset.scrollEnd; viewport.scrollLeft = 0; });
             }
-            // Downstream triggers must be measured after the gallery pin adds its spacing.
-            gsap.fromTo(root!.querySelector("[data-concept-photo]"), { clipPath: "inset(0 0 0 100%)" }, { clipPath: "inset(0 0 0 0%)", ease: "none", scrollTrigger: { trigger: "#auria", start: "top 70%", end: "center 40%", scrub: .4 } });
           }
           root!.querySelectorAll<HTMLElement>("[data-home-reveal]").forEach((element) => {
             gsap.fromTo(element, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1, ease: "luxe", clearProps: "transform,opacity", scrollTrigger: { trigger: element, start: "top 90%", once: true } });

@@ -28,7 +28,7 @@ test("homepage has eight honest connected scenes and proper metadata", async ({ 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Crafted to be remembered.");
   await expect(page.locator("[data-scene]")).toHaveCount(8);
   await expect(page.getByText("Illustrative rate preview · Not live")).toBeVisible();
-  await expect(page.getByText(/Hand-authored illustration → reference photograph/)).toBeVisible();
+  await expect(page.getByText("Not connected yet. No message, photo or voice leaves this page.")).toBeAttached();
   expect((await request.get("/admin")).status()).toBe(404);
   expect((await request.get("/designs")).status()).toBe(200);
   expect((await request.get("/ai-atelier")).status()).toBe(404);
@@ -114,7 +114,7 @@ test("future AURIA and enquiry CTAs explain availability without submissions", a
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   page.on("request", (request) => { methods.push(request.method()); if (!new URL(request.url()).hostname.match(/^(127\.0\.0\.1|localhost)$/)) external.push(request.url()); });
   await ready(page);
-  for (const [label, title] of [["Design with AURIA", "AURIA, coming into focus"], ["Plan a private visit", "A visit, thoughtfully planned"], ["A jewellery enquiry", "Begin with a conversation"]]) {
+  for (const [label, title] of [["Preview AURIA", "AURIA, coming into focus"], ["Plan a private visit", "A visit, thoughtfully planned"], ["A jewellery enquiry", "Begin with a conversation"]]) {
     await page.getByRole("button", { name: label, exact: true }).click();
     await expect(page.getByRole("dialog", { name: title })).toBeVisible();
     await page.keyboard.press("Escape");
@@ -197,13 +197,13 @@ for (const width of [390, 1440]) {
     await ready(page);
     const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(results.violations).toEqual([]);
-    await page.getByRole("button", { name: "Design with AURIA", exact: true }).click();
+    await page.getByRole("button", { name: "Preview AURIA", exact: true }).click();
     const dialogResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(dialogResults.violations).toEqual([]);
   });
 }
 
-test("scrubbed entrance and labelled sketch/reference reveal change with scroll", async ({ page }) => {
+test("scrubbed entrance changes with scroll and AURIA stays honestly unconnected", async ({ page }) => {
   await ready(page);
   const intro = page.locator("[data-film-intro]");
   await expect(intro).toHaveCSS("opacity", "1");
@@ -211,16 +211,10 @@ test("scrubbed entrance and labelled sketch/reference reveal change with scroll"
   await expect.poll(() => intro.evaluate((element) => Number(getComputedStyle(element).opacity))).toBeLessThan(.05);
   await expect.poll(() => page.locator("[data-film-caption]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
   await page.screenshot({ path: `${screenshotFolder}/entrance-transition-1440.png` });
-  const geometry = await page.locator("#auria").evaluate((element) => { const r = element.getBoundingClientRect(); const top = r.top + scrollY; return { start: top - innerHeight * .7, end: top + r.height / 2 - innerHeight * .4 }; });
-  const masks: string[] = [];
-  for (const [label, progress] of [["sketch", 0], ["midpoint", .5], ["reference", 1]] as const) {
-    await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), geometry.start + (geometry.end - geometry.start) * progress);
-    await page.waitForTimeout(700);
-    masks.push(await page.locator("[data-concept-photo]").evaluate((element) => getComputedStyle(element).clipPath));
-    await page.screenshot({ path: `${screenshotFolder}/auria-${label}-1440.png` });
-  }
-  expect(new Set(masks).size).toBe(3);
-  await expect(page.getByText(/not AI output, CAD or a manufacturing guarantee/)).toBeVisible();
+  // AURIA is a design-only preview: it must say plainly that nothing is connected.
+  await page.locator("#auria").scrollIntoViewIfNeeded();
+  await expect(page.getByText("Not connected yet. No message, photo or voice leaves this page.")).toBeVisible();
+  await expect(page.getByText("Illustrative conversation · not connected")).toBeVisible();
 });
 
 test("cold local home transfer and animation profiling evidence", async ({ page }, testInfo) => {
@@ -273,21 +267,29 @@ test("showcase: ring film, collection arc, lens and dropdown work both ways", as
   await expect.poll(() => page.locator("[data-film-caption]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
 });
 
-test("try it on: pieces go on the right person and the view focuses on them", async ({ page }) => {
+test("see it on: worn photographs zoom to each piece and link to the Design Vault", async ({ page }) => {
   await ready(page);
   const section = page.locator("#try-on");
   await section.scrollIntoViewIfNeeded();
-  await section.getByRole("button", { name: "Mehr Crescent Collar" }).click();
-  await expect(section.locator(".tryon__focus")).toContainText("Necklace");
-  await expect(section.locator(".tryon__camera")).toHaveAttribute("style", /scale\(1\.9\)/);
-  await section.getByRole("button", { name: "Lotus Rhythm Kada" }).click();
-  await expect(section.getByText(/Wearing: .*Mehr Crescent Collar, Lotus Rhythm Kada/)).toBeVisible();
+  await expect(section.getByText("Reference photography. Not our jewellery.")).toBeVisible();
+  await section.getByRole("button", { name: "Necklace set", exact: true }).click();
+  await expect(section.locator(".tryon__camera")).toHaveAttribute("style", /scale\(2\.4\)/);
+  await expect(section.locator(".tryon__focus")).toContainText("Necklace set");
+  await expect(section.getByRole("link", { name: /in the Design Vault/ })).toHaveAttribute("href", /q=necklace/);
   await section.getByRole("button", { name: "See the whole look" }).click();
-  await expect(section.locator(".tryon__camera")).toHaveAttribute("style", /scale\(1\)/);
+  await expect(section.locator(".tryon__focus")).toHaveCount(0);
   await section.getByRole("button", { name: "Men", exact: true }).click();
-  await expect(section.getByRole("button", { name: "Mehr Crescent Collar" })).toHaveCount(0);
-  await expect(section.getByRole("button", { name: "Oval Quiet Signet" })).toBeVisible();
-  await expect(section.getByText("AI-generated model · preview placement · sample designs")).toBeVisible();
+  await expect(section.getByRole("button", { name: "Necklace set", exact: true })).toHaveCount(0);
+  await expect(section.getByRole("button", { name: "Watch", exact: true })).toBeVisible();
+});
+
+test("bridal box lists the bridal sets and links to them", async ({ page }) => {
+  await ready(page);
+  const section = page.locator("#bridal");
+  await section.scrollIntoViewIfNeeded();
+  await expect(section.getByRole("heading", { name: /A promise/ })).toBeVisible();
+  await expect(section.getByRole("list", { name: "Bridal sets in this box" }).getByRole("link")).toHaveCount(4);
+  await expect(section.getByText("Sample designs, concept images. Not shop stock.")).toBeVisible();
 });
 
 test("mobile showcase scrolls without pins and keeps collections reachable", async ({ page }) => {

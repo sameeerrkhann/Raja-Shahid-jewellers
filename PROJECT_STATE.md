@@ -257,6 +257,15 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-22 — Claude (Saad's session) — Homepage polish after Saad's review (S-21)
+- Review strip ("Royal Gold Atelier · customer website demo" + Reduce motion) restyled dark to match the header; the checkbox is now a gold switch (`src/app/home.css`, `home-experience.tsx`).
+- "See it on" (scene 04) rebuilt on Saad's choice of real worn photographs + zoom (`src/components/home/try-on.tsx`, `wornLooks` in `src/config/showcase.ts`): Women/Men, three looks each (Pexels reference photography, credits in `src/data/demo/model-photography.ts`), named spots per look; choosing a spot moves the camera to it and opens a card linking to a Design Vault search. Labelled "Reference photography. Not our jewellery." The Figma composite figures and their `public/images/models/tryon/*` files are removed.
+- Bridal (new scene 05, `src/components/home/bridal-box.tsx`): CSS 3D jewellery box scrubbed by GSAP: lid opens on its hinge, Mehr Crescent Collar rises to face the visitor, three sets follow; set names link to the Vault. Replaces the old "A promise. Beautifully kept." photo section. Static open box when motion is reduced or JS is off. Labelled as sample designs/concept images.
+- AURIA (scene 07): design-only shell, "in development" badge, illustrative conversation clearly marked "not connected"; no functional AURIA/AI code touched.
+- Scenes now 8 (entrance, collection, closer, try-on, bridal, vault, auria, gold). Nav: "See it on" and "Bridal" anchors.
+- Verification: tsc, eslint, `pnpm build` pass; Playwright 83/83 pass (homepage spec updated: worn-looks zoom test, bridal box test, 8 scenes).
+- Not done yet: themed backgrounds and CapCut video slots for /designs, /collections, /design-preview (S-22, next). Push still done by Saad from his PC (Claude GitHub App has no access to the team repo).
+
 ### 2026-11-22 — Claude (Saad's session) — Long-scroll homepage showcase and try-on (S-20)
 - Saad reviewed three prototype artifacts (reference reels: a fragrance, a chocolate and a donut scroll site; his own Google Flow ring video) and asked for this direction. The Golden Assembly hero (particles) and its caption bands are removed.
 - New homepage opening (`src/components/home/scroll-showcase.tsx`, `src/app/showcase.css`, config in `src/config/showcase.ts`):
