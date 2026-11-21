@@ -7,7 +7,7 @@ import { ShowcaseHero } from "@/components/home/showcase-hero";
 import { WornStory } from "@/components/home/worn-story";
 import { CraftLoupe } from "@/components/home/craft-loupe";
 import { categorySamples, showcaseItems } from "@/lib/catalogue/showcase";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import "./home.css";
 import "./showcase.css";
@@ -31,9 +31,9 @@ export default function Home() {
     </section>
     <section id="vault" className="home-vault home-scene" data-scene="04" data-vault-pin aria-labelledby="vault-title"><div className="container home-vault__heading"><div><h2 id="vault-title" data-home-reveal>A world of <em>possibility.</em></h2></div><p>Six ways into the Design Vault.<br />Each shows the sample designs published so far.</p></div><VaultGallery samples={categorySamples()} /></section>
     <section id="auria" className="home-auria home-scene" data-scene="05" aria-labelledby="auria-title"><div className="container">
-      <div className="home-auria__heading"><p className="home-status-label"><span aria-hidden="true" />Visual introduction / Not connected</p></div>
+      <div className="home-auria__heading"><p className="home-status-label"><span aria-hidden="true" />Your personal jewellery concierge</p></div>
       <div className="home-auria__grid"><div className="home-concept-study"><div className="home-concept-study__stage"><div className="home-concept-study__sketch"><JewelleryDrawing kind="necklace" /><span>01 / Sketch study</span></div><div className="home-concept-study__photo" data-concept-photo><EditorialImage src="/images/editorial/floral-necklace.jpg" alt="Reference necklace photograph beside an original line illustration; not an AI-generated result" fill sizes="(max-width: 767px) 100vw, 50vw" quality={85} /><span className="home-concept-study__reference-label">02 / Reference</span></div><span className="home-concept-study__crosshair" aria-hidden="true">+</span></div><p className="home-reference-note">Hand-authored illustration → reference photograph.<br />A visual metaphor, not AI output, CAD or a manufacturing guarantee.</p></div>
-        <div className="home-auria__copy"><h2 id="auria-title" data-home-reveal>First, a thought.<br /><em>Then, something</em><br />entirely you.</h2><p data-home-reveal>A future space for your inspiration. A conversation about a feeling, a silhouette, a piece that could be yours.</p><div className="home-auria__interface"><div><Icon name="sparkle" /><span>AURIA</span><small>Interface study</small></div><p>“Something meaningful.<br /><em>Something like no other.”</em></p><span>Illustrative prompt / No messages can be sent</span></div><Button data-home-action="auria">Design with AURIA <Icon name="arrow" /></Button><p className="home-reference-note">AI chat, generation and voice are not connected.</p></div>
+        <div className="home-auria__copy"><h2 id="auria-title" data-home-reveal>First, a thought.<br /><em>Then, something</em><br />entirely you.</h2><p data-home-reveal>A future space for your inspiration. A conversation about a feeling, a silhouette, a piece that could be yours.</p><div className="home-auria__interface"><div><Icon name="sparkle" /><span>AURIA</span><small>Interface study</small></div><p>“Something meaningful.<br /><em>Something like no other.”</em></p><span>Begin your conversation in the atelier</span></div><ButtonLink href="/ai-atelier">Design with AURIA <Icon name="arrow" /></ButtonLink><p className="home-reference-note">Explore designs with AURIA. Voice and image creation are postponed.</p></div>
       </div>
     </div></section>
     <section id="gold" className="home-gold home-scene" data-scene="06" data-tone="dark" aria-labelledby="gold-title"><div className="container">

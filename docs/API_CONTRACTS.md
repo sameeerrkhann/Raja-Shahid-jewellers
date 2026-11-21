@@ -1,5 +1,27 @@
 # Customer demo API contracts
 
+## Implemented AI-01 contract — 2026-11-19
+
+The contracts below supersede the older202/worker chat proposal for this local text phase only. Node runtime, loopback Host allowlist, exact Origin for mutations, SameSite Strict HttpOnly guest cookie and X-CSRF-Token (except bootstrap). All responses private/no-store. Foreign-owned IDs return404; expired sessions401; validation422; oversize JSON413; concurrency409; unavailable provider503; quota429. Never return provider secrets/raw upstream errors.
+
+| Method/path | Body / result |
+|---|---|
+| POST /api/ai/session | {} → csrfToken and capability; create/recover seven-day browser session |
+| GET /api/ai/conversations | Owned summaries, capability and token usage metadata |
+| POST /api/ai/conversations | {language: auto/en/ur/roman-ur} → conversation201 |
+| GET /api/ai/conversations/:id | Owned full conversation, selected/recent IDs, messages and draft |
+| POST /api/ai/conversations/:id/selection | {selectedDesignId: UUID or null, expectedVersion} → updated conversation |
+| POST /api/ai/chat | {conversationId, expectedVersion, requestId: UUID, message} →200 application/x-ndjson |
+| POST /api/ai/conversations/:id/stop | {} → stopped conversation; abort owned active response |
+| POST /api/ai/conversations/:id/draft | {designId, variantId?, quantity?, requestedChanges?, budgetPKR?} → saved draft, NOT submitted |
+| POST /api/ai/conversations/:id/submit | {expectedVersion: draft version, processingAccepted:true, fictionalDataConfirmed:true} → idempotent demo receipt |
+
+Chat events: delta{text}, cards{cards}, draft{draft}, error{code,message,retryable}, done{conversation}. A streamed provider error can occur after HTTP200; consumers must inspect events and persisted message state. JSON bodies max16KiB; user text4000 chars;80 messages/30 conversations/session. Request UUID+payload hash replays a completed turn without new provider calls; conflicting reuse409. User Retry is a new request. Message status COMPLETE/STREAMING/STOPPED/FAILED. Canonical TypeScript shapes: src/types/auria.ts and validation.ts.
+
+All catalogue tools reuse current public query/detail contracts, with max6 retrieved cards. No arbitrary SQL, owner input or private order lookup. Submission uses current variant validation, saved source snapshot and fictional contact, ends SUBMITTED, notification NOT_CONFIGURED. No actual order or delivery. API IDs do not authorize cross-session access. Full product/customization/order/image/voice endpoints below remain future proposals.
+
+## Earlier baseline and future proposals (retained; active amendment above takes precedence)
+
 Status: Phase 04 public catalogue subset implemented, 2026-11-17; other endpoints below remain proposals. Five read-only routes exist: GET designs/list, designs/[id], categories, collections/list, collections/[slug]. They use an immutable local SAMPLE repository, not a configured database or provider. Actual checks are recorded in PROJECT_STATE. These are application contracts, not provider APIs. [DATA_MODEL.md](DATA_MODEL.md) owns data; [PRD.md](PRD.md) owns business rules; [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) owns future provider orchestration.
 
 ## 1. Common protocol and types

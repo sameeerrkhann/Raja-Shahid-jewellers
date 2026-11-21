@@ -1,5 +1,17 @@
 # Data model, relationships and demo catalogue
 
+## AI-01 actual local data — 2026-11-19
+
+Three local SQLite tables are created idempotently by store.ts: sessions(id hashed bearer PK, expires epoch, data JSON), calls(id UUID PK, owner hashed bearer, created epoch), metadata(key PK,value). No hosted migration or public product database was created. Existing catalogue fixtures and physical-stock/design separation are unchanged.
+
+Owner JSON contains conversations[] and bounded usage[]. Conversation: UUID, title/language/version/timestamps, selectedDesignId, ordered recentDesignIds, messages, optional draft, activeTurn expiry and idempotency request hashes. Message: UUID/role/text/time/state/cards/errorCode. Usage: model/time/state and nullable input/output/total tokens; unknown consumption is not zero.
+
+One QuoteDraft per conversation: designId/valid variantId, quantity1–5, requestedChanges, optional budget preference, version/timestamps, source PublicDesign snapshot, fixed fictional Demo Customer/demo@example.invalid, DRAFT or SUBMITTED, optional DEMO-Q reference and consentAt, notificationStatus NOT_CONFIGURED. Owned status lookup accesses only this conversation's submitted demo enquiry, not real orders.
+
+Relationships are enforced by typed services and transactional owned JSON, not relational foreign keys across JSON. Current catalogue revalidation occurs at draft save/submission. AI-03 must decide normalized quote/order entities, editing/re-submission policy, customer consent/retention and authoritative workshop states before expanding. src/types/auria.ts is the executable data contract. Production entities below remain conceptual.
+
+## Earlier baseline and future proposals (retained; active amendment above takes precedence)
+
 Status: Phase 04 typed local catalogue implemented, 2026-11-17; the database schema below remains conceptual. No SQL migration or database exists. Local fixture/asset manifests live in src/data/demo, types in src/types/catalogue.ts and projection/query functions in src/lib/catalogue; actual results are in PROJECT_STATE. [PRD.md](PRD.md) owns workflow/provenance; [API_CONTRACTS.md](API_CONTRACTS.md) owns transport. Proposed database names use snake_case; implemented DTOs use camelCase.
 
 ## 1. Common conventions and fulfilment projection

@@ -2,6 +2,7 @@ node_modules/
 .next/
 out/
 .cache/
+.auria-data/
 coverage/
 playwright-report/
 test-results/

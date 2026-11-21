@@ -31,7 +31,7 @@ test("homepage has six honest connected scenes and proper metadata", async ({ pa
   await expect(page.getByText(/Hand-authored illustration → reference photograph/)).toBeVisible();
   expect((await request.get("/admin")).status()).toBe(404);
   expect((await request.get("/designs")).status()).toBe(200);
-  expect((await request.get("/ai-atelier")).status()).toBe(404);
+  expect((await request.get("/ai-atelier")).status()).toBe(200);
   expect((await request.get("/")).headers()["x-robots-tag"]).toContain("noindex");
   const invalid = await page.locator('a[href^="#"], a[href^="/#"]').evaluateAll((links) => links.map((link) => link.getAttribute("href")!.split("#")[1]).filter((id) => !document.getElementById(id)));
   expect(invalid).toEqual([]);
@@ -106,7 +106,7 @@ test("mobile navigation and native horizontal gallery", async ({ page }) => {
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
 });
 
-test("future AURIA and enquiry CTAs explain availability without submissions", async ({ page }) => {
+test("AURIA links to the workspace; enquiry CTAs explain availability without submissions", async ({ page }) => {
   const methods: string[] = [];
   const errors: string[] = [];
   const external: string[] = [];
@@ -114,7 +114,8 @@ test("future AURIA and enquiry CTAs explain availability without submissions", a
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   page.on("request", (request) => { methods.push(request.method()); if (!new URL(request.url()).hostname.match(/^(127\.0\.0\.1|localhost)$/)) external.push(request.url()); });
   await ready(page);
-  for (const [label, title] of [["Design with AURIA", "AURIA, coming into focus"], ["Plan a private visit", "A visit, thoughtfully planned"], ["A jewellery enquiry", "Begin with a conversation"]]) {
+  await expect(page.getByRole("link", { name: "Design with AURIA", exact: true })).toHaveAttribute("href", "/ai-atelier");
+  for (const [label, title] of [["Plan a private visit", "A visit, thoughtfully planned"], ["A jewellery enquiry", "Begin with a conversation"]]) {
     await page.getByRole("button", { name: label, exact: true }).click();
     await expect(page.getByRole("dialog", { name: title })).toBeVisible();
     await page.keyboard.press("Escape");
@@ -197,7 +198,7 @@ for (const width of [390, 1440]) {
     await ready(page);
     const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(results.violations).toEqual([]);
-    await page.getByRole("button", { name: "Design with AURIA", exact: true }).click();
+    await page.getByRole("button", { name: "Plan a private visit", exact: true }).click();
     const dialogResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(dialogResults.violations).toEqual([]);
   });
