@@ -36,7 +36,7 @@ export function SiteHeader() {
         <nav aria-label="Primary" className="desktop-nav">{primary.map((link) => <Link key={link.href} href={link.href} prefetch={false} aria-current={pathname === link.href || (link.href !== "/" && !link.href.includes("#") && pathname.startsWith(link.href)) ? "page" : undefined}>{link.label}</Link>)}</nav>
         <button className="icon-button mobile-menu-trigger" type="button" aria-label="Open menu" aria-haspopup="dialog" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}><Icon name="menu" /></button>
         <Link href="/#top" prefetch={false} className="wordmark"><span>{brand.wordmark}</span><span className="wordmark__sub"><span>JEWELLERS</span></span></Link>
-        <div className="header-actions"><a className="header-auria" href={`${isPreview ? brand.previewPath : "/"}#auria`}><Icon name="sparkle" />Meet AURIA</a><button className="icon-button header-search" type="button" aria-label={isPreview ? "Search reference studies" : "Search jewellery designs"} aria-haspopup="dialog" onClick={() => setSearchOpen(true)}><Icon name="search" /></button></div>
+        <div className="header-actions"><Link className="header-auria" prefetch={false} href={isPreview ? `${brand.previewPath}#auria` : "/ai-atelier"}><Icon name="sparkle" />Meet AURIA</Link><button className="icon-button header-search" type="button" aria-label={isPreview ? "Search reference studies" : "Search jewellery designs"} aria-haspopup="dialog" onClick={() => setSearchOpen(true)}><Icon name="search" /></button></div>
       </div>
     </header>
     <Modal open={menuOpen} onClose={() => setMenuOpen(false)} title="The visual atelier" className="menu-modal">

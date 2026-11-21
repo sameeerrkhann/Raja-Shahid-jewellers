@@ -1,5 +1,17 @@
 # Customer sitemap, journeys and interactions
 
+## AI-01 route and journey update — 2026-11-19
+
+/ai-atelier is now the AURIA workspace; homepage “Design with AURIA”, header “Meet AURIA” and catalogue navigation link there. Homepage motion/artwork and the internal design-preview concept remain preserved. Other unbuilt sitemap routes are still unbuilt.
+
+Desktop: history, conversation and selected-design/draft columns. At <=900px, accessible Conversation / Design & draft / History switches show one pane. Text composer, streamed output, Stop, explicit Retry, timestamps, new conversations and server-restored history. Empty state suggestions populate the composer; they do not call the provider automatically. Initial curated SAMPLE cards are catalogue discovery, not AI recommendations.
+
+Choose a card → selected public source details → save editable fictional draft → review snapshot → explicit checkbox and Confirm demo enquiry. Nothing is submitted by the model. Saved receipt states no real order/notification/delivery. Chat and drafting remain separate: missing provider access leaves discovery/draft available. Show error/unavailable states honestly; never manufacture a greeting as a live AI answer.
+
+Language selection applies to newly created conversations; English/Urdu/Roman Urdu user prompts should be followed. Urdu rendering uses dir=auto and language tagging; native-speaker/accessibility review still required. Minimal safe Markdown excludes HTML and active arbitrary links. Voice/upload/image controls are absent, not disabled controls implying a working integration. Actual responsive/test evidence is tracked in PROJECT_STATE.
+
+## Earlier baseline and future proposals (retained; active amendment above takes precedence)
+
 Status: Phase 01 definition with Phase 04 catalogue routing update, Codex internal review2026-11-17. Owns routes and behavior. [PRD.md](PRD.md) owns business rules; [DESIGN.md](DESIGN.md) owns visual/motion treatment; [API_CONTRACTS.md](API_CONTRACTS.md) owns transport. Implemented route families: `/`, `/designs`, `/collections`, `/collections/[slug]` (four curated slugs). Internal `/design-preview` is separate. Product detail and all other planned routes remain unbuilt; the inventory below retains their future contracts, not a claim that they work.
 
 ## 1. Global navigation and route rules

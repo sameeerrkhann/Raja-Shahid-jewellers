@@ -1,5 +1,17 @@
 # Verification, acceptance and internal review
 
+## AI-01 verification contract — 2026-11-19
+
+Run pnpm check and isolated playwright.auria.config.ts (provider disabled and separate test.sqlite) for reproducible no-charge tests plus all existing homepage/catalogue/design-preview regressions. A test fixture is not a live Gemini result. Provider-policy tests cover missing key, disabled/unconfirmed gates, unapproved provider/model,429/access/model/TLS/timeout/error redaction; domain tests cover actual catalogue grounding, unknown facts, argument validation and bounded tool/stream orchestration.
+
+Browser/API checks cover owned persistent sessions/drafts, cross-owner404, CSRF/Origin403, conflicting version409, explicit consent422, idempotent submission, invalid variant/oversize requests, safe Markdown/Urdu rendering, history/new conversation, reduced-motion/mobile layouts, no overflow, image decode and axe. Capture320/390/768/1440 screenshots; inspect them, not just the assertions.
+
+Live opt-in: scripts/test-auria-live.mjs through a loopback production server with actual free-tier gates. Record actual text, chunk timing/counts, cards, token metadata, error events and saved-message hash. Check follow-ups and unknown-safe answers; rerun --history after server restart. Never force quota exhaustion on the real provider; inject quota errors in tests. Raw key/cookies must never appear in reports; the ignored .auria-data/live-test-session.json contains a private test bearer and must not be published.
+
+PROJECT_STATE records commands, failures/corrections, final counts and remaining gaps. Passing compile or mocked streaming alone cannot establish provider connectivity, multilingual answer quality or production readiness.
+
+## Earlier baseline and future proposals (retained; active amendment above takes precedence)
+
 Status: Phase 04 catalogue verification, 2026-11-17; Codex internal review only. Detailed actual outcomes/failures/corrections live in PROJECT_STATE.md. Phase 02/03 regression checks remain. Provider/private-database/financial/product-quotation checks below are still future work, not passed by the public sample catalogue. [PRD.md](PRD.md) owns requirements; this document owns required evidence.
 
 ## 1. Requirement traceability

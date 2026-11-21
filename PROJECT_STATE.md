@@ -4,9 +4,41 @@
 >
 > Created: 2026-11-16 | Owner: Neural Stack & Co. | Project: **customer-facing interactive demo only**.
 >
-> Phases 00–04 are complete for their assigned scopes, with the explicit demo/asset/device limits below. Phase 01 and later Codex reviews are internal, not independent. Phase 04 Design Vault is verified with the user-approved eleven-image seed. Phases 05–10 remain NOT STARTED; STOP after Phase 04.
+> Phases 00–04 retain their historical scoped completion evidence. Current authorization is **AURIA AI-01 text foundation**, not Phase05/admin. Gemini free-tier live text is verified with the limits below; final regression closure is in progress. All Codex reviews are internal, not independent. Voice/images remain postponed; STOP after AI-01.
 
 ## 0. Current state and next action
+
+### Active AI-02 catalogue intelligence — 2026-11-21 (Claude Code, at explicit user request)
+
+- User explicitly assigned Claude Code the AURIA AI work (overriding the 2026-11-17 retirement note for this task). Branch `codex/auria-ai-01`, no commit/push/merge. Saad's non-AI scope untouched. A concurrent Codex sync-only edit to this file (03:48) was preserved.
+- **AI-01 regression CLOSED:** stale homepage assertion (`/ai-atelier` expected 404) corrected to 200. Full suite **107/107 PASS** (provider disabled, test store).
+- **AI-02 DONE — verified with disclosed limits:** design-code lookups (RSJ-D007, case-insensitive) on all design tools; new typed `compareDesigns` tool (2–4 designs, customer order, recorded facts only, cards); 21K/24K requests answered honestly instead of failing validation; trusted context now gives `displayedDesigns` (position/code/title/category) + `selectedDesign` for ordinal references; safe Markdown comparison tables; Gemini stream fix (stop at finishReason, abort-race) after a live 98s hang; server-side diagnostics (tool/provider failure codes only, no content/secrets).
+- **Next exact milestone: AI-03 order management** (see log entry below). Voice and images remain postponed.
+
+### Latest synchronization request — 2026-11-21 (Codex)
+
+- User requested pulling branch `saads-work`. Remote check succeeded but the branch does not exist on configured origin https://github.com/sameeerrkhann/Raja-Shahid-jewellers.git. A complete `ls-remote --heads origin` returned only `main` at d8773fa17affefbf005e2a6a8d19868a7f203a93. Local origin/saad-works-customer-website is a cached reference, not evidence of a currently available remote branch.
+- Pull BLOCKED by missing remote branch. Stayed on `codex/auria-ai-01` at e672f94. All20 previously modified and23 untracked AURIA files remain in place; no stash, checkout, merge, reset, commit, push or dependency change. Only this tracking file changed during the pull request.
+- Checks: AGENTS/state/source/package/status/branch/remotes inspected; exact-name and complete remote-head queries succeeded. No application tests rerun for this synchronization-only task. AI-01 remains incomplete: last full suite103/104 passed, with the remaining stale homepage assertion expecting /ai-atelier404; its correction/rerun was not executed because automatic approval review reached its usage limit in the preceding task. Existing live Gemini/persistence evidence below remains valid historical evidence.
+- Next action: obtain the correct branch/repository URL or have Saad push `saads-work` to origin, then recheck remote heads, preserve dirty AURIA work before switching, inspect incoming changes and pull fast-forward only when appropriate. Do not replace this work with main or infer a different branch.
+
+### Active AI-01 continuation — 2026-11-19 (Codex internal review)
+
+- Latest user authorization supersedes the historical Phase04 stop: implement and verify AURIA text-chat foundation only. Branch `codex/auria-ai-01` starts at Saad's `e672f94`; one writer, no subagents, no commit/push/merge. Preserve Saad's homepage and non-AI ownership.
+- Status: IN PROGRESS. Workspace, provider adapter, catalogue tools and local SQLite/session/quote foundation are written. Live end-to-end verification and full regression checks are pending; do not claim AI-01 complete.
+- Updated order: AI-01 text foundation → AI-02 catalogue grounding/context/comparison quality → AI-03 full quotation/order tools → connected voice after those work → image analysis/generation/editing last. No voice/image calls, paid provider or automatic fallback authorized.
+- Verified so far: `pnpm.cmd check` passed (types, lint, production build). Initial session runtime check found internal/browser origin mismatch; corrected with strictly validated loopback Host plus exact Origin. Targeted suite then passed11/17; six UI tests exposed a null-draft initialization crash. Fix written; rerun pending.
+- First application live attempt failed TLS validation and saved an explicit FAILED message (no generated text). Minimal diagnostic confirmed Node `UNABLE_TO_VERIFY_LEAF_SIGNATURE`. On 2026-11-19, one minimal SDK request using `node --use-system-ca` genuinely returned "Hi" and STOP from `gemini-3.1-flash-lite`. HTTPS verification stayed enabled; Windows trusted roots used. This proves basic connectivity only, not catalogue/chat workflow acceptance. The failed first diagnostic shell quoting attempt made no provider request.
+- Gemini credentials remain server-side and unprinted. Key/enabled/free-tier confirmation gates are present. Operator confirms billing disabled; the application cannot independently inspect account billing. Paid OpenAI/Groq fallback, image and voice remain absent/disabled.
+- Next work in this same task: rebuild UI fix, run application with `NODE_OPTIONS=--use-system-ca`, verify real tools/stream/follow-ups and persistence, rerun browser/regression tests, reconcile canonical docs and finish exact results/handoff below.
+
+### Historical repository synchronization — 2026-11-18 (superseded by AI-01 authorization above)
+
+- User requested pulling `saad-works-customer-website` only. Local checkout now tracks `origin/saad-works-customer-website` at `e672f94505b3475f6d915522dc34a9580554dd7e`; local `main` remains `d8773fa17affefbf005e2a6a8d19868a7f203a93`. No merge into main, commit, push, deployment or later-phase implementation was performed.
+- Incoming changes are Saad's two UI commits (30 changed paths): showcase hero/viewer, illustrated worn story, craft loupe, category/header/style updates and related tests/team notes. Package manifest, lockfile and AGENTS.md are unchanged. Read the incoming log entries below and TEAM_TASKS.md; their contributor assignments do not authorize Codex to start Phase05.
+- Earlier Phase04 79-test evidence applies to the earlier main snapshot, not automatically to this changed homepage. Saad reports 81 passing tests; that report is retained as contributor evidence, not a new independent verification by Codex. The incoming four-pin homepage conflicts with the older canonical two-pin design budget; review/reconcile before visual acceptance, without silently changing either implementation during this pull-only task.
+- Existing local `next-env.d.ts` dev imports blocked checkout. Preserved only that file in `stash@{0}` (message `preserve local next-env before Saad branch sync 2026-11-18`); incoming committed contents match the stashed contents exactly according to Git diff. Stash retained as recoverable backup, not dropped. No user work discarded; Windows checkout line endings may differ.
+- Active handoff: stay on Saad's branch for review; no new feature phase is authorized. Check Git status and the local tracking-only edit before any subsequent checkout. Do not merge/push to main without an explicit request. Phase00–04 historical statuses are unchanged; Phase05–10 remain NOT STARTED.
 
 - **Current phase:** Phase 04 — Premium jewellery Design Vault.
 - **Status:** DONE — VERIFIED WITH DISCLOSED LIMITATIONS, 2026-11-17. Final types/lint/production build PASS; latest complete79/79 browser tests PASS, no failed/skipped/flaky cases. This is a customer-facing SAMPLE catalogue, not production inventory or final business/brand approval.
@@ -83,7 +115,9 @@ E. **Voice:** customer allows microphone -> asks for lightweight wedding jewelle
 
 F. **Gold services:** open live-rate board (or explicitly flagged sample feed) -> enter grams + karat -> illustrative estimate -> optional valuation/consultation enquiry.
 
-## 5. Architecture / data — frontend and public sample reads installed; private backend proposed
+## 5. Architecture / data — AI-01 amendment and retained baseline
+
+AI-01 now adds a real server-side Gemini text adapter, local SQLite guest-owned conversations/usage/fictional drafts and /api/ai endpoints. No hosted database was provisioned. Canonical active amendments in ARCHITECTURE, DATA_MODEL, API_CONTRACTS and AI_ARCHITECTURE supersede the older unimplemented-backend paragraph below for this local text scope only. Voice, images, real orders, notifications and gold integrations remain absent.
 
 Phase 01 detail: `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/API_CONTRACTS.md` and `docs/AI_ARCHITECTURE.md` own coordinated backend proposals/contracts. Next.js/React/TypeScript/Tailwind/GSAP and local test tooling are installed. Phase04 adds five read-only public catalogue GET route families backed by local typed SAMPLE fixtures, not a database. No storage, AI, voice, notification or gold provider/account is provisioned or verified connected. Only the catalogue subset is implemented; other APIs/entities below remain scope context/proposals. Private-backend ownership/pooling/job/privacy checks remain future gates.
 
@@ -118,10 +152,10 @@ Mark a phase `DONE` only after verifying its acceptance checks and updating the 
 | **02 Design system & project prep** | Codex | DONE — VERIFIED | Internal review recorded; pinned root project/lockfile, design tokens, responsive shell/cards/dialogs/loading, licensed photo preview and Phase 03 motion/asset specification. Types/lint/build PASS; 15/15 browser tests PASS. Owner visual/brand approval pending. Neural Stack steps 06–09 complete locally; hosted CI deferred. |
 | **03 Cinematic homepage** | Codex | DONE — VERIFIED WITH LIMITATIONS | All six scenes, two bounded desktop pins/<=180vh, native mobile/reduced alternatives, honest category/AURIA/gold/service previews. Types/lint/build PASS; 35/35 browser tests PASS; screenshots inspected. Assets/brand provisional; LCP variability and unperformed device/field checks disclosed below. |
 | **04 Design Vault** | Codex | DONE — VERIFIED WITH LIMITATIONS | 11 distinct image-backed SAMPLE designs accepted by user;14 hidden drafts; catalogue/collections, bounded combined URL queries, responsive accessible states and honest stock/design separation. Final types/lint/build and79/79 tests PASS. Local after-LCP1504/480/552ms; original3.08s miss, startup long tasks, reduced seed and absent device/field evidence retained. |
-| **05 Product + made-to-order** | Codex | NOT STARTED | Product pages and variants, quote form, demo lead saved, estimate only when source known; valid validation states. |
-| **06 AI chat + retrieval** | Codex | NOT STARTED | Real chat call and catalogue-grounded product cards; multi-turn memory; clear unknown-handling. |
-| **07 AI image understanding + generation/edit** | Codex | NOT STARTED | REAL prompt-to-image, uploaded reference, edit previous image, preserve history, save concept, functional error states. |
-| **08 Real voice-to-voice** | Codex | NOT STARTED | Real microphone-to-spoken-answer loop, interrupt/stop, Urdu/English tests, synced text/catalogue context. |
+| **05 Product + made-to-order** | Codex / non-AI coordination with Saad | NOT STARTED as a full phase | AI-01 only adds owned fictional draft/receipt foundation; product pages and full order/customization workflow remain deferred. |
+| **06 AI chat + retrieval / AI-01** | Codex internal review | IMPLEMENTED; FINAL REGRESSION IN PROGRESS | Genuine Gemini text/tool/stream/follow-up checks passed; local persistence and safe errors verified. Completion/limits in latest log; AI-02 not started. |
+| **07 AI image understanding + generation/edit** | Codex | POSTPONED | User places all image features after chatbot, catalogue, order and voice. No image provider calls or implementation in AI-01. |
+| **08 Real voice-to-voice** | Codex | POSTPONED | Interfaces only; connect to the same conversation after AI-01/02/03, under a separate assignment. |
 | **09 Gold services + customer tools** | Codex | NOT STARTED | Gold-rate source/time or labelled demo, calculator, financing enquiry, wishlist, appointments, sample tracking. |
 | **10 Integration, testing & showcase** | Codex internal QA | NOT STARTED | All 6 signature journeys pass, visual/responsive/a11y checks, speed checks, safe deployment, known issues disclosed. Neural Stack steps 10–15 reviewed. |
 
@@ -278,6 +312,39 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 - Tests: homepage spec rewritten for eight scenes, showcase scrub, dropdown and try-on; `hero-captions.spec.ts` removed with the old hero. Verified: typecheck, lint, build, Playwright 82/82 (headless Chromium only).
 - Waiting on Saad: Google Flow photos of the two models wearing actual catalogue pieces (`public/images/models/tryon/`), after which `tryOnPhotos[*].overlay` becomes false and the slots point at the worn pieces.
 
+### 2026-11-21 — Claude Code — AI-01 regression closure + AI-02 catalogue intelligence
+
+**Scope / authority:** User prompt assigned AURIA AI (chat → catalogue → orders → voice → images last) and asked to start at the earliest incomplete milestone and stop at its boundary. Audit found AI-01 complete except one stale test; AI-02 (catalogue grounding/comparison/ordinal context) was the earliest incomplete milestone. Tree was idle since 2026-11-19 at start; single writer apart from Codex's sync-only state edit.
+
+**Files changed (AI-owned only):** src/lib/auria/catalogue-tools.ts (designRef UUID|RSJ code, `resolveDesign`, `compareDesigns`, 18/21/22/24 karat schema with honest unsupported-purity result); src/lib/auria/orchestrate.ts (ordinal/code/comparison instructions); src/lib/server/auria/chat.ts (`displayedDesigns`/`selectedDesign` context, sanitized provider-failure log); src/lib/server/auria/tools.ts (sanitized tool-failure log); src/lib/server/auria/provider.ts (finishReason stop + abort race); src/components/auria/safe-message.tsx + src/app/ai-atelier/workspace.css (escaped scrollable comparison tables); scripts/test-auria-live.mjs (AURIA_LIVE_STATE/AURIA_LIVE_REPORTS overrides); tests/auria-domain.spec.ts (+3 AI-02 tests), tests/auria.spec.ts (table escaping assertions), tests/homepage.spec.ts (`/ai-atelier` 200).
+
+**Tests executed:** `pnpm check` (tsc, eslint zero-warning, production build) PASS after final edits. AURIA suites 26/26 PASS mid-task. Full suite `CI=1 playwright -c playwright.auria.config.ts --workers=1` **107/107 PASS** (9.8m; artifacts/ai02/final-results.json, final-run.log). Key-pattern scan of .next/static, src, tests, scripts, artifacts/ai02: 0 hits. `git diff --check` clean (CRLF warnings only).
+
+**Live Gemini (gemini-3.1-flash-lite, production server :3103 with --use-system-ca; reports artifacts/ai02/live/*.json, fictional conversation):**
+
+| Prompt | Result |
+|---|---|
+| "Show me some rings in 22 karat" (1st) | COMPLETE but answer said catalogue trouble — a tool call errored; cause unknown (pre-diagnostics build). Logged as unexplained. |
+| Retry 22K rings | 2 real cards (RSJ-D005 Petal Seal, RSJ-D007 Jali Arch); 15.3s |
+| "Compare the first and the second ring… daily wear, cost?" | Correct ordinal resolution, comparison table, no invented price, quote offered; 14.8s |
+| Roman Urdu "RSJ-D005… 24 karat?" | Natural Roman Urdu; code resolved; only 18K/22K offered; 14.0s |
+| Urdu-script code comparison | Correct Urdu table, but stream stayed open → 98.6s, saved STOPPED. Root-caused to lingering Gemini stream + non-abortable SDK iterator; fixed in provider.ts |
+| Urdu comparison after fix | PROVIDER_ERROR (not reproduced; pre-diagnostic build, likely transient) |
+| English code comparison after fix | COMPLETE, 13.7s (first text 11.7s) |
+| Urdu ordinal/customization follow-up | Blocked by app RATE_LIMITED (local 20/24h guard; no provider call). Ledger not reset. |
+
+**Not verified / limits:** Stop and 90s timeout after the abort-race change are covered by existing deterministic tests only, not re-tested live; Urdu-script ordinal follow-up not live-tested; first-turn tool error unexplained (diagnostics now log the code). One extra provider call was reserved after a client disconnect in the hang case (now prevented by the abort race, untested live). Budget/weight matching remains unverifiable because the sample catalogue has no prices/masses — by design. Port 3102 is held by a pre-existing process (not started by this session; left untouched).
+
+**Next exact milestone — AI-03 order management (only on assignment):** reuse createQuoteDraft/submit/getOrderStatus; add design-code support in createQuoteDraft, customization preference fields validated against design.customizationAvailable/variants, quote-draft edit conflict (version) handling, cross-conversation owned enquiry lookup by reference, persisted demo status transitions (SUBMITTED → UNDER_REVIEW etc. only via a server-side demo fixture, never AI), and browser test of the full request→draft→confirm→reference→status journey. Then live-verify with fresh quota. Voice after AI-03; images last.
+
+### 2026-11-21 — Codex — Requested saads-work pull blocked
+
+- Scope: repository synchronization only; sole writer, no delegation. Read repository instructions/state and inspected actual package/source/Git. Current branch codex/auria-ai-01; dirty AI implementation preserved.
+- Executed `git ls-remote --heads origin saads-work`: exit0, no match. Complete `git ls-remote --heads origin`: exit0, only main at d8773fa17affefbf005e2a6a8d19868a7f203a93. Used command-scoped safe.directory and schannel, with TLS verification intact.
+- Changed only PROJECT_STATE.md to record this blocker and precise handoff. No remote code pulled because requested branch is absent; no stash/branch switch/merge/reset/commit/push or secret access. Existing AI code and previous logs retained.
+- Verification: remote discovery and local status checks executed; final tracking diff/whitespace inspection required before handoff. Build, lint and browser suites not rerun because no application code changed.
+- Phase statuses unchanged. User must provide correct branch/repository or push saads-work; next Codex session rechecks remote and preserves all local AI files before attempting synchronization.
+
 ### 2026-11-19 — Claude (Saad's session) — Hero caption bands, legibility and flick test (S-19)
 - Saad approved `docs/DESIGN-PACKAGE.md` (written with the 10k-websites skill, applied to this Next.js site) with two decisions: hero scroll about 2,000px (decision A) and dark velvet with some ivory sections (decision B). Build step 1 of its plan is done.
 - Desktop hero now scrolls exactly 2,000px and carries four caption bands: the headline (settled on load), "Every grain finds its place." (letters scatter in while the dust gathers) then "Then the light tells the truth." (blur to sharp while light uncovers the photograph), the notes, and "Where would you like to begin?" above the collection tiles. Captions are desktop scroll only; phones, reduced motion and no-JS keep the still frame. Screen readers get each line once (visual letters are aria-hidden).
@@ -293,6 +360,72 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 - Cut-out regenerated with a tighter edge. The pearls in the source image cannot be separated reliably, so no note refers to them.
 - Verified: typecheck, lint, build, Playwright 81/81; production LCP (local, headless Chromium) 0.27–0.44s desktop, 0.16–0.22s mobile; ~54fps scrolling the particle act headless without GPU. Not measured on real phones.
 
+### 2026-11-19 — Codex — AI-01 implementation and genuine live verification
+
+**Authority / internal review / preservation**
+
+User authorizes real private free-tier Gemini text, existing-catalogue tools and fictional draft foundation; explicitly postpones images/voice and prohibits paid billing. This supersedes the old Phase04 stop only for AI-01. Codex is sole writer, no subagent or independent review. New local branch codex/auria-ai-01 from Saad e672f94505b3475f6d915522dc34a9580554dd7e; initial local tracking edit preserved. No commit, push, merge, deployment or stash deletion. Saad's animation/assets/catalogue data are unchanged; only AURIA entry links/copy touch his shell. Existing separate development server is left untouched.
+
+Read AGENTS/full state and PRD, UX, ARCHITECTURE, DATA_MODEL, API_CONTRACTS, AI_ARCHITECTURE, ACCEPTANCE; inspected home/catalogue/runtime/dependencies/Git and installed Next route/cookie guidance. Internal review identified stale OpenAI-first/202-worker/no-private-backend assumptions; active amendments preserve older planning while documenting the scoped Gemini/direct-stream/local-SQLite choice. The older four-versus-two homepage pin-budget discrepancy remains with non-AI design review, not silently redesigned here.
+
+**Implemented behavior**
+
+- /ai-atelier: luxury responsive history/conversation/selected-design/draft workspace, new conversation, real input/NDJSON streaming, Stop, explicit Retry, timestamps, safe minimal Markdown and language-aware direction. Initial sample cards are labelled catalogue discovery, not invented AI results. Missing credentials/disabled provider never produce a fake live reply.
+- ChatProvider.stream abstraction, Gemini-only adapter and fail-closed approved-model/free-tier gates. SDK @google/genai3.6.0 and Zod4.6.7 pinned; no Groq/OpenAI adapter/fallback. No account billing modification or paid call authorized/selected. Operator confirmation is required; account billing cannot be independently proved from an API response.
+- Existing catalogue is the only product source: six requested typed tools plus approved-demo-policy retrieval. Strict schemas, server ownership, bounded context/tool rounds/cards, explicit SAMPLE availability, null prices/masses/times preserved. Multi-search cards now merge/deduplicate in a stable bounded order instead of replacing earlier results; final behavior covered by deterministic tests.
+- Local Node22 SQLite .auria-data/private.sqlite (ignored), prepared transactions/WAL, seven-day opaque HttpOnly owner cookie, exact loopback Origin/Host/CSRF, version checks/one active chat, request replay IDs, safe errors and nullable token accounting. Test store is separate. No hosted database/service or public production auth.
+- createQuoteDraft/getQuoteDraft/getOrderStatus use one owned draft per conversation, source/variant snapshot, fictional customer, explicit confirmation/version check/idempotent demo receipt. Model cannot submit, reserve stock, confirm a real order, send notifications or promise delivery.
+- Future voice/transcription/speech/image-analysis/generation/edit/version interfaces only. Permissions/policy prohibitions remain; no disconnected voice/image demo.
+
+**Files created (23)**
+
+- src/types/auria.ts.
+- src/lib/auria/catalogue-tools.ts, orchestrate.ts, provider-policy.ts, validation.ts.
+- src/lib/server/auria/chat.ts, http.ts, provider.ts, store.ts, tools.ts.
+- src/app/api/ai/[...path]/route.ts; src/app/ai-atelier/page.tsx and workspace.css.
+- src/components/auria/workspace.tsx, use-workspace.ts, safe-message.tsx, quote-panel.tsx.
+- playwright.auria.config.ts; tests/auria-domain.spec.ts, auria-provider.spec.ts, auria.spec.ts.
+- scripts/test-auria-live.mjs and scripts/capture-auria.mjs.
+
+**Files modified (20)**
+
+.env.example; .gitignore; package.json; pnpm-lock.yaml; next-env.d.ts (Next build-generated production type imports); README.md; TEAM_TASKS.md; PROJECT_STATE.md; docs/PRD.md, UX.md, ARCHITECTURE.md, DATA_MODEL.md, API_CONTRACTS.md, AI_ARCHITECTURE.md, ACCEPTANCE.md; src/app/page.tsx; src/components/layout/site-header.tsx; src/components/home/home-experience.tsx; src/config/catalogue.ts; tests/homepage.spec.ts. No assets or catalogue fixtures changed; existing work/logs preserved.
+
+**Executed checks and correction trail**
+
+- Initial and corrected pnpm.cmd check passed; final check after contrast/composer/card-order corrections passed TypeScript, zero-warning lint and production build (exit0).
+- First isolated tests exposed valid loopback Origin rejection; fixed internal Next URL versus validated browser Host comparison, retaining strict cross-site rejection. Second run11/17 passed: UI crash from null-draft equality; corrected. Next19/20 passed: desktop active-history date contrast4.19:1; darkened text, no rule suppression.
+- Screenshot inspection found legacy preview .auria-composer flex styling squeezing the mobile text field. Renamed only the workspace class; added input-width/disclosure-placement assertions. Final read-only capture reports composer widths248px/696.625px at390/1440 with no overflow or page errors.
+- Final full104-test suite running with CI=1, provider disabled, separate test.sqlite, one Edge worker, reporter artifacts/ai01/final-results.json. Do not infer PASS until closure entry below.
+- git diff --check PASS (ordinary CRLF warnings only); ignored .env.local, SQLite, private test bearer and artifacts confirmed. Secret-pattern scan118 text files and actual-key check of .next/static JS: no hits/leaks;151 source files inventoried; local Markdown links resolve. Not a comprehensive security audit.
+- Initial live application request FAILED, zero text, saved error. Redacted diagnostic proved Node UNABLE_TO_VERIFY_LEAF_SIGNATURE. Windows --use-system-ca fixed trust without disabling TLS; one minimal genuine SDK greeting succeeded. One earlier diagnostic quoting failure made no API request; a tool approval usage interruption and later approval timeouts delayed work, never bypassed.
+
+**Actual live evidence (2026-11-19 Asia/Karachi; JSON UTC timestamps may show Nov18)**
+
+Through the real production application, six complete multi-turn answers plus one intentional Stop were verified, with the ten requested example topics grouped into these turns:
+
+| Test | Observed result |
+|---|---|
+| Traditional22K rings, broader alternatives | Real catalogue cards/answer;7 text deltas;15.641s total |
+| Second displayed design, customization, delivery | Exact Jali Arch UUID ending007; workshop-review caveat, no invented delivery;7 deltas;26.031s |
+| Available bangles plus lightweight bridal/budget | Actual Tidal Cuff/Lotus designs; explicitly unverified prices/weights;8 deltas;11.646s |
+| Roman Urdu + missing RSJ-D999 | Natural Roman Urdu, accurately says absent;4 deltas;3.918s |
+| Prepare fictional Jali quotation | Real owned DRAFT with requested smaller lattice; explicitly not submitted;7 deltas;8.444s |
+| Explicit test approval, then owned status in Urdu | SUBMITTED fictional receipt, no real order/delivery/notification;5 deltas;7.090s |
+| Stop actual ring stream |2 deltas then STOPPED/incomplete;3.941s; no fallback/retry |
+
+All eight attempts including the original TLS failure matched saved-message hashes on readback. Restarted production server and --history returned persisted:true,16 messages, SUBMITTED draft, no active turn. Read-only browser restored16 messages at390/1440 and saved screenshots; no AI calls in capture script. No genuine429 quota exhaustion was induced; free-tier429, timeout/access/TLS/missing-key and retry behavior are tested with injected failures, clearly separate from live success.
+
+Evidence: artifacts/ai01/live/*.json (eight reports), conversation-390/1440.png and receipt-390/1440.png; artifacts/ai01/workspace-320/390/768/1440.png and selection equivalents from tests. Live text data remains fictional. .auria-data/live-test-session.json holds a PRIVATE bearer, is ignored and must never be published. The live proof preceded the final UI-contrast/composer and card-merging refinement; final deterministic suite validates those refinements without spending more quota.
+
+**Limits / decisions / next**
+
+App ledger19 requests total:17 COMPLETE,1 STOPPED,1 failed TLS; direct minimal diagnostics are outside that ledger. Default local cap20 per rolling24h is nearly used, so another two-round response may be locally limited until reservations age out. Google project quota is separate/unknown; do not enable billing or reset usage to hide it. Successful first-text latency3.388–25.503s shows room for AI-02 efficiency work; no real-device/network/production latency certification.
+
+Local SQLite is experimental on Node22, single host, no at-rest encryption/backup/hosted deployment; seven-day access expiry with opportunistic cleanup, not a deletion SLA. Crash can lose uncommitted partial tokens; no durable stream replay. Draft multi-tab edits are last-write-wins until explicit version-checked submission; AI-03 should add draft edit conflicts/normalized order data. No real shop policy/price/weight/lead-time/stock evidence, customer notification, actual orders, optional Groq fallback or production identity.
+
+After final regression closure STOP AI-01. Next recommended, only on assignment: AI-02 grounding/context quality and latency; use the existing11 samples and adapter, evaluate combined queries/comparisons/selected-versus-ordinal context and approved FAQ gaps, align answer ordering with bounded cards, preserve unknown-safe facts, test explicit language switching and multi-tab state. Coordinate full product/quote contracts with Saad; AI-03 owns complete order workflow. Voice and every image feature remain postponed.
+
 ### 2026-11-18 — Claude (Saad's session) — Step 1: remove craft/worn scenes, add reference model photos
 - Agreed six-step plan recorded in `TEAM_TASKS.md` (S-12…S-17). Step 1 done.
 - Removed `craft-loupe.tsx`, `worn-story.tsx`, `wear-figure.tsx`, `worn.css`, `on-model.ts`; homepage scenes 5, desktop pins 1 (vault).
@@ -305,6 +438,14 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 - Built with canvas 2D + GSAP ScrollTrigger + Lenis 1.3.27 (MIT, new dependency). Particle targets are sampled from a transparent cut-out of sample design RSJ-D001 (`public/images/hero/`, derived from the existing AI concept image). No 3D assets, no paid generation.
 - Removed: showcase orbit hero and its viewer (`showcase-hero.tsx`, `showcase-viewer.tsx`, `showcase.css`). Desktop pins now 3.
 - Verified: typecheck, lint, build, Playwright 81/81 (Chromium headless). Not measured on real devices or throttled CPU.
+
+### 2026-11-18 — Codex — Requested Saad branch pull
+
+- Scope: repository synchronization only; sole writing session, no subagents, app implementation or later-phase work. Read full prior state/AGENTS, inspected actual page/package/Git and incoming state/team notes. Preserved previous documentation and source.
+- Commands: `ls-remote`, `fetch origin saad-works-customer-website`, incoming log/stat/instruction/package diff review, targeted `stash push -- next-env.d.ts`, tracking branch `switch`, `pull --ff-only origin saad-works-customer-website`, SHA verification and stash-to-HEAD file comparison. Fetch/pull succeeded; pull reported already up to date. Initial switch safely aborted on the local file; targeted preservation then succeeded. HEAD and origin branch both `e672f94505b3475f6d915522dc34a9580554dd7e`; main unchanged. No force/reset/TLS bypass/global ownership change.
+- Files modified by this task: PROJECT_STATE.md only, plus Git tracking/checkout/stash metadata and incoming branch files. No dependencies installed or credentials exposed. The local generated next-env change is equivalent to the incoming committed file and remains backed up in the named stash.
+- Verification: `pnpm.cmd typecheck` PASS exit0; `pnpm.cmd lint` PASS exit0 (zero warnings); `git diff --check` PASS; saved tracking diff/status inspected. Only PROJECT_STATE.md remains locally modified. Production build, browser/regression suite, screenshots and performance profiling were NOT rerun for this pull-only request. No claim of new UI acceptance or production readiness.
+- Next Codex session: review this branch's UI and the canonical motion-budget inconsistency when assigned; preserve the stash and this uncommitted tracking log. Do not begin Phase05 or merge into main automatically.
 
 ### 2026-11-18 — Claude (Saad's session) — Worn story, craft loupe, real category samples, lighter header
 - Branch `saad-works-customer-website` (not main). Owner: Saad. Tasks S-07…S-10 in `TEAM_TASKS.md`.
@@ -696,6 +837,12 @@ No customer requirement or journey is missing from the Phase 01 baseline. Remain
 - **Next agent + exact next action:**
 
 ## 10. Handoff snapshot (UPDATE AT EVERY HANDOFF)
+
+### Active snapshot — AURIA AI-02 done / STOP before AI-03 (2026-11-21, Claude Code)
+
+- AI-01 text chat: DONE (regression closed, 107/107). AI-02 catalogue intelligence: DONE with limits listed in the 2026-11-21 log entry. AI-03 orders, voice, images: NOT STARTED beyond the existing AI-01 draft/submit/status foundation.
+- Live runs need `NODE_OPTIONS=--use-system-ca`; local cap 20 provider calls/24h is currently exhausted — wait for reservations to age out, do not reset.
+- Next: AI-03 per the log entry. Uncommitted work on `codex/auria-ai-01`; commit only on user request.
 
 ### Active snapshot — Phase 04 verified / STOP before Phase 05
 

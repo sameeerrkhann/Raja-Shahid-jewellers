@@ -1,5 +1,23 @@
 # AURIA — unified chat, vision, images and voice
 
+## Active AI-01 text foundation — 2026-11-19
+
+This section supersedes the older OpenAI-first proposal for the private demo. Only Gemini text is implemented. Images (including analysis/upload), generation/editing and connected voice are postponed; their TypeScript capability interfaces are boundaries, not working features.
+
+- Provider-neutral `ChatProvider.stream` and bounded orchestrator; Gemini adapter uses pinned `@google/genai@3.6.0`. Model allowlist: `gemini-3.1-flash-lite` only. No automatic fallback, paid SDK path, search grounding, batch jobs or account/billing changes.
+- Gates: server-only GEMINI_API_KEY, AI_CHAT_ENABLED=true, GEMINI_FREE_TIER_CONFIRMED=true. Operator must verify Free tier/billing disabled in AI Studio. Configuration cannot independently verify billing; disable chat if that status changes. READY means configured, not a successful live call.
+- Local cap5 provider requests/minute, default20/rolling24h (AI_DAILY_REQUEST_LIMIT, max100). Every tool round and failed attempt counts. SDK attempts1; no automatic retries. Up to4 rounds/12 tool calls,6 cards/result,1600 output tokens/request;40s provider and90s whole-turn timeout.
+- Context: latest12 eligible messages, max16,000 characters; selected design and ordered recent IDs plus draft summary. No full catalogue dump. Exact source DTOs become cards; model text is escaped and minimally formatted, not executable HTML.
+- Tools: searchJewellery, getProductDetails, getDesignAvailability, getCategories, getAvailablePurities, getRelatedDesigns, getStorePolicies, createQuoteDraft, getQuoteDraft, getOrderStatus. Zod strict schemas reject unrecognized arguments/owner spoofing. Server-derived owner scopes every private tool. Draft creation never submits.
+- Policies require unknown prices/weights/timings to remain unknown; budget/lightweight requests are preferences, not verified matches. All11 records and availability remain SAMPLE; images are AI concepts. Production shop facts remain unapproved.
+- Direct NDJSON streaming with persistent completion/error/stop, replay-safe request IDs and explicit Retry. No durable streaming worker or replay of lost individual tokens. Interrupted streams remain incomplete. No hidden production mock mode.
+- Free-tier prompts may be used to improve Google products: UI disclosure and fictional data only. Windows TLS diagnostic required `node --use-system-ca`; certificate verification was never disabled.
+- Actual test evidence, success/blocker status and exact AI-02 handoff are in PROJECT_STATE.md.
+
+Official sources checked2026-11-19: [model/function support](https://aistudio.google.com/docs/models/gemini-3.1-flash-lite), [free-tier pricing/data treatment](https://aistudio.google.com/docs/pricing#gemini-3.1-flash-lite), [project-specific quotas](https://aistudio.google.com/docs/rate-limits), [supported SDK](https://aistudio.google.com/docs/libraries), [function calling](https://aistudio.google.com/docs/function-calling). Numeric Google quotas must be read in the user's AI Studio project; local caps are not provider guarantees.
+
+## Earlier baseline and future proposals (retained; active amendment above takes precedence)
+
 Status: Phase 01 integration proposal, 2026-11-17. No real call, model access, speech quality, cost or connected service has been verified. OpenAI is the proposed provider, subject to O-04. [API_CONTRACTS.md](API_CONTRACTS.md) owns our endpoints; [ARCHITECTURE.md](ARCHITECTURE.md) owns runtime/secrets/quotas; [DATA_MODEL.md](DATA_MODEL.md) owns persistence.
 
 ## 1. One concierge, several capabilities

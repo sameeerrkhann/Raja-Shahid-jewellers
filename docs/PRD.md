@@ -1,5 +1,15 @@
 # Customer-facing demo — product requirements
 
+## Active AI-01 scope amendment — 2026-11-19
+
+User authorizes a real one-tester private text concierge using eligible free-tier Gemini only; no paid billing/calls or automatic fallback. This supersedes the earlier OpenAI-first implementation order, not the broader future product vision. Catalogue stays the existing11 clearly labelled SAMPLE records with unknown price/weight/timing facts. No competing catalogue or admin portal.
+
+Required now: grounded streaming text, owned persistent conversations, selected-design/follow-up context, multilingual responses, safe errors/stop/retry, typed catalogue tools and fictional persistent quote drafts with explicit approval before a demo enquiry. No real customer details, real orders, reservations or notifications. Accurate business policies still require owner input.
+
+Sequence: AI-01 foundation → AI-02 grounding/context/comparison evaluation → AI-03 full order/quotation workflows → unified voice after those work → image analysis/generation/editing last. Each needs separate authorization. AI-01 does not complete Phase05 product pages or the entire older Phase06 acceptance scope. Implementation details live in the existing architecture/API/data/UX documents; actual results and blockers in PROJECT_STATE.
+
+## Earlier baseline and future proposals (retained; active amendment above takes precedence)
+
 Status: Phase 01 definition internally reviewed by Codex on 2026-11-17 (not an independent review). The user separately authorized Phases 02–04 and explicitly accepted finishing Phase 04 with 11 available original images after the built-in generation connection failed. This supersedes the earlier seed-count target for this demo, not final shop-data or manufacturing approval. Unresolved business/provider decisions remain gated to dependent phases. Scope authority and actual implementation status: [PROJECT_STATE.md](../PROJECT_STATE.md). Requirements below are targets, not verified behavior.
 
 ## 1. Document ownership and reading order

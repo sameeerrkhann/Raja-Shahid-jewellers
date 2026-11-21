@@ -1,5 +1,20 @@
 # Frontend, backend and runtime architecture
 
+## AI-01 runtime amendment — 2026-11-19
+
+Next.js Node route handlers now support /ai-atelier and /api/ai/* alongside the unchanged public catalogue. A local Node22 built-in SQLite adapter in src/lib/server/auria/store.ts is the approved-scope implementation choice for this one-tester private demo, not a hosted database deployment. No database service was provisioned.
+
+- .auria-data/private.sqlite (ignored) stores server-owned sessions, conversations, usage and demo drafts; tests use separate test.sqlite. Immediate transactions, prepared statements, WAL and busy timeout serialize writes. Node22 SQLite emits an experimental warning.
+- 256-bit random HttpOnly/SameSite Strict cookie; hashed bearer lookup, purpose-separated CSRF token, loopback-only Host and Origin checks. One active turn per conversation and version checks protect chat/selection. Cross-session access denied. Local OS file permissions remain important; no database-at-rest encryption.
+- Sessions expire after7 days; expired rows are removed when a new session is created. This is not a scheduled deletion SLA. Calls are pruned during reservation after24h; SQLite backups/WAL lifecycle and production retention are not implemented.
+- Bounded provider calls and token metadata; no paid budget pathway. Provider eligibility depends on the user's Free-tier project confirmation, not inferred from a key. See AI_ARCHITECTURE for caps and approved model.
+- Production prerequisites: hosted authentication, durable shared DB/storage, migrations, backup/retention policy, multi-instance cancellation/locking, approved privacy/shop policies and isolated deployment. Do not expose this loopback-only adapter publicly or deploy it on ephemeral serverless storage.
+- Windows on this host needs NODE_OPTIONS=--use-system-ca for the provider's trusted HTTPS chain. Do not set NODE_TLS_REJECT_UNAUTHORIZED=0. No TLS bypass was used.
+
+Earlier database/pooling/jobs design remains a future production proposal, not an assertion that those services exist. Current test evidence belongs to PROJECT_STATE.md.
+
+## Earlier baseline and future proposals (retained; active amendment above takes precedence)
+
 Status: Phase 04 local public catalogue implemented, 2026-11-17. Frontend plus five read-only catalogue handlers exist; no database/private backend/provider service is provisioned. Private persistence/security/deployment choices below remain proposals, not validated by a successful build. [PRD.md](PRD.md) owns decisions; [DATA_MODEL.md](DATA_MODEL.md), [API_CONTRACTS.md](API_CONTRACTS.md) and [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) own detailed contracts.
 
 ## 1. Architecture decisions for review

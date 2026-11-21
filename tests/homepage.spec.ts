@@ -31,7 +31,7 @@ test("homepage has eight honest connected scenes and proper metadata", async ({ 
   await expect(page.getByText("Not connected yet. No message, photo or voice leaves this page.")).toBeAttached();
   expect((await request.get("/admin")).status()).toBe(404);
   expect((await request.get("/designs")).status()).toBe(200);
-  expect((await request.get("/ai-atelier")).status()).toBe(404);
+  expect((await request.get("/ai-atelier")).status()).toBe(200);
   expect((await request.get("/")).headers()["x-robots-tag"]).toContain("noindex");
   const invalid = await page.locator('a[href^="#"], a[href^="/#"]').evaluateAll((links) => links.map((link) => link.getAttribute("href")!.split("#")[1]).filter((id) => !document.getElementById(id)));
   expect(invalid).toEqual([]);
@@ -106,7 +106,7 @@ test("mobile navigation and native horizontal gallery", async ({ page }) => {
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
 });
 
-test("future AURIA and enquiry CTAs explain availability without submissions", async ({ page }) => {
+test("AURIA links to the workspace; enquiry CTAs explain availability without submissions", async ({ page }) => {
   const methods: string[] = [];
   const errors: string[] = [];
   const external: string[] = [];
@@ -114,7 +114,8 @@ test("future AURIA and enquiry CTAs explain availability without submissions", a
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   page.on("request", (request) => { methods.push(request.method()); if (!new URL(request.url()).hostname.match(/^(127\.0\.0\.1|localhost)$/)) external.push(request.url()); });
   await ready(page);
-  for (const [label, title] of [["Preview AURIA", "AURIA, coming into focus"], ["Plan a private visit", "A visit, thoughtfully planned"], ["A jewellery enquiry", "Begin with a conversation"]]) {
+  await expect(page.getByRole("link", { name: "Design with AURIA", exact: true })).toHaveAttribute("href", "/ai-atelier");
+  for (const [label, title] of [["Plan a private visit", "A visit, thoughtfully planned"], ["A jewellery enquiry", "Begin with a conversation"]]) {
     await page.getByRole("button", { name: label, exact: true }).click();
     await expect(page.getByRole("dialog", { name: title })).toBeVisible();
     await page.keyboard.press("Escape");
@@ -197,13 +198,13 @@ for (const width of [390, 1440]) {
     await ready(page);
     const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(results.violations).toEqual([]);
-    await page.getByRole("button", { name: "Preview AURIA", exact: true }).click();
+    await page.getByRole("button", { name: "Plan a private visit", exact: true }).click();
     const dialogResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(dialogResults.violations).toEqual([]);
   });
 }
 
-test("scrubbed entrance changes with scroll and AURIA stays honestly unconnected", async ({ page }) => {
+test("scrubbed entrance changes with scroll and AURIA describes only what works", async ({ page }) => {
   await ready(page);
   const intro = page.locator("[data-film-intro]");
   await expect(intro).toHaveCSS("opacity", "1");
@@ -211,10 +212,11 @@ test("scrubbed entrance changes with scroll and AURIA stays honestly unconnected
   await expect.poll(() => intro.evaluate((element) => Number(getComputedStyle(element).opacity))).toBeLessThan(.05);
   await expect.poll(() => page.locator("[data-film-caption]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
   await page.screenshot({ path: `${screenshotFolder}/entrance-transition-1440.png` });
-  // AURIA is a design-only preview: it must say plainly that nothing is connected.
+  // AURIA text chat is live in the demo; voice and images must be plainly labelled as coming soon.
   await page.locator("#auria").scrollIntoViewIfNeeded();
-  await expect(page.getByText("Not connected yet. No message, photo or voice leaves this page.")).toBeVisible();
-  await expect(page.getByText("Illustrative conversation · not connected")).toBeVisible();
+  await expect(page.getByText("Text chat works in this demo, using sample designs only. Voice and images are coming soon.")).toBeVisible();
+  await expect(page.getByText("Illustrative conversation · sample designs")).toBeVisible();
+  await expect(page.locator("#auria").getByRole("link", { name: "Design with AURIA", exact: true })).toHaveAttribute("href", "/ai-atelier");
 });
 
 test("cold local home transfer and animation profiling evidence", async ({ page }, testInfo) => {

@@ -1,6 +1,45 @@
 # Raja Shahid Jewellers — Visual Atelier
 
-Customer-facing demo by Neural Stack & Co. Phases 02–04 provide the design foundation, six-scene cinematic homepage and premium sample Design Vault. AURIA remains a working concierge name. No admin portal, full product/customization/quotation flow, AI backend, voice or live gold service is implemented.
+## AURIA AI-01 private preview
+
+The text concierge now lives at /ai-atelier. The historical baseline below predates AI-01; PROJECT_STATE.md records current verification and limitations. No admin, paid fallback, voice or image generation/editing is enabled.
+
+Configure these **server-only** values in ignored .env.local (never paste/commit the key):
+
+```dotenv
+GEMINI_API_KEY=<your-local-free-tier-key>
+AI_CHAT_PROVIDER=gemini
+AI_CHAT_MODEL=gemini-3.1-flash-lite
+AI_CHAT_ENABLED=true
+GEMINI_FREE_TIER_CONFIRMED=true
+AI_DAILY_REQUEST_LIMIT=20
+```
+
+Set the confirmation flag only after AI Studio shows Free tier with billing disabled. The app cannot verify account billing. Other provider/model choices fail closed; each tool round counts against the local request cap. Use fictional data only: Google's free tier may use content to improve products.
+
+```powershell
+# This Windows machine needs its trusted system roots; never disable TLS verification.
+$env:NODE_OPTIONS='--use-system-ca'
+pnpm.cmd check
+pnpm.cmd start --port 3102
+# Visit http://127.0.0.1:3102/ai-atelier
+```
+
+For development use pnpm.cmd dev and http://127.0.0.1:3000/ai-atelier. Only one build/test writer at a time. Do not rebuild while a production preview is running. Another developer's server must not be terminated without agreement.
+
+Persistent sessions/drafts use ignored .auria-data/private.sqlite and an HttpOnly seven-day cookie. Browser reload/server restart preserve saved messages; clearing the cookie loses access. This Node22 experimental SQLite adapter is local/single-host only, not a publicly deployable/serverless backend. The user explicitly reviews and confirms a fictional demo enquiry; no real order, email or delivery is created.
+
+```powershell
+# No live calls: isolated provider-disabled suite + all existing regressions.
+pnpm.cmd exec playwright test --config=playwright.auria.config.ts
+# Opt-in live call, only with the free project confirmed and preview running:
+node scripts/test-auria-live.mjs "Show me traditional 22K gold rings."
+node scripts/test-auria-live.mjs --history
+```
+
+The live script has no automatic retries and stores its private test cookie in ignored .auria-data/live-test-session.json; never share that file. Reports/screenshots under artifacts/ai01 are local evidence, not checked-in assets. Do not run the live script in ordinary CI. Detailed transport/tool/data contracts are in the existing docs directory.
+
+Customer-facing demo by Neural Stack & Co. Phases 02–04 provide the design foundation, cinematic homepage and sample Design Vault. AI-01 adds the private text concierge and fictional quote-draft foundation described above. No admin portal, full product/customization/order workflow, voice, image generation/editing or live gold service is implemented.
 
 ## Local preview
 

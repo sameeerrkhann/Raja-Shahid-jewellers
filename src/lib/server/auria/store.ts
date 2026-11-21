@@ -1,0 +1,49 @@
+import "server-only";
+import { DatabaseSync } from "node:sqlite";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { randomUUID } from "node:crypto";
+import type { Conversation, Usage } from "@/types/auria";
+import { AuriaError } from "@/lib/auria/validation";
+
+export type OwnerState = { conversations: Conversation[]; usage: Usage[] };
+// Local single-host adapter; no hosted service or public storage. Transactions serialize writers.
+function database() {
+  const directory = join(process.cwd(), ".auria-data");
+  mkdirSync(directory, { recursive: true, mode: 0o700 });
+  const db = new DatabaseSync(join(directory, process.env.AURIA_TEST_STORE === "true" ? "test.sqlite" : "private.sqlite"));
+  db.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, expires INTEGER NOT NULL, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS calls (id TEXT PRIMARY KEY, owner TEXT NOT NULL, created INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
+  return db;
+}
+export function createSession(id: string, expires: number) {
+  const db = database();
+  try { db.prepare("DELETE FROM sessions WHERE expires < ?").run(Date.now()); db.prepare("INSERT INTO sessions VALUES (?, ?, ?)").run(id, expires, JSON.stringify({ conversations: [], usage: [] })); } finally { db.close(); }
+}
+export function withOwner<T>(owner: string, change: (state: OwnerState) => T): T {
+  const db = database();
+  try {
+    db.exec("BEGIN IMMEDIATE");
+    const row = db.prepare("SELECT expires,data FROM sessions WHERE id=?").get(owner) as { expires: number; data: string } | undefined;
+    if (!row || row.expires <= Date.now()) throw new AuriaError("SESSION_EXPIRED", "Your private session expired. Start a new session.", 401);
+    const state = JSON.parse(row.data) as OwnerState;
+    for (const c of state.conversations) if (c.activeTurn && c.activeTurn.expiresAt < Date.now()) { const m = c.messages.find((m) => m.id === c.activeTurn?.assistantId); if (m) { m.state = "STOPPED"; m.errorCode = "INTERRUPTED"; } c.activeTurn = null; c.version++; }
+    const result = change(state);
+    db.prepare("UPDATE sessions SET data=? WHERE id=?").run(JSON.stringify(state), owner);
+    db.exec("COMMIT"); return result;
+  } catch (error) { try { db.exec("ROLLBACK"); } catch {} throw error; } finally { db.close(); }
+}
+export function ownedConversation(state: OwnerState, id: string) { const c = state.conversations.find((c) => c.id === id); if (!c) throw new AuriaError("NOT_FOUND", "Conversation unavailable.", 404); return c; }
+export function reserveCall(owner: string, model: string): string {
+  const db = database(); const now = Date.now(); const id = randomUUID();
+  try {
+    db.exec("BEGIN IMMEDIATE"); db.prepare("DELETE FROM calls WHERE created < ?").run(now - 86_400_000);
+    const count = (since: number) => (db.prepare("SELECT COUNT(*) AS n FROM calls WHERE created >= ?").get(since) as { n: number }).n;
+    const cap = Math.min(100, Math.max(1, Number(process.env.AI_DAILY_REQUEST_LIMIT) || 20));
+    if (count(now - 60_000) >= 5 || count(now - 86_400_000) >= cap) throw new AuriaError("RATE_LIMITED", "The demo request limit is reached. Please wait before retrying.", 429, true);
+    db.prepare("INSERT INTO calls VALUES (?, ?, ?)").run(id, owner, now); db.exec("COMMIT");
+  } catch (error) { try { db.exec("ROLLBACK"); } catch {} throw error; } finally { db.close(); }
+  withOwner(owner, (s) => { s.usage.push({ id, model, startedAt: new Date(now).toISOString(), state: "RESERVED", inputTokens: null, outputTokens: null, totalTokens: null }); s.usage = s.usage.slice(-100); });
+  return id;
+}
+export function markVerified() { const db = database(); try { db.prepare("INSERT OR REPLACE INTO metadata VALUES ('verified', ?)").run(new Date().toISOString()); } finally { db.close(); } }
+export function lastVerified(): string | null { const db = database(); try { return (db.prepare("SELECT value FROM metadata WHERE key='verified'").get() as { value: string } | undefined)?.value ?? null; } finally { db.close(); } }

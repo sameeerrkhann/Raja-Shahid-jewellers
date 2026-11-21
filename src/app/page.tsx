@@ -9,7 +9,7 @@ import { showcase } from "@/config/showcase";
 import { sampleDesigns } from "@/data/demo/catalogue";
 import { categorySamples } from "@/lib/catalogue/showcase";
 import { categoryLabel } from "@/config/catalogue";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import "./home.css";
 import "lenis/dist/lenis.css";
@@ -18,7 +18,7 @@ import "./showcase.css";
 
 export const metadata: Metadata = {
   title: { absolute: "Raja Shahid Jewellers — Beyond the Moment" },
-  description: "The provisional Royal Gold Atelier: turn a concept ring with your scroll, look closer at sample designs, see pieces on a model, then browse sample jewellery, bridal inspiration and the future AURIA atelier. Customer website demo with concept imagery, not actual stock.",
+  description: "The provisional Royal Gold Atelier: turn a concept ring with your scroll, look closer at sample designs, see pieces on a model, then browse sample jewellery, bridal inspiration and the AURIA text atelier. Customer website demo with concept imagery, not actual stock.",
   robots: { index: false, follow: false },
 };
 
@@ -49,18 +49,18 @@ export default function Home() {
     <section id="vault" className="home-vault home-scene" data-scene="06" data-vault-pin aria-labelledby="vault-title"><div className="container home-vault__heading"><div><h2 id="vault-title" data-home-reveal>A world of <em>possibility.</em></h2></div><p>Six ways into the Design Vault.<br />Each shows the sample designs published so far.</p></div><VaultGallery samples={categorySamples()} /></section>
     <section id="auria" className="auria home-scene" data-scene="07" data-tone="dark" aria-labelledby="auria-title"><div className="container auria__grid">
       <div className="auria__copy">
-        <p className="auria__badge"><Icon name="sparkle" />AURIA · in development</p>
+        <p className="auria__badge"><Icon name="sparkle" />AURIA · text chat</p>
         <h2 id="auria-title" data-home-reveal>Describe it.<br /><em>We will find it.</em></h2>
-        <p data-home-reveal>AURIA will be your jewellery concierge: tell it the occasion, the feeling or a photo you love, and it suggests pieces from the Design Vault or starts a custom request with our team.</p>
+        <p data-home-reveal>AURIA is your jewellery concierge: tell it the occasion or the feeling you have in mind, and it suggests sample pieces from the Design Vault or helps you prepare a custom enquiry for our team.</p>
         <ul className="auria__abilities">
           <li><strong>Ideas into pieces</strong><span>From a few words to designs you can open.</span></li>
           <li><strong>Custom requests</strong><span>Shape a made-to-order idea before you visit.</span></li>
-          <li><strong>Voice, later</strong><span>Speak instead of typing, when it is ready.</span></li>
+          <li><strong>Voice and images</strong><span>Coming soon.</span></li>
         </ul>
-        <div className="auria__actions"><Button data-home-action="auria">Preview AURIA <Icon name="arrow" /></Button><Button data-home-action="appointment" variant="outline">Talk to our team <Icon name="arrow" /></Button></div>
-        <p className="auria__note">Not connected yet. No message, photo or voice leaves this page.</p>
+        <div className="auria__actions"><ButtonLink href="/ai-atelier">Design with AURIA <Icon name="arrow" /></ButtonLink><Button data-home-action="appointment" variant="outline">Talk to our team <Icon name="arrow" /></Button></div>
+        <p className="auria__note">Text chat works in this demo, using sample designs only. Voice and images are coming soon.</p>
       </div>
-      <div className="auria__device" aria-label="Illustrative AURIA conversation, not connected" role="img">
+      <div className="auria__device" aria-label="Illustrative AURIA conversation" role="img">
         <div className="auria__orb" aria-hidden="true" />
         <div className="auria__thread" aria-hidden="true">
           <p className="auria__msg auria__msg--you">A bridal set in 22K, light enough for a long day.</p>
@@ -69,7 +69,7 @@ export default function Home() {
           <div className="auria__chips"><span>Something for my mother</span><span>Match my outfit</span><span>A ring with a story</span></div>
           <div className="auria__input"><span>Ask AURIA…</span><Icon name="sparkle" /></div>
         </div>
-        <span className="auria__label">Illustrative conversation · not connected</span>
+        <span className="auria__label">Illustrative conversation · sample designs</span>
       </div>
     </div></section>
     <section id="gold" className="home-gold home-scene" data-scene="08" data-tone="dark" aria-labelledby="gold-title"><div className="container">

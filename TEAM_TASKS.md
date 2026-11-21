@@ -51,12 +51,12 @@ _Sameer: please correct or extend this section._
 
 ## AI development — AURIA (assigned separately)
 
-**Owner:** _add name_
-**Scope:** AURIA chatbot, AI image generation/analysis, AI search, voice, AI backend. Not part of Saad's assignment; existing AURIA placeholders are kept intact.
+**Owner:** Codex for Sameer, branch `codex/auria-ai-01` (integrated onto Saad's `ea0a56f` in `integrate/auria-homepage`).
+**Scope:** AI-01 free-tier text foundation only. Saad retains non-AI ownership. Only the AURIA homepage/header entry points change; existing home animation and catalogue remain. Order tools expand in AI-03; voice later; images last. No paid APIs/admin.
 
 | # | Date | Task | Status | Main files |
 |---|------|------|--------|------------|
-| — | — | _add tasks here_ | — | — |
+| AI-01 | 2026-11-19 | Persistent private chat workspace, Gemini adapter, existing-catalogue tools and explicit fictional quote drafts; live verification/QA | In progress | src/components/auria, src/lib/auria, src/lib/server/auria, src/app/ai-atelier, src/app/api/ai, tests/auria*, canonical docs/state |
 
 ---
 
