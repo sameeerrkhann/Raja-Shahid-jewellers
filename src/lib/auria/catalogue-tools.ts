@@ -1,12 +1,11 @@
 import { z } from "zod";
 import { catalogueCategories, purityOptions } from "@/config/catalogue";
 import { parseCatalogueQuery } from "@/lib/catalogue/query";
-import { draftInput } from "./validation";
+import { draftInput, designRef, enquiryReference } from "./validation";
 import type { CatalogueQuery, CatalogueResult, PublicDesign } from "@/types/catalogue";
 import type { ToolDefinition, ToolResult } from "@/types/auria";
 
 // Customers quote printed design codes (RSJ-D007); the model may also pass the UUID from a card.
-const designRef = z.string().trim().regex(/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|RSJ-D\d{3,6})$/i, "Use a design UUID or code such as RSJ-D007");
 const id = z.strictObject({ designId: designRef });
 const empty = z.strictObject({});
 export const toolSchemas = {
@@ -15,7 +14,7 @@ export const toolSchemas = {
   getAvailablePurities: z.strictObject({ designId: designRef.optional() }), getRelatedDesigns: id,
   compareDesigns: z.strictObject({ designIds: z.array(designRef).min(2).max(4) }),
   getStorePolicies: empty, createQuoteDraft: draftInput, getQuoteDraft: empty,
-  getOrderStatus: z.strictObject({ reference: z.string().max(60).optional() }),
+  getOrderStatus: z.strictObject({ reference: enquiryReference.optional() }),
 };
 export type ToolName = keyof typeof toolSchemas;
 const descriptions: Record<ToolName, string> = {
@@ -27,9 +26,9 @@ const descriptions: Record<ToolName, string> = {
   getRelatedDesigns: "Retrieve up to 6 existing designs from the same category, excluding the selected design.",
   compareDesigns: "Compare 2-4 published designs side by side (UUIDs or RSJ-D codes, in the order the customer named them). Returns only recorded facts; unverified prices/weights/timings stay null.",
   getStorePolicies: "Read known demo rules and explicitly pending shop policies. Use for price, delivery, returns, address or hours questions.",
-  createQuoteDraft: "Prepare an editable persistent DEMO draft for a published design and valid variant. This never submits an enquiry. Only suggest it when the user requests a quotation; the user must review and explicitly submit in the UI.",
+  createQuoteDraft: "Prepare or replace an editable DEMO draft. Resolve designId UUID/RSJ code, displayedPosition (1-based current card order), or selected design if both absent. GetQuoteDraft first before editing: expectedVersion must match, zero only for a new draft. Gather purity from actual variants; sizing/stone/pattern changes are preferences subject to jeweller confirmation, not supported-option claims. Never invent missing details. Send the complete reviewed preferences on edit. Never submits an enquiry.",
   getQuoteDraft: "Get this conversation's owned demo draft, or null.",
-  getOrderStatus: "Read only this conversation's owned submitted demo enquiry. No real orders, no other customer lookup, no delivery promises.",
+  getOrderStatus: "Read recorded status/history by reference across this browser customer's own conversations, or this conversation's enquiry if reference absent. Reference possession alone never authorizes access. No invented status, price, real order or delivery promises.",
 };
 export const toolDefinitions: ToolDefinition[] = Object.entries(toolSchemas).map(([name, schema]) => { const parameters = z.toJSONSchema(schema); delete parameters.$schema; return { name, description: descriptions[name as ToolName], parameters }; });
 export interface CatalogueAccess { search(query: CatalogueQuery): CatalogueResult; get(id: string): PublicDesign | null }

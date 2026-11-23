@@ -7,6 +7,7 @@ import type { DesignCardData, PublicDesign } from "@/types/catalogue";
 import { statusLabels, categoryLabel } from "@/config/catalogue";
 import { SafeMessage } from "./safe-message";
 import { QuotePanel } from "./quote-panel";
+import { EnquiryLookup } from "./enquiry-status";
 import { useWorkspace, type View } from "./use-workspace";
 const suggestions = ["Show me traditional 22K gold rings.", "Which available bangles can I order?", "Show me lightweight bridal jewellery.", "Mujhe shaadi ke liye jewellery chahiye."];
 function Picture({ design, large = false }: { design: DesignCardData | PublicDesign; large?: boolean }) {
@@ -14,7 +15,7 @@ function Picture({ design, large = false }: { design: DesignCardData | PublicDes
   return <div className={`auria-product-image${large ? " auria-product-image--large" : ""}`}>{failed ? <span>Image unavailable<br />{design.title}</span> : <Image src={media.url} alt={media.alt} fill sizes={large ? "(max-width: 900px) 80vw, 280px" : "180px"} onError={() => setFailed(true)} />}</div>;
 }
 export function AuriaWorkspace({ discovery }: { discovery: DesignCardData[] }) {
-  const { csrf, capability, history, conversation, selected, view, setView, input, setInput, language, setLanguage, error, busy, loading, streaming, notice, retryText, usageCount, scrollRef, inputRef, newConversation, openConversation, selectDesign, send, stop, saveDraft, submitDraft } = useWorkspace();
+  const { csrf, capability, history, conversation, selected, view, setView, input, setInput, language, setLanguage, error, busy, loading, streaming, notice, retryText, usageCount, scrollRef, inputRef, newConversation, openConversation, selectDesign, send, stop, saveDraft, submitDraft, reloadDraft } = useWorkspace();
   const displayed = [...(conversation?.messages ?? []), ...(streaming ? [streaming] : [])];
   return <main id="main-content" className="auria-workspace" data-view={view}>
     <div className="auria-masthead"><div><p className="eyebrow">Your personal jewellery concierge</p><h1>AURIA<span> / The conversation atelier</span></h1></div><Link href="/designs" className="text-link">Explore the Design Vault ↗</Link></div>
@@ -35,7 +36,8 @@ export function AuriaWorkspace({ discovery }: { discovery: DesignCardData[] }) {
       </section>
       <aside className="auria-selection" aria-label="Selected design and quotation"><div className="auria-panel-heading"><p className="eyebrow">On your mind</p><span aria-hidden="true">◇</span></div>
         {selected ? <><Picture key={selected.id} design={selected} large /><p className="auria-design-code">{selected.designCode} / {categoryLabel(selected.categorySlug)}</p><h2>{selected.title}</h2><p className="auria-sample-status">Sample · {statusLabels[selected.displayStatus]}</p><p>{selected.description}</p><dl className="auria-facts"><div><dt>Price & weight</dt><dd>Workshop confirmation required</dd></div><div><dt>Customization</dt><dd>{selected.customizationAvailable ? "Enquiry welcome; review required" : "Ask the workshop"}</dd></div><div><dt>Delivery</dt><dd>Timing not yet confirmed</dd></div></dl><Link className="text-link" href={`/designs?q=${selected.designCode}`}>View in the Design Vault ↗</Link></> : <><h2>A closer connection.</h2><p className="auria-muted">Select a design to keep its details beside your conversation.</p><p className="eyebrow">From the sample collection</p><div className="auria-discovery">{discovery.map((card) => <button key={card.id} className="auria-design" disabled={busy || !csrf} onClick={() => selectDesign(card)}><Picture design={card} /><span><strong>{card.title}</strong><small>{card.designCode} · Sample</small></span></button>)}</div></>}
-        {conversation && <QuotePanel key={`${conversation.id}-${conversation.draft?.version ?? 0}-${selected?.id ?? "none"}`} draft={conversation.draft} design={selected} disabled={busy} save={saveDraft} submit={submitDraft} />}
+        {conversation && <QuotePanel key={`${conversation.id}-${conversation.draft?.version ?? 0}-${selected?.id ?? "none"}`} draft={conversation.draft} design={selected} disabled={busy} save={saveDraft} submit={submitDraft} reload={reloadDraft} />}
+        {!!csrf && <EnquiryLookup />}
       </aside>
     </div>
   </main>;

@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import type { Conversation, Usage } from "@/types/auria";
 import { AuriaError } from "@/lib/auria/validation";
+import { normalizeDraft } from "@/lib/auria/quotation";
 
 export type OwnerState = { conversations: Conversation[]; usage: Usage[] };
 // Local single-host adapter; no hosted service or public storage. Transactions serialize writers.
@@ -13,6 +14,7 @@ function database() {
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   const db = new DatabaseSync(join(directory, process.env.AURIA_TEST_STORE === "true" ? "test.sqlite" : "private.sqlite"));
   db.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, expires INTEGER NOT NULL, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS calls (id TEXT PRIMARY KEY, owner TEXT NOT NULL, created INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
+  db.exec("CREATE TABLE IF NOT EXISTS enquiry_references (reference TEXT PRIMARY KEY, owner TEXT NOT NULL, conversation_id TEXT NOT NULL, draft_id TEXT NOT NULL UNIQUE);");
   return db;
 }
 export function createSession(id: string, expires: number) {
@@ -26,8 +28,14 @@ export function withOwner<T>(owner: string, change: (state: OwnerState) => T): T
     const row = db.prepare("SELECT expires,data FROM sessions WHERE id=?").get(owner) as { expires: number; data: string } | undefined;
     if (!row || row.expires <= Date.now()) throw new AuriaError("SESSION_EXPIRED", "Your private session expired. Start a new session.", 401);
     const state = JSON.parse(row.data) as OwnerState;
+    for (const c of state.conversations) if (c.draft) normalizeDraft(c.draft);
     for (const c of state.conversations) if (c.activeTurn && c.activeTurn.expiresAt < Date.now()) { const m = c.messages.find((m) => m.id === c.activeTurn?.assistantId); if (m) { m.state = "STOPPED"; m.errorCode = "INTERRUPTED"; } c.activeTurn = null; c.version++; }
     const result = change(state);
+    for (const c of state.conversations) if (c.draft?.reference) {
+      const existing = db.prepare("SELECT owner,draft_id FROM enquiry_references WHERE reference=?").get(c.draft.reference) as { owner: string; draft_id: string } | undefined;
+      if (existing && (existing.owner !== owner || existing.draft_id !== c.draft.id)) throw new AuriaError("REFERENCE_CONFLICT", "Could not reserve an enquiry reference. Retry submission.", 409, true);
+      db.prepare("INSERT OR IGNORE INTO enquiry_references VALUES (?, ?, ?, ?)").run(c.draft.reference, owner, c.id, c.draft.id);
+    }
     db.prepare("UPDATE sessions SET data=? WHERE id=?").run(JSON.stringify(state), owner);
     db.exec("COMMIT"); return result;
   } catch (error) { try { db.exec("ROLLBACK"); } catch {} throw error; } finally { db.close(); }
