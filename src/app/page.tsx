@@ -49,7 +49,7 @@ export default function Home() {
     <section id="vault" className="home-vault home-scene" data-scene="06" data-vault-pin aria-labelledby="vault-title"><div className="container home-vault__heading"><div><h2 id="vault-title" data-home-reveal>A world of <em>possibility.</em></h2></div><p>Six ways into the Design Vault.<br />Each shows the sample designs published so far.</p></div><VaultGallery samples={categorySamples()} /></section>
     <section id="auria" className="auria home-scene" data-scene="07" data-tone="dark" aria-labelledby="auria-title"><div className="container auria__grid">
       <div className="auria__copy">
-        <p className="auria__badge"><Icon name="sparkle" />AURIA · text chat</p>
+        <p className="auria__badge"><Icon name="sparkle" />AURIA · text chat demo</p>
         <h2 id="auria-title" data-home-reveal>Describe it.<br /><em>We will find it.</em></h2>
         <p data-home-reveal>AURIA is your jewellery concierge: tell it the occasion or the feeling you have in mind, and it suggests sample pieces from the Design Vault or helps you prepare a custom enquiry for our team.</p>
         <ul className="auria__abilities">
@@ -58,7 +58,7 @@ export default function Home() {
           <li><strong>Voice and images</strong><span>Coming soon.</span></li>
         </ul>
         <div className="auria__actions"><ButtonLink href="/ai-atelier">Design with AURIA <Icon name="arrow" /></ButtonLink><Button data-home-action="appointment" variant="outline">Talk to our team <Icon name="arrow" /></Button></div>
-        <p className="auria__note">Text chat works in this demo, using sample designs only. Voice and images are coming soon.</p>
+        <p className="auria__note">Text chat demo using sample designs only; it relies on a free AI service that may sometimes be busy. Voice and images are coming soon.</p>
       </div>
       <div className="auria__device" aria-label="Illustrative AURIA conversation" role="img">
         <div className="auria__orb" aria-hidden="true" />

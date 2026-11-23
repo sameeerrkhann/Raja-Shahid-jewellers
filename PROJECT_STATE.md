@@ -8,6 +8,12 @@
 
 ## 0. Current state and next action
 
+### Integration branch — 2026-11-23 (Claude Code, at explicit user request)
+- Branch `integrate/auria-homepage` = Saad's `ea0a56f` + AURIA `6fba523` + AURIA enquiry/quotation commit `cde7581` (cherry-picked, not merged, so Saad's stale `e672f94` is not carried over).
+- Homepage design is Saad's. His AURIA section 07 now links to `/ai-atelier`; the "Preview AURIA" modal and its explanation text were removed.
+- Live Gemini text check on 2026-11-23 FAILED twice with provider 503 "high demand" (our request reached Google; the app recorded the failure honestly). Homepage copy therefore says "text chat demo … may sometimes be busy", not "works". Re-verify live and only then strengthen the wording.
+- Next: Saad and Sameer pull `integrate/auria-homepage`; merge to `main` only after both review.
+
 ### Active AI-02 catalogue intelligence — 2026-11-21 (Claude Code, at explicit user request)
 
 - User explicitly assigned Claude Code the AURIA AI work (overriding the 2026-11-17 retirement note for this task). Branch `codex/auria-ai-01`, no commit/push/merge. Saad's non-AI scope untouched. A concurrent Codex sync-only edit to this file (03:48) was preserved.
@@ -290,6 +296,14 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 ## 9. Implementation log (append only; newest first)
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
+
+### 2026-11-23 — Claude Code — Integrate AURIA onto Saad's homepage (`integrate/auria-homepage`)
+- Branch `integrate/auria-homepage` from `origin/saad-works-customer-website` (`ea0a56f`); cherry-picked `6fba523` (AI-01/AI-02) and `cde7581` (enquiry lifecycle, quotation module, status route; previously only in a local stash, now also pushed on `codex/auria-ai-01`).
+- Conflicts resolved: `package.json` (both dependency sets kept); `pnpm-lock.yaml` (regenerated from Saad's lockfile: additions only, `--frozen-lockfile` passes); `src/app/page.tsx` (Saad's section 07 kept; "Preview AURIA" button → link to `/ai-atelier`; voice and images "coming soon"); `tests/homepage.spec.ts`; this file (both logs kept, date order); `TEAM_TASKS.md` owner line.
+- Also changed: `home-experience.tsx` (removed the unreachable "auria" modal branch). Checked unchanged: `site-header.tsx` "Meet AURIA" → `/ai-atelier`; `.gitignore` ignores `.auria-data/` and `.env*`.
+- Verified: typecheck, lint, production build PASS; Playwright homepage 24/24 PASS; AURIA specs (`auria`, `auria-domain`, `auria-provider`, provider disabled) 26/26 PASS.
+- Live Gemini check FAILED twice (provider 503 high demand). Homepage wording does not claim chat works; re-verify live before strengthening it.
+- Not pushed to `main` or Saad's branch.
 
 ### 2026-11-22 — Claude (Saad's session) — Homepage polish after Saad's review (S-21)
 - Review strip ("Royal Gold Atelier · customer website demo" + Reduce motion) restyled dark to match the header; the checkbox is now a gold switch (`src/app/home.css`, `home-experience.tsx`).

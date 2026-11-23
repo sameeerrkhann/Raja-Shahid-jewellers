@@ -28,7 +28,7 @@ test("homepage has eight honest connected scenes and proper metadata", async ({ 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Crafted to be remembered.");
   await expect(page.locator("[data-scene]")).toHaveCount(8);
   await expect(page.getByText("Illustrative rate preview · Not live")).toBeVisible();
-  await expect(page.getByText("Not connected yet. No message, photo or voice leaves this page.")).toBeAttached();
+  await expect(page.getByText("Text chat demo using sample designs only; it relies on a free AI service that may sometimes be busy. Voice and images are coming soon.")).toBeAttached();
   expect((await request.get("/admin")).status()).toBe(404);
   expect((await request.get("/designs")).status()).toBe(200);
   expect((await request.get("/ai-atelier")).status()).toBe(200);
@@ -212,9 +212,9 @@ test("scrubbed entrance changes with scroll and AURIA describes only what works"
   await expect.poll(() => intro.evaluate((element) => Number(getComputedStyle(element).opacity))).toBeLessThan(.05);
   await expect.poll(() => page.locator("[data-film-caption]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
   await page.screenshot({ path: `${screenshotFolder}/entrance-transition-1440.png` });
-  // AURIA text chat is live in the demo; voice and images must be plainly labelled as coming soon.
+  // AURIA must not overclaim: text chat is a demo on a free service; voice and images are plainly coming soon.
   await page.locator("#auria").scrollIntoViewIfNeeded();
-  await expect(page.getByText("Text chat works in this demo, using sample designs only. Voice and images are coming soon.")).toBeVisible();
+  await expect(page.getByText("Text chat demo using sample designs only; it relies on a free AI service that may sometimes be busy. Voice and images are coming soon.")).toBeVisible();
   await expect(page.getByText("Illustrative conversation · sample designs")).toBeVisible();
   await expect(page.locator("#auria").getByRole("link", { name: "Design with AURIA", exact: true })).toHaveAttribute("href", "/ai-atelier");
 });
