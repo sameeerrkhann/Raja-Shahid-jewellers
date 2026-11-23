@@ -15,6 +15,7 @@ export function providerError(error: unknown): AuriaError {
   if (status === 429) return new AuriaError("PROVIDER_RATE_LIMIT", "Gemini's free quota is temporarily unavailable. Wait before retrying; no paid fallback was used.", 429, true);
   if (status === 401 || status === 403) return new AuriaError("PROVIDER_ACCESS", "Gemini access was rejected. Check the server key, project eligibility and Free tier.", 503);
   if (status === 404) return new AuriaError("MODEL_UNAVAILABLE", "The configured Gemini model is unavailable for this project.", 503);
+  if (status === 503) return new AuriaError("PROVIDER_BUSY", "Gemini is busy. Retry in a moment or switch to the catalogue demo.", 503, true);
   if (["UNABLE_TO_VERIFY_LEAF_SIGNATURE", "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_GET_ISSUER_CERT_LOCALLY"].includes(String(value.cause?.code))) return new AuriaError("PROVIDER_TLS", "The server could not verify the provider certificate. Configure a trusted certificate store; never disable HTTPS verification.", 503);
   if (status === 408 || status === 504 || value.name === "TimeoutError") return new AuriaError("TIMEOUT", "The AI service timed out. You can retry.", 504, true);
   return new AuriaError("PROVIDER_ERROR", "The AI service could not finish this response. You can retry when it is available.", 502, true);

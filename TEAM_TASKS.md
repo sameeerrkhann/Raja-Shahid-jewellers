@@ -51,12 +51,13 @@ _Sameer: please correct or extend this section._
 
 ## AI development — AURIA (assigned separately)
 
-**Owner:** Codex for Sameer, branch `codex/auria-ai-01` (integrated onto Saad's `ea0a56f` in `integrate/auria-homepage`).
-**Scope:** AI-01 free-tier text foundation only. Saad retains non-AI ownership. Only the AURIA homepage/header entry points change; existing home animation and catalogue remain. Order tools expand in AI-03; voice later; images last. No paid APIs/admin.
+**Owner** · Codex for Sameer on `feature/auria-immersive-ai`, based on `integrate/auria-homepage`. The earlier foundation came from `codex/auria-ai-01`.
+**Scope** · The customer-facing AURIA atelier and its services. Saad owns the homepage and other customer routes. The current task preserves his code and connects only free or local demo capabilities.
 
 | # | Date | Task | Status | Main files |
 |---|------|------|--------|------------|
 | AI-01 | 2026-11-19 | Persistent private chat workspace, Gemini adapter, existing-catalogue tools and explicit fictional quote drafts; live verification/QA | In progress | src/components/auria, src/lib/auria, src/lib/server/auria, src/app/ai-atelier, src/app/api/ai, tests/auria*, canonical docs/state |
+| AURIA Atelier | 2026-11-23 | Responsive cinematic workspace, no-provider catalogue mode, local photo matching and browser speech, existing AI-03 enquiry journey | Implemented, see verification in PROJECT_STATE.md | src/app/ai-atelier, src/components/auria, src/lib/auria, src/lib/server/auria, tests/atelier.spec.ts |
 
 ---
 

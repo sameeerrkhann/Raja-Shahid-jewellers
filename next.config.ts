@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
       ],
+    }, {
+      source: "/ai-atelier",
+      headers: [{ key: "Permissions-Policy", value: "camera=(), microphone=(self), on-device-speech-recognition=(self), geolocation=()" }],
     }];
   },
 };

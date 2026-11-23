@@ -28,6 +28,27 @@ test("persistent sessions, selection and demo quote require ownership, CSRF and 
   expect((await request.post(`/api/ai/conversations/${c.id}/draft`, { headers: headers(csrf), data: { designId: design.id } })).status()).toBe(409);
   await foreign.dispose();
 });
+test("local catalogue stream saves grounded context for a draft without recording provider calls", async ({ request }) => {
+  const csrf = await bootstrap(request);
+  const conversation = await create(request, csrf);
+  const url = `/api/ai/conversations/${conversation.id}`;
+  const result = await request.post("/api/ai/chat", { headers: headers(csrf), data: { conversationId: conversation.id, expectedVersion: conversation.version, requestId: randomUUID(), message: "Show me rings.", mode: "catalogue" } });
+  expect(result.ok()).toBe(true);
+  expect(await result.text()).toContain('"type":"delta"');
+  const saved = (await (await request.get(url)).json()).data as Conversation;
+  expect(saved.messages.at(-1)).toMatchObject({ source: "CATALOGUE_DEMO", state: "COMPLETE" });
+  expect(saved.recentDesignIds.length).toBeGreaterThan(1);
+  const reply = await request.post("/api/ai/chat", { headers: headers(csrf), data: { conversationId: saved.id, expectedVersion: saved.version, requestId: randomUUID(), message: "Tell me more about the second ring.", mode: "catalogue" } });
+  expect(reply.ok()).toBe(true);
+  await reply.text();
+  const followed = (await (await request.get(url)).json()).data as Conversation;
+  expect(followed.messages.at(-1)?.cards[0]?.id).toBe(saved.recentDesignIds[1]);
+  const drafted = await request.post(url + "/draft", { headers: headers(csrf), data: { displayedPosition: 1 } });
+  expect(drafted.status()).toBe(200);
+  expect((await drafted.json()).data.designId).toBe(saved.recentDesignIds[1]);
+  const listing = await request.get("/api/ai/conversations");
+  expect((await listing.json()).data.usage).toEqual([]);
+});
 test("disabled provider returns honest unavailable state without fake assistant message", async ({ request }) => {
   const csrf = await bootstrap(request); const c = await create(request, csrf);
   const r = await request.post("/api/ai/chat", { headers: headers(csrf), data: { conversationId: c.id, expectedVersion: c.version, requestId: randomUUID(), message: "Show me traditional 22K rings" } });

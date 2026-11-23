@@ -8,6 +8,7 @@ import { geminiProvider, providerCapability, providerError } from "./provider";
 import { executeTool } from "./tools";
 import { findPublicDesign } from "@/lib/server/catalogue";
 import { noStore } from "./http";
+import { catalogueDemoProvider } from "./catalogue-demo";
 
 const globalState = globalThis as typeof globalThis & { auriaTurns?: Map<string, AbortController> };
 const active = globalState.auriaTurns ??= new Map<string, AbortController>();
@@ -18,20 +19,21 @@ export function stopTurn(owner: string, conversationId: string) {
 }
 export async function chat(request: Request, owner: string) {
   const body = await readJson(request, chatInput);
-  const hash = createHash("sha256").update(JSON.stringify({ message: body.message, version: body.expectedVersion })).digest("hex");
+  const demo = body.mode === "catalogue";
+  const hash = createHash("sha256").update(JSON.stringify({ message: body.message, version: body.expectedVersion, ...(demo ? { mode: body.mode } : {}) })).digest("hex");
   const replay = withOwner(owner, (s) => { const c = ownedConversation(s, body.conversationId); const previous = c.requests[body.requestId]; if (previous && previous.hash !== hash) throw new AuriaError("IDEMPOTENCY_CONFLICT", "This request ID belongs to another message.", 409); return previous ? c : null; });
   if (replay) {
     if (replay.activeTurn) throw new AuriaError("TURN_ACTIVE", "This response is still running. Reload history or stop it.", 409);
     return new Response(JSON.stringify({ type: "done", conversation: replay } satisfies ChatEvent) + "\n", { headers: { ...noStore, "Content-Type": "application/x-ndjson" } });
   }
-  const provider = geminiProvider();
+  const liveProvider = demo ? null : geminiProvider();
   const conversation = withOwner(owner, (s) => {
     const c = ownedConversation(s, body.conversationId);
     if (c.activeTurn) throw new AuriaError("TURN_ACTIVE", "Stop the current response before sending another.", 409);
     if (c.version !== body.expectedVersion) throw new AuriaError("VERSION_CONFLICT", "History changed in another tab. Reload it before sending.", 409, true);
     if (c.messages.length >= 80) throw new AuriaError("CONVERSATION_LIMIT", "Start a new conversation to continue.", 429);
     const now = new Date().toISOString(); const assistantId = randomUUID();
-    c.messages.push({ id: randomUUID(), role: "user", text: body.message, createdAt: now, state: "COMPLETE", cards: [] }, { id: assistantId, role: "assistant", text: "", createdAt: now, state: "STREAMING", cards: [] });
+    c.messages.push({ id: randomUUID(), role: "user", text: body.message, createdAt: now, state: "COMPLETE", cards: [] }, { id: assistantId, role: "assistant", text: "", createdAt: now, state: "STREAMING", cards: [], ...(demo ? { source: "CATALOGUE_DEMO" as const } : {}) });
     c.title = c.messages.find((m) => m.role === "user")!.text.slice(0, 55); c.updatedAt = now; c.version++;
     c.requests[body.requestId] = { hash, assistantId }; c.activeTurn = { id: body.requestId, assistantId, expiresAt: Date.now() + 95_000 };
     return c;
@@ -51,10 +53,11 @@ export async function chat(request: Request, owner: string) {
         let remaining = 16_000;
         const history: ProviderTurn[] = conversation.messages.filter((m) => m.role === "user" || m.state === "COMPLETE").slice(-12).reverse().flatMap((m) => { if (remaining <= 0) return []; const value = m.text.slice(0, Math.min(4000, remaining)); remaining -= value.length; return [{ role: m.role, text: value }]; }).reverse();
         const describe = (id: string) => { const d = findPublicDesign(id); return d ? { id, designCode: d.designCode, title: d.title, category: d.categorySlug } : null; };
-        const context = JSON.stringify({ language: conversation.language, selectedDesign: conversation.selectedDesignId ? describe(conversation.selectedDesignId) : null, displayedDesigns: conversation.recentDesignIds.flatMap((id, i) => { const d = describe(id); return d ? [{ position: i + 1, ...d }] : []; }), draft: conversation.draft ? { status: conversation.draft.status, designId: conversation.draft.designId, reference: conversation.draft.reference } : null });
-        for await (const event of orchestrate({ provider, system: `${conciergeInstructions}\nTrusted application context (IDs in displayed order): ${context}`, history, signal: controller.signal,
-          beforeCall: () => { stillActive(); return reserveCall(owner, providerCapability().model); },
-          usage: (id, usage, state) => withOwner(owner, (s) => { const u = s.usage.find((u) => u.id === id)!; u.state = state; u.inputTokens = usage?.input ?? null; u.outputTokens = usage?.output ?? null; u.totalTokens = usage?.total ?? null; }),
+        const context = { language: conversation.language, selectedDesign: conversation.selectedDesignId ? describe(conversation.selectedDesignId) : null, displayedDesigns: conversation.recentDesignIds.flatMap((id, i) => { const d = describe(id); return d ? [{ position: i + 1, ...d }] : []; }), draft: conversation.draft ? { status: conversation.draft.status, designId: conversation.draft.designId, reference: conversation.draft.reference } : null };
+        const provider = liveProvider ?? catalogueDemoProvider(body.message, context);
+        for await (const event of orchestrate({ provider, system: `${conciergeInstructions}\nTrusted application context (IDs in displayed order): ${JSON.stringify(context)}`, history, signal: controller.signal,
+          beforeCall: () => { stillActive(); return demo ? "local" : reserveCall(owner, providerCapability().model); },
+          usage: (id, usage, state) => { if (!demo) withOwner(owner, (s) => { const u = s.usage.find((u) => u.id === id)!; u.state = state; u.inputTokens = usage?.input ?? null; u.outputTokens = usage?.output ?? null; u.totalTokens = usage?.total ?? null; }); },
           execute: (call) => { stillActive(); return executeTool(owner, body.conversationId, call.name, call.args); },
         })) {
           stillActive();
@@ -62,11 +65,11 @@ export async function chat(request: Request, owner: string) {
           if (event.type === "cards") { cards = event.cards; withOwner(owner, (s) => { ownedConversation(s, body.conversationId).recentDesignIds = cards.map((c) => c.id); }); }
           send(event);
         }
-        stillActive(); const completed = finish("COMPLETE"); markVerified(); send({ type: "done", conversation: completed });
+        stillActive(); const completed = finish("COMPLETE"); if (!demo) markVerified(); send({ type: "done", conversation: completed });
       } catch (error) {
         const timedOut = controller.signal.aborted && controller.signal.reason instanceof Error && controller.signal.reason.message === "TIMEOUT";
-        if (!controller.signal.aborted && !(error instanceof AuriaError)) { const e = error as { name?: string; status?: number; message?: string; cause?: { code?: string } }; console.warn(`[auria] provider failure: ${e?.name} status=${e?.status ?? "-"} cause=${e?.cause?.code ?? "-"} ${String(e?.message ?? "").replace(/key=[^&\s]+/gi, "key=[redacted]").slice(0, 240)}`); }
         const safe = timedOut ? new AuriaError("TIMEOUT", "The response timed out. You can retry.", 504, true) : controller.signal.aborted ? new AuriaError("STOPPED", "Response stopped. Partial text may be incomplete.", 409, true) : providerError(error);
+        if (!controller.signal.aborted) console.warn("[auria] chat failure", safe.code);
         try { const c = finish(controller.signal.aborted ? "STOPPED" : "FAILED", safe.code); send({ type: "error", code: safe.code, message: safe.message, retryable: safe.retryable }); send({ type: "done", conversation: c }); } catch { send({ type: "error", code: "SAVE_FAILED", message: "The response could not be saved. Reload history before retrying.", retryable: true }); }
       } finally { clearTimeout(timeout); request.signal.removeEventListener("abort", abort); active.delete(body.requestId); if (open) try { output.close(); } catch {} }
     },

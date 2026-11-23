@@ -9,11 +9,7 @@ export function createQuoteDraft(owner: string, conversationId: string, input: u
   return withOwner(owner, (s) => {
     const c = ownedConversation(s, conversationId);
     if (c.activeTurn && !fromActiveTool) throw new AuriaError("TURN_ACTIVE", "Finish the response before editing the draft.", 409);
-    const raw = input as { designId?: string; displayedPosition?: number };
-    if (raw.designId && raw.displayedPosition) throw new AuriaError("AMBIGUOUS_DESIGN", "Choose a design code or a displayed position, not both.", 422);
-    const reference = raw.designId ?? (raw.displayedPosition ? c.recentDesignIds[raw.displayedPosition - 1] : c.selectedDesignId);
-    if (!reference) throw new AuriaError("DESIGN_REQUIRED", "Which design would you like? Select a card or give its design code.", 422);
-    c.draft = prepareDraft(c, { ...(input as object), designId: reference }, { search: queryCatalogue, get: findPublicDesign }, randomUUID(), new Date().toISOString());
+    c.draft = prepareDraft(c, input, { search: queryCatalogue, get: findPublicDesign }, randomUUID(), new Date().toISOString());
     c.updatedAt = c.draft.updatedAt;
     return c.draft;
   });

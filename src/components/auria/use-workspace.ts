@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Capability, ChatEvent, ChatMessage, Conversation, ConversationSummary, Language, QuoteDraft } from "@/types/auria";
+import type { Capability, ChatEvent, ChatMessage, ChatMode, Conversation, ConversationSummary, Language, QuoteDraft } from "@/types/auria";
 import type { DesignCardData, PublicDesign } from "@/types/catalogue";
 export type View = "conversation" | "selection" | "history";
 export function useWorkspace() {
@@ -8,6 +8,7 @@ export function useWorkspace() {
   const [history, setHistory] = useState<ConversationSummary[]>([]); const [conversation, setConversation] = useState<Conversation | null>(null);
   const [selected, setSelected] = useState<PublicDesign | null>(null); const [view, setView] = useState<View>("conversation");
   const [input, setInput] = useState(""); const [language, setLanguage] = useState<Language>("auto");
+  const [mode, setMode] = useState<ChatMode>("live");
   const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const [loading, setLoading] = useState(true);
   const [streaming, setStreaming] = useState<ChatMessage | null>(null); const [notice, setNotice] = useState(""); const [retryText, setRetryText] = useState(""); const [usageCount, setUsageCount] = useState(0);
   const abortRef = useRef<AbortController | null>(null); const scrollRef = useRef<HTMLDivElement>(null); const inputRef = useRef<HTMLTextAreaElement>(null); const conversationRef = useRef<Conversation | null>(null);
@@ -47,13 +48,13 @@ export function useWorkspace() {
     try { const c = conversation ?? await api<Conversation>("conversations", { language }); const updated = await api<Conversation>(`conversations/${c.id}/selection`, { selectedDesignId: design.id, expectedVersion: c.version }); setConversation(updated); const response = await fetch(`/api/designs/${design.id}`); const data = await response.json(); if (!response.ok) throw new Error("Design details unavailable."); setSelected(data.data); setView("selection"); await refreshHistory(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
   async function send(text = input) {
-    if (busy || !text.trim()) return; if (!capability?.available) { setError(capability?.reason || "Chat is unavailable."); return; }
+    if (busy || !csrf || !text.trim()) return; if (mode === "live" && !capability?.available) { setError(capability?.reason || "Chat is unavailable."); return; }
     setBusy(true); setError(""); setNotice(""); setRetryText(text); setView("conversation"); const controller = new AbortController(); abortRef.current = controller; let c = conversation;
     try {
       c ??= await api<Conversation>("conversations", { language }); setConversation(c); conversationRef.current = c;
       const now = new Date().toISOString(); const user: ChatMessage = { id: crypto.randomUUID(), role: "user", text, createdAt: now, state: "COMPLETE", cards: [] };
-      setConversation({ ...c, messages: [...c.messages, user] }); setStreaming({ id: "stream", role: "assistant", text: "", createdAt: now, state: "STREAMING", cards: [] }); setInput("");
-      const response = await fetch("/api/ai/chat", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify({ conversationId: c.id, expectedVersion: c.version, requestId: crypto.randomUUID(), message: text }), signal: controller.signal });
+      setConversation({ ...c, messages: [...c.messages, user] }); setStreaming({ id: "stream", role: "assistant", text: "", createdAt: now, state: "STREAMING", cards: [], ...(mode === "catalogue" ? { source: "CATALOGUE_DEMO" as const } : {}) }); setInput("");
+      const response = await fetch("/api/ai/chat", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify({ conversationId: c.id, expectedVersion: c.version, requestId: crypto.randomUUID(), message: text, mode }), signal: controller.signal });
       if (!response.ok) { const data = await response.json(); throw new Error(data.error?.message || "Chat request failed."); }
       if (!response.body) throw new Error("Streaming is unavailable in this browser.");
       const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = "", completed = false, failed = false;
@@ -74,5 +75,6 @@ export function useWorkspace() {
   async function saveDraft(body: unknown) { if (!conversation) return; const draft = await api<QuoteDraft>(`conversations/${conversation.id}/draft`, body); setConversation((c) => c ? { ...c, draft } : c); setNotice("Demo draft saved. Nothing has been submitted."); }
   async function submitDraft(version: number, idempotencyKey: string) { if (!conversation) return; const draft = await api<QuoteDraft>(`conversations/${conversation.id}/submit`, { expectedVersion: version, idempotencyKey, processingAccepted: true, fictionalDataConfirmed: true }); setConversation((c) => c ? { ...c, draft } : c); setNotice("Demo enquiry saved. No real order or notification created."); }
   async function reloadDraft() { if (conversation) await loadConversation(conversation.id); }
-  return { csrf, capability, history, conversation, selected, view, setView, input, setInput, language, setLanguage, error, busy, loading, streaming, notice, retryText, usageCount, scrollRef, inputRef, newConversation, openConversation, selectDesign, send, stop, saveDraft, submitDraft, reloadDraft };
+  function changeMode(next: ChatMode) { setMode(next); setError(""); if (retryText) setInput(retryText); }
+  return { csrf, capability, history, conversation, selected, view, setView, input, setInput, language, setLanguage, mode, changeMode, error, busy, loading, streaming, notice, retryText, usageCount, scrollRef, inputRef, newConversation, openConversation, selectDesign, send, stop, saveDraft, submitDraft, reloadDraft };
 }

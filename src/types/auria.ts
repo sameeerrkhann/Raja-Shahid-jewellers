@@ -2,7 +2,8 @@ import type { DesignCardData, PublicDesign } from "./catalogue";
 
 export type Language = "auto" | "en" | "ur" | "roman-ur";
 export type MessageState = "COMPLETE" | "STREAMING" | "STOPPED" | "FAILED";
-export type ChatMessage = { id: string; role: "user" | "assistant"; text: string; createdAt: string; state: MessageState; cards: DesignCardData[]; errorCode?: string };
+export type ChatMode = "live" | "catalogue";
+export type ChatMessage = { id: string; role: "user" | "assistant"; text: string; createdAt: string; state: MessageState; cards: DesignCardData[]; errorCode?: string; source?: "CATALOGUE_DEMO" };
 export type EnquiryStatus = "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "QUOTED" | "AWAITING_CUSTOMER_APPROVAL" | "CONFIRMED" | "IN_PRODUCTION" | "READY_FOR_COLLECTION" | "COMPLETED" | "CANCELLED";
 export type QuotePreferences = { size: { kind: "RING_SIZE" | "NECKLACE_LENGTH"; value: string } | null; stonePreferences: string; instructions: string };
 export type EnquiryEvent = { status: EnquiryStatus; at: string; source: "CUSTOMER" | "SERVER_DEMO"; note: string };

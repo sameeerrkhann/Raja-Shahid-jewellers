@@ -16,6 +16,7 @@ test("free quota, access, missing model, TLS, timeout and unknown errors are saf
   expect(providerError({ status: 429 })).toMatchObject({ code: "PROVIDER_RATE_LIMIT", status: 429, retryable: true });
   for (const status of [401, 403]) expect(providerError({ status }).code).toBe("PROVIDER_ACCESS");
   expect(providerError({ status: 404 }).code).toBe("MODEL_UNAVAILABLE");
+  expect(providerError({ status: 503, message: "private diagnostic" })).toMatchObject({ code: "PROVIDER_BUSY", status: 503, retryable: true });
   expect(providerError({ name: "TimeoutError" }).status).toBe(504);
   expect(providerError({ cause: { code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE" } }).code).toBe("PROVIDER_TLS");
   const safe = providerError({ status: 500, message: "secret-test-value", request: "private-url" });

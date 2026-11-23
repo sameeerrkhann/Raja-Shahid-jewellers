@@ -1,0 +1,191 @@
+.auria-workspace {
+  --stage-black: #0d0c0d;
+  --stage-graphite: #151314;
+  --stage-panel: #1e1918;
+  --stage-gold: #e5c27e;
+  --stage-ivory: #f5eee2;
+  --stage-muted: #bfb2a4;
+  --stage-line: #493b30;
+  --stage-focus: #ffda91;
+  color-scheme: dark;
+  color: var(--stage-ivory);
+  background: radial-gradient(ellipse at 8% 15%, #2b1c17 0%, transparent 38%), var(--stage-black);
+  padding: 20px max(20px, env(safe-area-inset-right)) 26px max(20px, env(safe-area-inset-left));
+}
+.auria-workspace :focus-visible { outline: 2px solid var(--stage-focus); outline-offset: 3px; }
+.auria-workspace :is(button, a) { touch-action: manipulation; }
+.auria-workspace :is(h1, h2, h3, h4) { text-wrap: balance; }
+.auria-workspace .auria-masthead { align-items: center; margin-bottom: 17px; min-height: 57px; }
+.atelier-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.auria-workspace .auria-masthead h1 { margin: 0; font: 500 clamp(35px, 4.2vw, 57px)/.83 var(--font-display); letter-spacing: .1em; color: var(--stage-gold); }
+.auria-workspace .auria-masthead h1 span { display: inline; color: var(--stage-ivory); font: 500 clamp(19px, 2.3vw, 34px)/1.1 var(--font-display); letter-spacing: -.025em; margin: 0 0 0 .25em; }
+.atelier-identity p { margin: 8px 0 0; color: var(--stage-muted); font-size: 12px; }
+.atelier-vault { color: var(--stage-gold); text-decoration: none; font-size: 12px; line-height: 1.4; padding-block: 8px; }
+.atelier-vault span { margin-left: 4px; }
+.atelier-vault:hover { color: var(--stage-ivory); text-decoration: underline; text-underline-offset: 4px; }
+.auria-workspace .auria-layout { height: clamp(430px, calc(100svh - 183px), 960px); min-height: 0; grid-template-columns: minmax(170px, .68fr) minmax(0, 2.15fr) minmax(235px, 1.2fr); border: 1px solid var(--stage-line); background: var(--stage-graphite); }
+.auria-workspace :is(.auria-history, .auria-selection) { min-height: 0; overflow: auto; scrollbar-width: thin; overscroll-behavior: contain; background: #191514; padding: 20px; }
+.auria-workspace .auria-history { background: linear-gradient(150deg, #211916, #151212 58%); }
+.atelier-history__heading { margin: 12px 0 0; }
+.atelier-history__heading h2 { font: 500 29px/1 var(--font-display); margin: 0 0 12px; }
+.atelier-outline, .auria-workspace .button--outline { min-height: 40px; color: var(--stage-ivory); background: #221a17; border: 1px solid #6e5540; padding: 8px 12px; font: 600 12px/1.3 var(--font-sans); }
+.auria-workspace .button--outline::before { content: none; }
+.atelier-outline:hover, .auria-workspace .button--outline:hover { background: #33251e; border-color: var(--stage-gold); color: #fff4df; }
+.auria-workspace .auria-label { color: var(--stage-muted); margin-top: 18px; }
+.auria-workspace :is(select, input:not([type=checkbox]), textarea) { color: var(--stage-ivory); background: #151212; border-color: #6a5747; }
+.auria-workspace :is(input, textarea)::placeholder { color: #b4a598; opacity: 1; }
+.auria-workspace .auria-history-list { margin-top: 14px; }
+.auria-workspace .auria-history-list button { border-color: #45372f; color: var(--stage-ivory); }
+.auria-workspace .auria-history-list button:hover { background: #2c231e; }
+.auria-workspace .auria-history-list button[aria-current=true] { background: #30241f; border-left-color: var(--stage-gold); }
+.auria-workspace :is(.auria-history-list small, .auria-history-note, .auria-muted) { color: var(--stage-muted); }
+.auria-workspace .auria-chat { min-height: 0; border-inline-color: var(--stage-line); background: radial-gradient(ellipse at 45% 25%, #261d1a 0%, #181516 58%, #141213 90%); }
+.auria-workspace .auria-chat-heading { padding: 13px clamp(14px, 2.1vw, 31px); border-color: var(--stage-line); }
+.auria-workspace .auria-chat-heading h2 { font: 500 25px/1 var(--font-display); }
+.auria-workspace .auria-chat-heading p { color: var(--stage-muted); font-size: 11px; }
+.auria-workspace .auria-connection { display: inline-flex; gap: 7px; align-items: center; color: #eddac4; border-color: #65513e; font-size: 10px; padding: 5px 9px; }
+.auria-connection i { width: 6px; height: 6px; border-radius: 100%; background: #bb9479; }
+.auria-connection[data-ready=true] i { background: #e5c27e; box-shadow: 0 0 8px #e5c27e88; }
+.auria-workspace button.auria-connection { background: #211916; border: 1px solid #70553f; min-height: 36px; }
+.auria-workspace button.auria-connection:hover { background: #3a2a22; }
+.auria-workspace .auria-transcript { min-height: 0; max-height: none; flex: 1 1 0; padding: 16px clamp(14px, 2.1vw, 31px); }
+.auria-workspace .auria-transcript:focus-visible { outline-offset: -3px; }
+.auria-workspace .auria-welcome { max-width: 475px; margin: clamp(8px, 5vh, 42px) auto 14px; }
+.atelier-welcome__ornament { font-size: 31px; color: var(--stage-gold); line-height: 1; }
+.auria-workspace .auria-welcome h2 { font: 500 clamp(34px, 4.8vw, 64px)/.92 var(--font-display); margin: 9px auto 14px; letter-spacing: -.035em; max-width: 430px; }
+.auria-workspace .auria-welcome > p:not(.eyebrow) { color: var(--stage-muted); line-height: 1.55; }
+.auria-workspace .auria-suggestions { margin-top: 19px; gap: 8px; }
+.auria-workspace .auria-suggestions button { color: var(--stage-ivory); background: #211a19; border-color: #634d3b; min-height: 43px; padding: 10px 12px; align-items: center; line-height: 1.35; }
+.auria-workspace .auria-suggestions button:hover { background: #3a2a22; border-color: var(--stage-gold); }
+.auria-suggestions button span { color: var(--stage-gold); }
+.auria-workspace .auria-message { border-color: var(--stage-line); content-visibility: auto; contain-intrinsic-size: auto 120px; }
+.auria-workspace .auria-message--user { background: #31231d; border: 1px solid #5c4636; margin-left: 13%; }
+.auria-workspace .auria-message-meta, .auria-workspace .auria-message-meta span, .auria-workspace .auria-message-state { color: var(--stage-muted); }
+.auria-workspace .auria-message-text code { color: var(--stage-ivory); background: #372920; }
+.auria-workspace .auria-table, .auria-workspace .auria-table th, .auria-workspace .auria-table td { border-color: var(--stage-line); }
+.auria-workspace .auria-table thead th { background: #30231e; color: var(--stage-ivory); }
+.auria-workspace .auria-table tbody th { color: var(--stage-gold); }
+.auria-workspace .auria-chat-composer { flex: none; border-color: var(--stage-line); background: #181415; padding: 8px clamp(12px, 2.1vw, 31px) 12px; }
+.auria-workspace .auria-chat-composer form { align-items: stretch; gap: 8px; }
+.auria-workspace .auria-chat-composer textarea { min-height: 54px; max-height: 64px; resize: none; font-size: 14px; }
+.auria-workspace .auria-live-status { min-height: 0; color: var(--stage-gold); margin: 0 0 6px; }
+.auria-live-status:empty { display: none; }
+.auria-workspace .auria-disclosure { color: var(--stage-muted); font-size: 10px; line-height: 1.35; margin-top: 8px; }
+.atelier-send { flex: none; padding: 8px 15px; min-width: 69px; border: 1px solid #f3d395; background: linear-gradient(145deg, #f5d99d, #cf9f55); color: #25170d; font: 700 12px/1.3 var(--font-sans); }
+.atelier-send:not([disabled]):hover { background: #f8dfa9; }
+.auria-workspace .auria-availability, .auria-workspace .auria-error { color: #f2ddc6; background: #30231e; border: 1px solid #725340; font-size: 12px; padding: 10px 12px; margin: 0 0 12px; }
+.auria-workspace .auria-error button { color: var(--stage-ivory); }
+.auria-workspace .auria-skeleton { color: var(--stage-muted); }
+.auria-workspace .auria-skeleton span { background: #403129; }
+
+.atelier-core { min-height: 163px; display: grid; justify-items: center; place-content: center; gap: 8px; }
+.atelier-core--compact { display: none; }
+.atelier-orb { position: relative; isolation: isolate; width: 142px; aspect-ratio: 1; perspective: 220px; color: #e6be79; }
+.atelier-orb > * { position: absolute; pointer-events: none; }
+.atelier-orb__halo { inset: 0; border-radius: 50%; background: radial-gradient(circle, #b662323b, #a05b2017 55%, transparent 76%); }
+.atelier-orb__sphere { inset: 24%; border-radius: 50%; overflow: hidden; border: 1px solid #d2a265; background:
+  radial-gradient(ellipse at 29% 21%, #fff6d8 0%, #f8d895 9%, #ca8846 23%, transparent 51%),
+  radial-gradient(ellipse at 82% 65%, #ffe6b4 0%, #e5a061 12%, transparent 48%),
+  radial-gradient(ellipse at 58% 76%, #eea363, #54271d 48%, #120d13 71%);
+  box-shadow: inset -6px -10px 18px #331914, inset 3px 3px 9px #ffdda339, 0 0 30px #d7975354;
+}
+.atelier-orb__sphere span { position: absolute; inset: -26%; border-radius: 50%; opacity: .54; background: repeating-linear-gradient(117deg, transparent 0 10%, #fbdb9b60 13%, #2d15149c 17%, transparent 20% 23%); transform: rotate(-19deg) skewX(18deg); mix-blend-mode: screen; }
+.atelier-orb__track { inset: 13%; border: 1px solid #d5a87473; border-bottom-color: #f7d69a; border-radius: 50%; transform: rotateZ(-28deg) rotateX(58deg); }
+.atelier-orb__track--cross { inset: 8%; transform: rotateZ(43deg) rotateY(58deg); border-color: #d5a8743b; border-right-color: #efc4889c; z-index: -1; }
+.atelier-orb__rim { inset: 4%; border: 1px dotted #e9bf824e; border-radius: 50%; }
+.atelier-orb__spark { background: #ffefd1; width: 3px; height: 3px; border-radius: 50%; box-shadow: 0 0 8px 2px #ffaa5c75; }
+.atelier-orb__spark--one { top: 66%; left: 19%; }.atelier-orb__spark--two { top: 22%; right: 22%; }
+.atelier-core__caption { color: var(--stage-muted); font-size: 10px; text-align: center; }
+.atelier-core__caption span { display: inline-block; background: var(--stage-gold); width: 5px; height: 5px; border-radius: 50%; vertical-align: 2px; margin-right: 7px; }
+.atelier-core[data-state=idle] .atelier-orb__sphere { animation: atelier-breathe 2.4s ease-in-out 2; }
+.atelier-core:is([data-state=processing], [data-state=listening]) .atelier-orb__track { animation: atelier-orbit 1.9s ease-in-out 2; }
+.atelier-core:is([data-state=responding], [data-state=speaking]) .atelier-orb__sphere { animation: atelier-breathe 1.15s ease-in-out 4; box-shadow: 0 0 35px #efa7648c; }
+.atelier-core[data-state=attention] .atelier-orb__sphere { filter: saturate(.45); box-shadow: 0 0 16px #a8774b3f; }
+@keyframes atelier-breathe { 50% { transform: scale(1.08); opacity: .87; } }
+@keyframes atelier-orbit { 50% { transform: rotateZ(38deg) rotateX(48deg); opacity: .65; } }
+
+.atelier-stage__heading { display: flex; justify-content: space-between; align-items: center; color: var(--stage-gold); font-size: 12px; padding-bottom: 13px; }
+.atelier-stage__image { position: relative; background: #2b211a; }
+.atelier-stage__open { display: block; position: relative; padding: 0; border: 0; width: 100%; color: #fff2d5; background: transparent; }
+.auria-workspace .atelier-stage__picture { aspect-ratio: 1.07; max-height: 340px; background: #34251c; }
+.atelier-stage__open:hover img { transform: scale(1.055); }
+.atelier-stage__expand { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 35px; height: 35px; background: #171215db; border: 1px solid #c0a16e; }
+.atelier-stage__origin { position: absolute; left: 0; bottom: 0; padding: 6px 9px; color: #fcf3e2; background: #1a1512ed; font-size: 10px; pointer-events: none; }
+.atelier-stage__details { padding-top: 16px; }.atelier-stage__code { color: var(--stage-gold); font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: .09em; }
+.auria-workspace .atelier-stage__details h2 { margin: 5px 0 6px; font: 500 clamp(26px, 2.6vw, 40px)/.96 var(--font-display); }
+.atelier-stage__details p { margin: 9px 0; color: var(--stage-muted); font-size: 12px; line-height: 1.6; }
+.atelier-stage__actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 13px 0 2px; }
+.atelier-stage__pagination { display: flex; align-items: center; gap: 6px; color: var(--stage-muted); font-variant-numeric: tabular-nums; font-size: 11px; }
+.atelier-stage__pagination button { color: var(--stage-ivory); background: #271d18; border: 1px solid #624c38; min-width: 35px; min-height: 37px; font-size: 22px; line-height: 1; }
+.atelier-stage__pagination button:hover { background: #453020; }
+.atelier-stage__vault { display: inline-block; margin-top: 9px; }
+.auria-workspace .auria-quote, .auria-workspace .auria-lookup, .auria-workspace .auria-status-card, .auria-workspace .auria-draft-review { border-color: #5d4837; }
+.auria-workspace .auria-lookup { margin-top: 17px; border-top: 1px solid #5d4837; padding-top: 14px; }
+.auria-workspace .auria-lookup h3 { font: 500 23px/1.1 var(--font-display); margin: 0 0 7px; }
+.auria-workspace .auria-lookup > p { font-size: 12px; line-height: 1.55; color: var(--stage-muted); margin: 0 0 10px; }
+.auria-workspace .auria-lookup label { font-size: 12px; color: var(--stage-muted); }
+.auria-workspace .auria-lookup form { display: grid; gap: 7px; }
+.auria-workspace .auria-lookup form button { justify-self: start; }
+.auria-workspace .auria-status-card { margin-top: 14px; padding: 12px; border: 1px solid #5d4837; font-size: 12px; line-height: 1.55; }
+.auria-workspace .auria-status-card h4, .auria-workspace .auria-reference { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.auria-workspace .auria-status-card h4 { margin-block: 6px 10px; font-size: 14px; }
+.auria-workspace .auria-status-card > p { margin-block: 5px; }
+.auria-workspace .auria-timeline { margin: 13px 0; padding: 0; list-style: none; }
+.auria-workspace .auria-timeline li { display: flex; flex-wrap: wrap; gap: 3px 9px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--stage-line); font-size: 11px; line-height: 1.4; }
+.auria-workspace .auria-timeline li[aria-current=step] { padding-inline: 7px; background: #2e221b; }
+.auria-workspace .auria-draft-review dl { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 7px 10px; margin-block: 12px; font-size: 11px; line-height: 1.45; }
+.auria-workspace .auria-draft-review dd { margin: 0; overflow-wrap: anywhere; }
+.auria-workspace :is(.auria-timeline span, .auria-draft-review dt, .auria-draft-review small) { color: var(--stage-muted); }
+.auria-workspace .auria-timeline li[aria-current=step] strong, .auria-workspace .eyebrow { color: var(--stage-gold); }
+.auria-workspace .auria-design { color: var(--stage-ivory); background: #231c19; border-color: #624d3a; }
+.auria-workspace .auria-design:hover { background: #31231e; border-color: var(--stage-gold); }
+.auria-workspace .auria-design small { color: var(--stage-muted); }
+.auria-workspace .auria-recommendations { grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); }
+.auria-workspace .auria-recommendations .auria-product-image { aspect-ratio: 1.4; }
+.atelier-inspector.modal { --stage-ivory: #f5eee2; width: min(92vw, 660px); max-height: 92svh; color: #f5eee2; background: #1f1917; border-color: #806346; overscroll-behavior: contain; }
+.atelier-inspector__image { max-height: 63svh; overflow: auto; background: #241a15; }
+.atelier-inspector__image img { display: block; width: 100%; height: auto; }
+.atelier-inspector__image[data-zoom=true] img { width: 170%; max-width: none; }
+.atelier-inspector__controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.atelier-inspector p { font-size: 12px; color: #d8c4ae; }
+.atelier-composer-tools { display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: center; margin-top: 3px; }
+.atelier-text-action { border: 0; background: transparent; color: #e5c27e; padding: 5px 0; min-height: 32px; font: 600 11px/1.25 var(--font-sans); }
+a.atelier-text-action { display: inline-flex; align-items: center; }
+.atelier-text-action:hover { color: #fff0cd; text-decoration: underline; text-underline-offset: 3px; }
+.atelier-inspector .icon-button { color: #f5eee2; }
+.atelier-inspector :focus-visible { outline: 2px solid #ffda91; outline-offset: 3px; }
+.atelier-reference { --stage-ivory: #f5eee2; }
+.atelier-reference input[type=file] { display: block; margin: 10px 0; width: 100%; }
+.atelier-reference label { font-size: 12px; }
+.atelier-reference__preview { display: block; width: 100%; max-height: 240px; object-fit: contain; background: #131010; }
+.atelier-reference__sample { display: flex; align-items: center; gap: 8px; color: #d8c4ae; font-size: 12px; padding: 8px 0; }
+.atelier-reference__sample span { width: 20px; height: 20px; border: 1px solid #c4a579; }
+.atelier-reference__result ul { padding: 0; margin: 10px 0 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.atelier-reference__result small { display: block; margin-top: 3px; color: #ddc8ab; }
+
+@media (max-width: 900px) {
+  .auria-workspace { padding: 12px max(12px, env(safe-area-inset-right)) 18px max(12px, env(safe-area-inset-left)); }
+  .auria-workspace .auria-masthead { min-height: 46px; margin-bottom: 10px; gap: 8px; }
+  .auria-workspace .auria-masthead h1 { font-size: 30px; }
+  .auria-workspace .auria-masthead h1 span { display: block; font-size: 18px; margin: 3px 0 0; }
+  .atelier-identity p { display: none; }.atelier-identity { gap: 5px; }
+  .atelier-core--compact { display: grid; min-height: 0; }.atelier-core--compact .atelier-orb { width: 50px; }
+  .auria-workspace .auria-masthead > a { text-align: right; max-width: 86px; color: var(--stage-gold); }
+  .auria-workspace .auria-mobile-nav { border-color: var(--stage-line); }
+  .auria-workspace .auria-mobile-nav button { color: var(--stage-muted); background: #1d1818; min-height: 42px; }
+  .auria-workspace .auria-mobile-nav button[aria-pressed=true] { color: var(--stage-gold); background: #2e221b; box-shadow: inset 0 -2px var(--stage-gold); }
+  .auria-workspace .auria-layout { height: clamp(348px, calc(100svh - 196px), 870px); }
+  .auria-workspace :is(.auria-chat, .auria-selection, .auria-history) { height: 100%; min-height: 0; }
+  .auria-workspace .auria-welcome { margin-top: clamp(5px, 3vh, 24px); }
+  .auria-workspace .auria-welcome h2 { font-size: clamp(35px, 9.5vw, 52px); }
+  .auria-workspace .auria-chat-composer textarea { font-size: 16px; }
+  .auria-workspace .auria-chat-heading h2 { font-size: 22px; }
+  .auria-workspace .auria-chat-heading { padding-block: 10px; }
+  .auria-workspace .auria-suggestions { margin-top: 13px; }
+  .auria-workspace .atelier-stage__picture { max-height: 440px; }
+  .atelier-composer-tools { gap: 0 12px; }
+  .atelier-text-action { min-height: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auria-workspace .atelier-orb *, .auria-workspace .atelier-stage__picture img { animation: none !important; transition: none !important; }
+}
