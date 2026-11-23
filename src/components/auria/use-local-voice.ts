@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+export type DictationLanguage = "en-US" | "en-PK" | "ur-PK";
+
 type Recognition = {
   processLocally: boolean; lang: string; continuous: boolean; interimResults: boolean;
   onstart: (() => void) | null; onend: (() => void) | null;
@@ -40,7 +42,7 @@ export function useLocalVoice() {
     setState("idle");
   }
 
-  async function dictate(language: "en-US" | "ur-PK", onText: (text: string) => void) {
+  async function dictate(language: DictationLanguage, onText: (text: string) => void) {
     stopVoice();
     setVoiceNotice("");
     setVoiceReload(false);

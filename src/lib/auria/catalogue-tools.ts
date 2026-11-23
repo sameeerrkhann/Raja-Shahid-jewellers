@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { catalogueCategories, purityOptions } from "@/config/catalogue";
 import { parseCatalogueQuery } from "@/lib/catalogue/query";
+import { storeKnowledge } from "./knowledge";
 import { draftInput, designRef, enquiryReference } from "./validation";
 import type { CatalogueQuery, CatalogueResult, PublicDesign } from "@/types/catalogue";
 import type { ToolDefinition, ToolResult } from "@/types/auria";
@@ -9,7 +10,7 @@ import type { ToolDefinition, ToolResult } from "@/types/auria";
 const id = z.strictObject({ designId: designRef });
 const empty = z.strictObject({});
 export const toolSchemas = {
-  searchJewellery: z.strictObject({ q: z.string().max(100).optional(), category: z.string().max(40).optional(), subcategory: z.string().max(40).optional(), style: z.string().max(40).optional(), occasion: z.string().max(40).optional(), karat: z.enum(["18", "21", "22", "24"]).optional(), status: z.enum(["IN_STOCK", "MADE_TO_ORDER", "CUSTOM_DESIGN", "UNAVAILABLE"]).optional(), budgetPKR: z.number().min(1).max(10_000_000).optional(), maxWeightGrams: z.number().positive().max(1000).optional() }),
+  searchJewellery: z.strictObject({ q: z.string().max(100).optional(), category: z.string().max(40).optional(), subcategory: z.string().max(40).optional(), collection: z.string().max(80).optional(), style: z.string().max(40).optional(), occasion: z.string().max(40).optional(), karat: z.enum(["18", "21", "22", "24"]).optional(), status: z.enum(["IN_STOCK", "MADE_TO_ORDER", "CUSTOM_DESIGN", "UNAVAILABLE"]).optional(), budgetPKR: z.number().min(1).max(10_000_000).optional(), maxWeightGrams: z.number().positive().max(1000).optional() }),
   getProductDetails: id, getDesignAvailability: id, getCategories: empty,
   getAvailablePurities: z.strictObject({ designId: designRef.optional() }), getRelatedDesigns: id,
   compareDesigns: z.strictObject({ designIds: z.array(designRef).min(2).max(4) }),
@@ -42,12 +43,29 @@ export function catalogueTool(name: ToolName, args: unknown, repository: Catalog
     case "searchJewellery": {
       const { budgetPKR, maxWeightGrams, ...filters } = parsed as z.infer<typeof toolSchemas.searchJewellery>;
       if (filters.karat && !(purityOptions as readonly number[]).includes(+filters.karat)) return { data: { items: [], requestedPurity: `${filters.karat}K`, supportedSamplePurities: purityOptions, explanation: `No ${filters.karat}K designs are published in the sample catalogue. Offer the supported purities or a custom workshop enquiry; never imply ${filters.karat}K is available.` } };
-      const query = parseCatalogueQuery(new URLSearchParams({ ...filters, limit: "6" }));
-      const results = repository.search(query);
-      // The current catalogue has no reliable amounts/masses. Do not call a style result a budget/weight match.
-      return { data: { ...results, budgetPreferencePKR: budgetPKR ?? null, maxWeightPreferenceGrams: maxWeightGrams ?? null, budgetVerified: false, weightVerified: false, explanation: "All results are SAMPLE designs. Prices and weights are unverified; obtain a quotation before claiming budget or lightweight suitability." }, cards: results.items };
+      const params = new URLSearchParams({ limit: "6" });
+      for (const [key, value] of Object.entries(filters)) {
+        if (value !== undefined) params.set(key, value);
+      }
+      const query = parseCatalogueQuery(params);
+      let results = repository.search(query);
+      if (!results.items.length && query.category === "necklaces" && !query.subcategory && !query.q) {
+        const bridal = repository.search({ ...query, category: "bridal" });
+        const items = bridal.items.filter((card) => ["collars", "long-sets", "chokers", "layered-sets"].includes(card.subcategorySlug));
+        results = { ...results, items, totalMatching: items.length };
+      }
+      const items = results.items.map((item) => {
+        const design = repository.get(item.id);
+        return { ...item, displayStatus: design?.displayStatus ?? item.displayStatus };
+      });
+      // The selected filters still match at variant level. AURIA labels cards at design level.
+      const matchedVariantStatus = results.items.map((item) => ({ id: item.id, displayStatus: item.displayStatus }));
+      return { data: { ...results, items, matchedVariantStatus, budgetPreferencePKR: budgetPKR ?? null, maxWeightPreferenceGrams: maxWeightGrams ?? null, budgetVerified: false, weightVerified: false, explanation: "All results are SAMPLE designs. Prices and weights are unverified; obtain a quotation before claiming budget or lightweight suitability." }, cards: items };
     }
-    case "getProductDetails": return { data: design };
+    case "getProductDetails": {
+      const cards = repository.search(parseCatalogueQuery(new URLSearchParams({ q: design!.designCode, limit: "6" }))).items.filter((card) => card.id === designId);
+      return { data: design, cards };
+    }
     case "getDesignAvailability": return { data: { designId, dataOrigin: design!.dataOrigin, displayStatus: design!.displayStatus, manufacturingAvailable: design!.manufacturingAvailable, manufacturingReview: design!.manufacturingReview, variants: design!.variants.map((v) => ({ ...v, status: design!.variantStatuses.find((s) => s.variantId === v.id)?.displayStatus })), manufacturingTime: design!.manufacturingTime, deliveryTime: null, explanation: "Sample stock and sample manufacture are independent; neither establishes actual shop availability." } };
     case "getCategories": return { data: catalogueCategories };
     case "getAvailablePurities": return { data: { options: design ? [...new Set(design.variants.flatMap((v) => v.karat ? [v.karat] : []))] : purityOptions, dataOrigin: "SAMPLE" } };
@@ -60,7 +78,7 @@ export function catalogueTool(name: ToolName, args: unknown, repository: Catalog
       return { data: { compared: rows, notFound: found.filter(({ d }) => !d).map(({ r }) => r), dataOrigin: "SAMPLE", explanation: "Compare only these recorded fields. Null price/weight/time means unverified; offer a quotation instead of estimating." }, cards };
     }
     case "getRelatedDesigns": { const results = repository.search(parseCatalogueQuery(new URLSearchParams({ category: design!.categorySlug, limit: "7" }))); const cards = results.items.filter((d) => d.id !== designId).slice(0, 6); return { data: { items: cards, dataOrigin: "SAMPLE" }, cards }; }
-    case "getStorePolicies": return { data: { approvedShopPolicies: [], facts: ["Customer-facing private demo; use fictional customer details only.", "Catalogue images are AI concepts and availability is synthetic SAMPLE data.", "Prices, weights, delivery times, returns, address, opening hours and shop contact are not yet approved.", "Customization is a request subject to workshop review, never guaranteed.", "Demo enquiries require explicit user confirmation, create no order or reservation, and send no notification.", "Reference-photo color matching runs locally. Dictation and playback require on-device browser support. Hosted vision, realtime voice, and image generation or editing are deferred."], source: "PRD and sample catalogue, atelier demo policy" } };
+    case "getStorePolicies": return { data: { approvedShopPolicies: [], details: storeKnowledge, facts: ["Customer-facing private demo; use fictional customer details only.", "Catalogue images are AI concepts and availability is synthetic SAMPLE data.", "Prices, weights, delivery times, returns, address, opening hours and shop contact are not yet approved.", "Customization is a request subject to workshop review, never guaranteed.", "Demo enquiries require explicit user confirmation, create no order or reservation, and send no notification.", "Reference-photo color matching runs locally. Dictation and playback require on-device browser support. Hosted vision, realtime voice, and image generation or editing are deferred."], source: "PRD and sample catalogue, atelier demo policy" } };
     default: return null;
   }
 }

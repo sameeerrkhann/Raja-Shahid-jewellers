@@ -5,7 +5,7 @@ export class AuriaError extends Error {
 }
 export const uuid = z.uuid();
 export const designRef = z.string().trim().regex(/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|RSJ-D\d{3,6})$/i, "Use a design UUID or code such as RSJ-D007");
-export const enquiryReference = z.string().trim().toUpperCase().regex(/^DEMO-Q-[A-F0-9]{8,32}$/);
+export const enquiryReference = z.string().trim().toUpperCase().regex(/^DEMO-(?:Q-[A-F0-9]{8,32}|C-[A-F0-9]{20})$/);
 export const language = z.enum(["auto", "en", "ur", "roman-ur"]);
 export const chatInput = z.strictObject({ conversationId: uuid, expectedVersion: z.number().int().nonnegative(), requestId: uuid, message: z.string().trim().min(1).max(4000), mode: z.enum(["live", "catalogue"]).optional() });
 export const selectionInput = z.strictObject({ selectedDesignId: uuid.nullable(), expectedVersion: z.number().int().nonnegative() });
@@ -17,6 +17,12 @@ export const draftInput = z.strictObject({
   budgetPKR: z.number().int().min(1).max(10_000_000).nullable().default(null),
   preferences: z.strictObject({ size: z.strictObject({ kind: z.enum(["RING_SIZE", "NECKLACE_LENGTH"]), value: z.string().trim().min(1).max(80) }).nullable().default(null), stonePreferences: z.string().trim().max(500).default(""), instructions: z.string().trim().max(1000).default("") }).default({ size: null, stonePreferences: "", instructions: "" }),
   customer: z.strictObject({ name: z.string().trim().min(1).max(80), email: z.email().max(120).refine((value) => value.toLowerCase().endsWith(".invalid"), "Use a fictional .invalid email address.") }).default({ name: "Demo Customer", email: "demo@example.invalid" }),
+});
+export const callbackInput = z.strictObject({
+  topic: z.enum(["CALLBACK", "APPOINTMENT"]),
+  expectedVersion: z.number().int().nonnegative(),
+  customer: draftInput.shape.customer,
+  note: z.string().trim().max(800).default(""),
 });
 export const submitInput = z.strictObject({ expectedVersion: z.number().int().nonnegative(), processingAccepted: z.literal(true), fictionalDataConfirmed: z.literal(true), idempotencyKey: uuid.optional() });
 export async function readJson<T>(request: Request, schema: z.ZodType<T>): Promise<T> {

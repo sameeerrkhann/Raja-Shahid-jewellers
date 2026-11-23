@@ -1,0 +1,130 @@
+/* The chat and photography share the atelier canvas. History sits above it only while open. */
+.auria-workspace {
+  --atelier-ground: #100e0d;
+  --atelier-glass: #201917;
+  --atelier-edge: #503e31;
+  --atelier-brass: #efcca0;
+  --atelier-paper: #f7eee1;
+  background: radial-gradient(ellipse at 66% 18%, #2d201a, transparent 56%), var(--atelier-ground);
+  color: var(--atelier-paper);
+  padding-block-end: max(12px, env(safe-area-inset-bottom));
+}
+.atelier-masthead-actions { display: flex; align-items: center; gap: clamp(9px, 1.35vw, 20px); }
+.atelier-desktop-action { display: none; }
+.auria-workspace .auria-layout { position: relative; overflow: hidden; isolation: isolate; }
+.auria-workspace .auria-chat { background: linear-gradient(165deg, #231b18, #1b1716 62%); }
+.auria-workspace .auria-chat-heading { padding-block: 10px; }
+.auria-workspace .auria-masthead { width: 100%; }
+.auria-workspace .auria-chat-heading p,
+.auria-workspace .auria-connection,
+.auria-workspace .auria-message-meta,
+.auria-workspace .auria-message-state,
+.auria-workspace .auria-disclosure { font-size: 13px; }
+.auria-workspace .auria-chat-heading p { margin-top: 4px; }
+.auria-workspace .auria-message-text { font-size: 17px; line-height: 1.55; }
+.auria-workspace .auria-message-text[lang="ur"] { line-height: 2.15; }
+.auria-workspace .auria-chat-composer textarea {
+  field-sizing: content;
+  min-height: 48px;
+  max-height: 106px;
+  padding-block: 10px;
+  line-height: 1.45;
+  font-size: 16px;
+  overflow: auto;
+}
+.auria-workspace .auria-suggestions button,
+.auria-workspace .atelier-text-action,
+.auria-workspace .atelier-stage__code,
+.auria-workspace .atelier-stage__origin,
+.auria-workspace .auria-history-list small { font-size: 13px; }
+.auria-workspace .auria-suggestions button { min-height: 40px; }
+.auria-workspace .auria-recommendations {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(126px, 154px);
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  padding-block-end: 8px;
+  scroll-snap-type: inline proximity;
+}
+.auria-workspace .auria-recommendations .auria-design { min-width: 0; scroll-snap-align: start; }
+.auria-workspace .auria-recommendations .auria-product-image { aspect-ratio: 4 / 5; }
+.auria-workspace .auria-design strong { font: 600 20px / 1.04 var(--font-display); }
+.auria-workspace .auria-design small { font-size: 13px; line-height: 1.4; }
+.auria-workspace .auria-selection { background: #211914; }
+.auria-workspace .atelier-stage__picture img {
+  animation: auria-lens-settle 720ms cubic-bezier(.23,.61,.36,1) both;
+  transform-origin: center;
+}
+.auria-workspace .atelier-core[data-state=attention] .atelier-orb__sphere { filter: saturate(.8); box-shadow: 0 0 23px #b7824778; }
+.auria-workspace .atelier-core__caption { font-size: 13px; }
+
+@keyframes auria-lens-settle {
+  from { opacity: .62; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.035); }
+}
+
+@media (min-width: 901px) {
+  .auria-workspace .auria-masthead { margin-bottom: 13px; }
+  .atelier-desktop-action { display: inline-flex; align-items: center; }
+  .auria-workspace .auria-layout {
+    grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+    border-color: var(--atelier-edge);
+  }
+  .auria-workspace .auria-chat { grid-column: 1; grid-row: 1; z-index: 2; margin: 10px -12px 10px 10px; border: 1px solid var(--atelier-edge); box-shadow: 12px 0 45px #0907066e; }
+  .auria-workspace .auria-selection { grid-column: 2; grid-row: 1; padding: 0; }
+  .auria-workspace .atelier-stage__heading { padding: 10px clamp(16px, 2vw, 28px); }
+  .auria-workspace .atelier-stage__picture {
+    max-height: none;
+    height: clamp(258px, 53dvh, 745px);
+    aspect-ratio: auto;
+    background: #9f815d;
+  }
+  .auria-workspace .atelier-stage__picture img { object-fit: cover; object-position: center 46%; }
+  .auria-workspace .atelier-stage__image::after {
+    position: absolute;
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 65px #4226103f;
+  }
+  .auria-workspace .atelier-stage__details { padding: 16px clamp(16px, 2vw, 28px) 10px; }
+  .auria-workspace .auria-selection > :is(.auria-quote, .auria-contact, .auria-lookup, .atelier-stage__vault) {
+    margin-inline: clamp(16px, 2vw, 28px);
+  }
+  .auria-workspace .auria-selection > .auria-lookup { padding-bottom: 26px; }
+  .auria-workspace .auria-history {
+    grid-column: 1;
+    grid-row: 1;
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: min(390px, 100%);
+    z-index: 5;
+    border-inline-end: 1px solid var(--atelier-edge);
+    box-shadow: 20px 0 60px #0d0c0dbd;
+  }
+  .auria-workspace .auria-history:not([data-drawer-open="true"]) { display: none; }
+  .atelier-masthead-actions .atelier-outline { font-size: 13px; min-height: 36px; }
+  .atelier-close-history { align-self: flex-end; margin-bottom: 8px; }
+  .auria-chat-heading-copy { display: flex; align-items: center; gap: 9px; }
+  .auria-chat-heading-copy .atelier-core--compact { display: grid; min-height: 0; }
+  .auria-chat-heading-copy .atelier-orb { width: 43px; }
+}
+
+@media (max-width: 900px) {
+  .auria-chat-heading-copy .atelier-core--compact { display: none; }
+  .atelier-masthead-actions > a { max-width: 86px; text-align: end; }
+  .auria-workspace .auria-disclosure { font-size: 12px; }
+}
+@media (max-width: 390px) {
+  .auria-workspace .auria-chat-heading p { font-size: 12px; }
+  .auria-workspace .auria-connection { font-size: 12px; }
+}
+ .auria-workspace[data-reduced-motion="true"] :is(.atelier-stage__picture img, .atelier-orb *) {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .auria-workspace .atelier-stage__picture img { animation: none; }
+}

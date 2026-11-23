@@ -1,4 +1,15 @@
+body:has(> .auria-workspace) {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+  overflow: hidden;
+}
+body:has(> .auria-workspace) > footer { display: none; }
+
 .auria-workspace {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
   --stage-black: #0d0c0d;
   --stage-graphite: #151314;
   --stage-panel: #1e1918;
@@ -23,7 +34,7 @@
 .atelier-vault { color: var(--stage-gold); text-decoration: none; font-size: 12px; line-height: 1.4; padding-block: 8px; }
 .atelier-vault span { margin-left: 4px; }
 .atelier-vault:hover { color: var(--stage-ivory); text-decoration: underline; text-underline-offset: 4px; }
-.auria-workspace .auria-layout { height: clamp(430px, calc(100svh - 183px), 960px); min-height: 0; grid-template-columns: minmax(170px, .68fr) minmax(0, 2.15fr) minmax(235px, 1.2fr); border: 1px solid var(--stage-line); background: var(--stage-graphite); }
+.auria-workspace .auria-layout { width: 100%; height: 100%; min-height: 0; grid-template-columns: minmax(170px, .68fr) minmax(0, 2.15fr) minmax(235px, 1.2fr); border: 1px solid var(--stage-line); background: var(--stage-graphite); }
 .auria-workspace :is(.auria-history, .auria-selection) { min-height: 0; overflow: auto; scrollbar-width: thin; overscroll-behavior: contain; background: #191514; padding: 20px; }
 .auria-workspace .auria-history { background: linear-gradient(150deg, #211916, #151212 58%); }
 .atelier-history__heading { margin: 12px 0 0; }
@@ -48,7 +59,7 @@
 .auria-connection[data-ready=true] i { background: #e5c27e; box-shadow: 0 0 8px #e5c27e88; }
 .auria-workspace button.auria-connection { background: #211916; border: 1px solid #70553f; min-height: 36px; }
 .auria-workspace button.auria-connection:hover { background: #3a2a22; }
-.auria-workspace .auria-transcript { min-height: 0; max-height: none; flex: 1 1 0; padding: 16px clamp(14px, 2.1vw, 31px); }
+.auria-workspace .auria-transcript { overflow-anchor: none; min-height: 0; max-height: none; flex: 1 1 0; padding: 16px clamp(14px, 2.1vw, 31px); }
 .auria-workspace .auria-transcript:focus-visible { outline-offset: -3px; }
 .auria-workspace .auria-welcome { max-width: 475px; margin: clamp(8px, 5vh, 42px) auto 14px; }
 .atelier-welcome__ornament { font-size: 31px; color: var(--stage-gold); line-height: 1; }
@@ -58,9 +69,11 @@
 .auria-workspace .auria-suggestions button { color: var(--stage-ivory); background: #211a19; border-color: #634d3b; min-height: 43px; padding: 10px 12px; align-items: center; line-height: 1.35; }
 .auria-workspace .auria-suggestions button:hover { background: #3a2a22; border-color: var(--stage-gold); }
 .auria-suggestions button span { color: var(--stage-gold); }
-.auria-workspace .auria-message { border-color: var(--stage-line); content-visibility: auto; contain-intrinsic-size: auto 120px; }
+.auria-workspace .auria-message { border-color: var(--stage-line); }
+.auria-workspace .auria-message:nth-last-child(n + 7) { content-visibility: auto; contain-intrinsic-size: auto 120px; }
 .auria-workspace .auria-message--user { background: #31231d; border: 1px solid #5c4636; margin-left: 13%; }
 .auria-workspace .auria-message-meta, .auria-workspace .auria-message-meta span, .auria-workspace .auria-message-state { color: var(--stage-muted); }
+.auria-workspace .auria-message-text[lang="ur"] { font-family: var(--auria-urdu), serif; line-height: 2.12; }
 .auria-workspace .auria-message-text code { color: var(--stage-ivory); background: #372920; }
 .auria-workspace .auria-table, .auria-workspace .auria-table th, .auria-workspace .auria-table td { border-color: var(--stage-line); }
 .auria-workspace .auria-table thead th { background: #30231e; color: var(--stage-ivory); }
@@ -70,6 +83,13 @@
 .auria-workspace .auria-chat-composer textarea { min-height: 54px; max-height: 64px; resize: none; font-size: 14px; }
 .auria-workspace .auria-live-status { min-height: 0; color: var(--stage-gold); margin: 0 0 6px; }
 .auria-live-status:empty { display: none; }
+.auria-workspace .auria-chat-composer .auria-composer-error { margin-block: 0 8px; }
+.auria-workspace .auria-composer-error p { margin: 0; }
+.auria-workspace .auria-composer-error button { min-height: 32px; }
+.auria-failed-message { color: #f0c699; }
+.auria-new-reply { margin-bottom: 8px; }
+.auria-workspace .button:disabled { background: #302b26; border-color: #605346; color: #c1b4a6; opacity: .75; cursor: not-allowed; }
+.auria-workspace .button:disabled::before { display: none; }
 .auria-workspace .auria-disclosure { color: var(--stage-muted); font-size: 10px; line-height: 1.35; margin-top: 8px; }
 .atelier-send { flex: none; padding: 8px 15px; min-width: 69px; border: 1px solid #f3d395; background: linear-gradient(145deg, #f5d99d, #cf9f55); color: #25170d; font: 700 12px/1.3 var(--font-sans); }
 .atelier-send:not([disabled]):hover { background: #f8dfa9; }
@@ -120,6 +140,14 @@
 .atelier-stage__pagination button:hover { background: #453020; }
 .atelier-stage__vault { display: inline-block; margin-top: 9px; }
 .auria-workspace .auria-quote, .auria-workspace .auria-lookup, .auria-workspace .auria-status-card, .auria-workspace .auria-draft-review { border-color: #5d4837; }
+.auria-contact { margin-block: 18px; border-block-start: 1px solid var(--stage-line); padding-block-start: 14px; font-size: 13px; }
+.auria-contact summary { color: var(--stage-gold); padding-block: 6px; cursor: pointer; }
+.auria-contact > p { margin-block: 8px; color: var(--stage-muted); }
+.auria-contact form { display: grid; gap: 7px; }
+.auria-contact form button { justify-self: start; }
+.auria-contact-review { margin-top: 12px; }
+.atelier-reference-copy { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }
+.auria-contact-reference { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .auria-workspace .auria-lookup { margin-top: 17px; border-top: 1px solid #5d4837; padding-top: 14px; }
 .auria-workspace .auria-lookup h3 { font: 500 23px/1.1 var(--font-display); margin: 0 0 7px; }
 .auria-workspace .auria-lookup > p { font-size: 12px; line-height: 1.55; color: var(--stage-muted); margin: 0 0 10px; }
@@ -143,9 +171,12 @@
 .auria-workspace .auria-recommendations { grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); }
 .auria-workspace .auria-recommendations .auria-product-image { aspect-ratio: 1.4; }
 .atelier-inspector.modal { --stage-ivory: #f5eee2; width: min(92vw, 660px); max-height: 92svh; color: #f5eee2; background: #1f1917; border-color: #806346; overscroll-behavior: contain; }
-.atelier-inspector__image { max-height: 63svh; overflow: auto; background: #241a15; }
+.atelier-inspector__image { max-height: 59dvh; overflow: auto; overscroll-behavior: contain; touch-action: none; background: #241a15; }
 .atelier-inspector__image img { display: block; width: 100%; height: auto; }
-.atelier-inspector__image[data-zoom=true] img { width: 170%; max-width: none; }
+.atelier-inspector__image[data-zoom=true] { cursor: grab; }
+.atelier-inspector__image[data-zoom=true]:active { cursor: grabbing; }
+.atelier-inspector__image[data-zoom=true] img { max-width: none; }
+.atelier-inspector__image img { user-select: none; }
 .atelier-inspector__controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .atelier-inspector p { font-size: 12px; color: #d8c4ae; }
 .atelier-composer-tools { display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: center; margin-top: 3px; }
@@ -164,7 +195,7 @@ a.atelier-text-action { display: inline-flex; align-items: center; }
 .atelier-reference__result small { display: block; margin-top: 3px; color: #ddc8ab; }
 
 @media (max-width: 900px) {
-  .auria-workspace { padding: 12px max(12px, env(safe-area-inset-right)) 18px max(12px, env(safe-area-inset-left)); }
+  .auria-workspace { grid-template-rows: auto auto minmax(0, 1fr); padding: 12px max(12px, env(safe-area-inset-right)) 18px max(12px, env(safe-area-inset-left)); }
   .auria-workspace .auria-masthead { min-height: 46px; margin-bottom: 10px; gap: 8px; }
   .auria-workspace .auria-masthead h1 { font-size: 30px; }
   .auria-workspace .auria-masthead h1 span { display: block; font-size: 18px; margin: 3px 0 0; }
@@ -174,7 +205,6 @@ a.atelier-text-action { display: inline-flex; align-items: center; }
   .auria-workspace .auria-mobile-nav { border-color: var(--stage-line); }
   .auria-workspace .auria-mobile-nav button { color: var(--stage-muted); background: #1d1818; min-height: 42px; }
   .auria-workspace .auria-mobile-nav button[aria-pressed=true] { color: var(--stage-gold); background: #2e221b; box-shadow: inset 0 -2px var(--stage-gold); }
-  .auria-workspace .auria-layout { height: clamp(348px, calc(100svh - 196px), 870px); }
   .auria-workspace :is(.auria-chat, .auria-selection, .auria-history) { height: 100%; min-height: 0; }
   .auria-workspace .auria-welcome { margin-top: clamp(5px, 3vh, 24px); }
   .auria-workspace .auria-welcome h2 { font-size: clamp(35px, 9.5vw, 52px); }

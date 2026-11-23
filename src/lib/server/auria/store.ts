@@ -31,10 +31,10 @@ export function withOwner<T>(owner: string, change: (state: OwnerState) => T): T
     for (const c of state.conversations) if (c.draft) normalizeDraft(c.draft);
     for (const c of state.conversations) if (c.activeTurn && c.activeTurn.expiresAt < Date.now()) { const m = c.messages.find((m) => m.id === c.activeTurn?.assistantId); if (m) { m.state = "STOPPED"; m.errorCode = "INTERRUPTED"; } c.activeTurn = null; c.version++; }
     const result = change(state);
-    for (const c of state.conversations) if (c.draft?.reference) {
-      const existing = db.prepare("SELECT owner,draft_id FROM enquiry_references WHERE reference=?").get(c.draft.reference) as { owner: string; draft_id: string } | undefined;
-      if (existing && (existing.owner !== owner || existing.draft_id !== c.draft.id)) throw new AuriaError("REFERENCE_CONFLICT", "Could not reserve an enquiry reference. Retry submission.", 409, true);
-      db.prepare("INSERT OR IGNORE INTO enquiry_references VALUES (?, ?, ?, ?)").run(c.draft.reference, owner, c.id, c.draft.id);
+    for (const c of state.conversations) for (const draft of [c.draft, c.callback]) if (draft?.reference) {
+      const existing = db.prepare("SELECT owner,draft_id FROM enquiry_references WHERE reference=?").get(draft.reference) as { owner: string; draft_id: string } | undefined;
+      if (existing && (existing.owner !== owner || existing.draft_id !== draft.id)) throw new AuriaError("REFERENCE_CONFLICT", "Could not reserve an enquiry reference. Retry submission.", 409, true);
+      db.prepare("INSERT OR IGNORE INTO enquiry_references VALUES (?, ?, ?, ?)").run(draft.reference, owner, c.id, draft.id);
     }
     db.prepare("UPDATE sessions SET data=? WHERE id=?").run(JSON.stringify(state), owner);
     db.exec("COMMIT"); return result;

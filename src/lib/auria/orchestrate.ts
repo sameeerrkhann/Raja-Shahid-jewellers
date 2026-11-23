@@ -16,9 +16,11 @@ Stay focused on jewellery discovery and relevant store questions. Be helpful, cl
 export async function* orchestrate(input: {
   provider: ChatProvider; system: string; history: ProviderTurn[]; signal: AbortSignal;
   execute: (call: ToolCall) => ToolResult | Promise<ToolResult>;
+  retry?: (error: unknown) => Promise<boolean>;
   beforeCall: () => string; usage: (id: string, value: { input: number | null; output: number | null; total: number | null } | null, state: "COMPLETE" | "FAILED" | "STOPPED") => void;
 }): AsyncGenerator<ChatEvent> {
   const exchanges: { continuation: unknown; results: { call: ToolCall; data: unknown }[] }[] = [];
+  let retried = false;
   let emittedText = false; let totalTools = 0;
   const displayedCards = new Map<string, NonNullable<ToolResult["cards"]>[number]>();
   for (let round = 0; round < 4; round++) {
@@ -34,7 +36,15 @@ export async function* orchestrate(input: {
         if (chunk.usage) usage = chunk.usage;
       }
       input.usage(callId, usage, "COMPLETE");
-    } catch (error) { input.usage(callId, usage, input.signal.aborted ? "STOPPED" : "FAILED"); throw error; }
+    } catch (error) {
+      input.usage(callId, usage, input.signal.aborted ? "STOPPED" : "FAILED");
+      if (!input.signal.aborted && !emittedText && !calls.length && !retried && await input.retry?.(error)) {
+        retried = true;
+        round--;
+        continue;
+      }
+      throw error;
+    }
     if (!calls.length) { if (!emittedText) throw new AuriaError("EMPTY_RESPONSE", "AURIA returned no answer. Please retry.", 502, true); return; }
     if (!continuation || totalTools + calls.length > 12) throw new AuriaError("TOOL_LIMIT", "Please narrow your request to a few designs.", 422, true);
     totalTools += calls.length;

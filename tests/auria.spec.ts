@@ -102,6 +102,7 @@ test("history and new conversation are functional and do not start model calls",
   await page.goto("/ai-atelier"); await expect(page.getByText("Restoring your atelier…")).toBeHidden();
   await page.getByRole("button", { name: "＋ New conversation" }).click(); await expect(page.locator(".auria-history-list button")).toHaveCount(1);
   await page.getByRole("button", { name: "＋ New conversation" }).click(); await expect(page.locator(".auria-history-list button")).toHaveCount(2);
+  await page.getByRole("button", { name: "Conversation history", exact: true }).click();
   await page.locator(".auria-history-list button").last().click(); await page.reload(); await expect(page.locator(".auria-history-list button")).toHaveCount(2); expect(calls).toBe(0);
 });
 
@@ -118,5 +119,7 @@ test("streamed quota error offers explicit retry without automatic provider requ
   await page.goto("/ai-atelier"); await expect(page.getByRole("button", { name: "＋ New conversation" })).toBeEnabled();
   await page.getByLabel("Message AURIA").fill("Test-only quota case"); await page.getByRole("button", { name: /^Send/ }).click();
   await expect(page.getByRole("button", { name: "Retry response" })).toBeEnabled(); expect(calls).toBe(1);
-  await page.getByRole("button", { name: "Retry response" }).click(); await expect(page.getByText("Test-only retry completed.", { exact: true })).toBeVisible(); expect(calls).toBe(2);
+  await page.getByRole("button", { name: "Retry response" }).click(); await expect(page.getByText("Test-only retry completed.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "＋ New conversation" })).toBeEnabled();
+  expect(calls).toBe(2);
 });

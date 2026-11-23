@@ -2,21 +2,55 @@ import type { Capability } from "@/types/auria";
 import { AuriaError } from "./validation";
 
 export function configuredCapability(env: Record<string, string | undefined>): Capability {
+  const hasKey = !!env.GEMINI_API_KEY?.trim();
   const model = env.AI_CHAT_MODEL || "gemini-3.1-flash-lite";
-  const reason = !env.GEMINI_API_KEY ? "AURIA is waiting for a server-side Gemini API key." : env.AI_CHAT_ENABLED !== "true" ? "Live chat is disabled in this private demo." : env.GEMINI_FREE_TIER_CONFIRMED !== "true" ? "Confirm the Gemini project is on the Free tier with billing disabled before enabling chat." : (env.AI_CHAT_PROVIDER || "gemini") !== "gemini" || model !== "gemini-3.1-flash-lite" ? "This provider or model has not been approved for free-tier use." : "Ready for a free-tier conversation. Availability depends on provider quota.";
-  const available = !!env.GEMINI_API_KEY && env.AI_CHAT_ENABLED === "true" && env.GEMINI_FREE_TIER_CONFIRMED === "true" && (env.AI_CHAT_PROVIDER || "gemini") === "gemini" && model === "gemini-3.1-flash-lite";
+  const reason = !hasKey ? "AURIA is waiting for a server-side Gemini API key." : env.AI_CHAT_ENABLED !== "true" ? "Live chat is disabled in this private demo." : env.GEMINI_FREE_TIER_CONFIRMED !== "true" ? "Confirm the Gemini project is on the Free tier with billing disabled before enabling chat." : (env.AI_CHAT_PROVIDER || "gemini") !== "gemini" || model !== "gemini-3.1-flash-lite" ? "This provider or model has not been approved for free-tier use." : "Ready for a free-tier conversation. Availability depends on provider quota.";
+  const available = hasKey && env.AI_CHAT_ENABLED === "true" && env.GEMINI_FREE_TIER_CONFIRMED === "true" && (env.AI_CHAT_PROVIDER || "gemini") === "gemini" && model === "gemini-3.1-flash-lite";
   return { available, mode: available ? "READY" : "UNAVAILABLE", reason, provider: "gemini", model, lastVerifiedAt: null };
+}
+
+const providerFailures = {
+  PROVIDER_RATE_LIMIT: ["Gemini’s free quota is unavailable. Wait before retrying or use the catalogue demo.", 429, true],
+  PROVIDER_ACCESS: ["Gemini rejected the server credentials or project access. Use the catalogue demo while access is checked.", 503, false],
+  MODEL_UNAVAILABLE: ["The configured Gemini model is unavailable for this project. Use the catalogue demo while it is checked.", 503, false],
+  PROVIDER_BUSY: ["Gemini is temporarily unavailable. Retry in a moment or use the catalogue demo.", 503, true],
+  PROVIDER_TLS: ["The server could not verify the provider connection. You can continue in the catalogue demo.", 503, false],
+  TIMEOUT: ["Gemini timed out. Retry or use the catalogue demo.", 504, true],
+  PROVIDER_REQUEST: ["Gemini rejected this request. Try another wording or use the catalogue demo.", 502, false],
+  PROVIDER_ERROR: ["The AI service could not finish this response. You can retry when it is available.", 502, true],
+  RATE_LIMITED: ["The demo request limit is reached. Please wait before retrying.", 429, true],
+} as const;
+
+export function savedProviderFailure(code?: string) {
+  const failure = code && Object.hasOwn(providerFailures, code) ? providerFailures[code as keyof typeof providerFailures] : null;
+  return failure ? { message: failure[0], retryable: failure[2] } : { message: "AURIA could not finish this response.", retryable: true };
+}
+
+export function upstreamStatus(error: unknown) {
+  if (error instanceof AuriaError || !error || typeof error !== "object" || !("status" in error)) return null;
+  const status = Number(error.status);
+  return Number.isInteger(status) && status >= 400 && status <= 599 ? status : null;
+}
+
+export function isTransientProviderFailure(error: unknown) {
+  const status = upstreamStatus(error);
+  return status !== null && [408, 500, 502, 503, 504].includes(status)
+    || error instanceof Error && error.name === "TimeoutError";
 }
 
 export function providerError(error: unknown): AuriaError {
   if (error instanceof AuriaError) return error;
-  const value = error && typeof error === "object" ? error as { status?: unknown; name?: unknown; cause?: { code?: unknown } } : {};
-  const status = Number(value.status);
-  if (status === 429) return new AuriaError("PROVIDER_RATE_LIMIT", "Gemini's free quota is temporarily unavailable. Wait before retrying; no paid fallback was used.", 429, true);
-  if (status === 401 || status === 403) return new AuriaError("PROVIDER_ACCESS", "Gemini access was rejected. Check the server key, project eligibility and Free tier.", 503);
-  if (status === 404) return new AuriaError("MODEL_UNAVAILABLE", "The configured Gemini model is unavailable for this project.", 503);
-  if (status === 503) return new AuriaError("PROVIDER_BUSY", "Gemini is busy. Retry in a moment or switch to the catalogue demo.", 503, true);
-  if (["UNABLE_TO_VERIFY_LEAF_SIGNATURE", "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_GET_ISSUER_CERT_LOCALLY"].includes(String(value.cause?.code))) return new AuriaError("PROVIDER_TLS", "The server could not verify the provider certificate. Configure a trusted certificate store; never disable HTTPS verification.", 503);
-  if (status === 408 || status === 504 || value.name === "TimeoutError") return new AuriaError("TIMEOUT", "The AI service timed out. You can retry.", 504, true);
-  return new AuriaError("PROVIDER_ERROR", "The AI service could not finish this response. You can retry when it is available.", 502, true);
+  const value = error && typeof error === "object" ? error as { name?: unknown; message?: unknown; cause?: { code?: unknown } } : {};
+  const status = upstreamStatus(error);
+  const detail = typeof value.message === "string" ? value.message : "";
+  let code: keyof typeof providerFailures = "PROVIDER_ERROR";
+  if (status === 429) code = "PROVIDER_RATE_LIMIT";
+  else if (status === 401 || status === 403 || (status === 400 && /API_KEY_(?:INVALID|EXPIRED)|API key not valid/i.test(detail))) code = "PROVIDER_ACCESS";
+  else if (status === 404) code = "MODEL_UNAVAILABLE";
+  else if (["UNABLE_TO_VERIFY_LEAF_SIGNATURE", "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_GET_ISSUER_CERT_LOCALLY"].includes(String(value.cause?.code))) code = "PROVIDER_TLS";
+  else if (status === 408 || status === 504 || value.name === "TimeoutError") code = "TIMEOUT";
+  else if (status !== null && status >= 500) code = "PROVIDER_BUSY";
+  else if (status === 400) code = "PROVIDER_REQUEST";
+  const [message, httpStatus, retryable] = providerFailures[code];
+  return new AuriaError(code, message, httpStatus, retryable);
 }

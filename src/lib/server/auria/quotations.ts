@@ -31,6 +31,18 @@ export function getOrderStatus(owner: string, conversationId: string, reference?
   const normalized = reference ? enquiryReference.parse(reference) : undefined;
   return withOwner(owner, (s) => {
     const c = ownedConversation(s, conversationId);
+    const callbackConversation = normalized ? s.conversations.find((other) => other.callback?.reference === normalized) : c;
+    const callback = callbackConversation?.callback;
+    if (callback?.status === "SUBMITTED" && (normalized || !c.draft?.reference)) {
+      return {
+        found: true as const, reference: callback.reference!, conversationId: callbackConversation!.id,
+        status: callback.status, version: callback.version, designCode: "",
+        title: callback.topic === "APPOINTMENT" ? "Showroom visit request" : "Callback request",
+        dataOrigin: "SAMPLE" as const, recordType: "CALLBACK_ENQUIRY" as const, timeline: callback.timeline,
+        notificationStatus: "NOT_CONFIGURED" as const, quotedAmountPKR: null,
+        explanation: "Recorded fictional request. No message or booking was sent.",
+      };
+    }
     const draft = normalized ? s.conversations.find((other) => other.draft?.reference === normalized)?.draft : c.draft;
     if (!draft || draft.status === "DRAFT") return { found: false as const, explanation: "No matching enquiry in your private session. Check the reference or return to the browser where it was saved." };
     return { found: true as const, reference: draft.reference!, conversationId: draft.conversationId, status: draft.status, version: draft.version, designCode: draft.source.designCode, title: draft.source.title, dataOrigin: "SAMPLE" as const, recordType: ["CONFIRMED", "IN_PRODUCTION", "READY_FOR_COLLECTION", "COMPLETED"].includes(draft.status) ? "SIMULATED_MANUFACTURING_ORDER" as const : "QUOTATION_ENQUIRY" as const, timeline: draft.timeline, notificationStatus: draft.notificationStatus, quotedAmountPKR: draft.jewellerQuote?.amountPKR ?? null, weight: unconfirmed, makingCharges: unconfirmed, manufacturingDeadline: unconfirmed, explanation: "Persisted demo record. Later workshop events, if present, are server-simulated. No actual manufacture, reservation or notification." };
