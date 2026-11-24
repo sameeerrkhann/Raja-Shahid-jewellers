@@ -8,6 +8,7 @@ import { findPublicDesign } from "@/lib/server/catalogue";
 import { createQuoteDraft, submitQuoteDraft, getOrderStatus } from "@/lib/server/auria/quotations";
 import { chat, stopTurn } from "@/lib/server/auria/chat";
 import { saveCallback, submitCallback } from "@/lib/server/auria/callbacks";
+import { analyzeReference } from "@/lib/server/auria/vision";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ async function handle(request: Request, context: Context) {
     if (route === "session" && method === "POST") { await readJson(request, z.strictObject({})); const s = await session(request, true); return json({ csrfToken: s.csrfToken, capability: providerCapability() }); }
     const { owner } = await session(request);
     if (route === "chat" && method === "POST") return await chat(request, owner);
+    if (route === "reference" && method === "POST") return json(await analyzeReference(request, owner));
     if (path[0] === "enquiries" && path.length === 2 && method === "GET") {
       const reference = enquiryReference.safeParse(path[1]);
       if (!reference.success) throw new AuriaError("NOT_FOUND", "Enquiry unavailable.", 404);
@@ -48,7 +50,7 @@ async function handle(request: Request, context: Context) {
     if (path[2] === "selection" && method === "POST") {
       const input = await readJson(request, selectionInput);
       if (input.selectedDesignId && !findPublicDesign(input.selectedDesignId)) throw new AuriaError("NOT_FOUND", "Design unavailable.", 404);
-      return json(withOwner(owner, (s) => { const c = ownedConversation(s, id); if (c.activeTurn || c.version !== input.expectedVersion) throw new AuriaError("VERSION_CONFLICT", "Finish the response or reload history before selecting a design.", 409, true); c.selectedDesignId = input.selectedDesignId; c.version++; return c; }));
+      return json(withOwner(owner, (s) => { const c = ownedConversation(s, id); if (c.activeTurn || c.version !== input.expectedVersion) throw new AuriaError("VERSION_CONFLICT", "Finish the response or reload history before selecting a design.", 409, true); if (input.referenceNote !== undefined || c.selectedDesignId !== input.selectedDesignId) c.referenceNote = input.selectedDesignId ? input.referenceNote ?? null : null; c.selectedDesignId = input.selectedDesignId; c.version++; return c; }));
     }
     if (path[2] === "stop" && method === "POST") { await readJson(request, z.strictObject({})); return json(stopTurn(owner, id)); }
     if (path[2] === "callback" && method === "POST") return json(saveCallback(owner, id, await readJson(request, callbackInput)));

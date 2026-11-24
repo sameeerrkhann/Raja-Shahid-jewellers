@@ -93,9 +93,9 @@ export function useWorkspace() {
     try { const c = await api<Conversation>("conversations", { language, mode }); setConversation(c); setSelected(null); setStreaming(null); setInput(""); setRetryText(""); setView("conversation"); window.history.replaceState(null, "", `/ai-atelier?conversation=${c.id}`); await refreshHistory(); inputRef.current?.focus(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
   async function openConversation(id: string) { setError(""); setNotice(""); setInput(""); setNewReply(false); setLoading(true); try { await loadConversation(id); setView("conversation"); window.history.replaceState(null, "", `/ai-atelier?conversation=${id}`); } catch (e) { setError((e as Error).message); } finally { setLoading(false); } }
-  async function selectDesign(design: DesignCardData) {
+  async function selectDesign(design: DesignCardData, referenceNote?: string) {
     if (busy) return; setBusy(true); setError("");
-    try { const c = conversation ?? await api<Conversation>("conversations", { language, mode }); const updated = await api<Conversation>(`conversations/${c.id}/selection`, { selectedDesignId: design.id, expectedVersion: c.version }); setConversation(updated); const response = await fetch(`/api/designs/${design.id}`); const data = await response.json(); if (!response.ok) throw new Error("Design details unavailable."); setSelected(data.data); setView("selection"); await refreshHistory(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+    try { const c = conversation ?? await api<Conversation>("conversations", { language, mode }); const updated = await api<Conversation>(`conversations/${c.id}/selection`, { selectedDesignId: design.id, expectedVersion: c.version, ...(referenceNote ? { referenceNote } : {}) }); setConversation(updated); const response = await fetch(`/api/designs/${design.id}`); const data = await response.json(); if (!response.ok) throw new Error("Design details unavailable."); setSelected(data.data); setView("selection"); await refreshHistory(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
   async function send(text = input) {
     if (busy || loading || sendLock.current || conversation?.activeTurn || !csrf || !text.trim()) return; if (mode === "live" && !capability?.available) { setError(capability?.reason || "Chat is unavailable."); return; }
@@ -123,6 +123,7 @@ export function useWorkspace() {
       let newDesignId: string | null = null;
       const accept = (line: string) => {
         if (!line.trim()) return; const event = JSON.parse(line) as ChatEvent;
+        if (event.type === "source") setStreaming((m) => m ? { ...m, source: event.source } : m);
         if (event.type === "delta") setStreaming((m) => m ? { ...m, text: m.text + event.text } : m);
         if (event.type === "cards") setStreaming((m) => m ? { ...m, cards: event.cards } : m);
         if (event.type === "draft") setConversation((current) => current ? { ...current, draft: event.draft } : current);

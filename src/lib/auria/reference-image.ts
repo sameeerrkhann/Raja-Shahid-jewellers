@@ -1,3 +1,5 @@
+import { maxReferenceBytes, maxReferenceEdge } from "./visual-reference";
+
 const allowed = ["image/jpeg", "image/png", "image/webp"];
 const limit = 5 * 1024 * 1024;
 
@@ -8,6 +10,24 @@ export async function validateReference(file: File) {
   const matches = (signature: number[], offset = 0) => signature.every((byte, i) => bytes[offset + i] === byte);
   const realType = matches([255, 216, 255]) ? "image/jpeg" : matches([137, 80, 78, 71, 13, 10, 26, 10]) ? "image/png" : matches([82, 73, 70, 70]) && matches([87, 69, 66, 80], 8) ? "image/webp" : null;
   if (file.type !== realType) throw new Error("The image format could not be verified. Export a new JPEG, PNG or WebP.");
+}
+
+export async function prepareReferenceJpeg(source: Blob) {
+  const bitmap = await createImageBitmap(source);
+  try {
+    const scale = Math.min(1, maxReferenceEdge / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) throw new Error("Photo preparation is unavailable in this browser.");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const result = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", .8));
+    if (result?.type !== "image/jpeg" || result.size > maxReferenceBytes) throw new Error("This photo could not be prepared. Try a smaller image.");
+    return result;
+  } finally { bitmap.close(); }
 }
 
 export type ImageColors = readonly [red: number, green: number, blue: number, contrast: number];

@@ -38,6 +38,10 @@ export function isTransientProviderFailure(error: unknown) {
     || error instanceof Error && error.name === "TimeoutError";
 }
 
+export function canUseLocalFallback(error: unknown) {
+  return ["PROVIDER_RATE_LIMIT", "PROVIDER_ACCESS", "MODEL_UNAVAILABLE", "PROVIDER_BUSY", "PROVIDER_TLS", "TIMEOUT", "PROVIDER_INCOMPLETE"].includes(providerError(error).code);
+}
+
 export function providerError(error: unknown): AuriaError {
   if (error instanceof AuriaError) return error;
   const value = error && typeof error === "object" ? error as { name?: unknown; message?: unknown; cause?: { code?: unknown } } : {};

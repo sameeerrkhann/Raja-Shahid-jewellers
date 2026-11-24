@@ -53,5 +53,15 @@ export function reserveCall(owner: string, model: string): string {
   withOwner(owner, (s) => { s.usage.push({ id, model, startedAt: new Date(now).toISOString(), state: "RESERVED", inputTokens: null, outputTokens: null, totalTokens: null }); s.usage = s.usage.slice(-100); });
   return id;
 }
+export function finishProviderCall(owner: string, id: string, tokens: { input: number | null; output: number | null; total: number | null } | null, state: Exclude<Usage["state"], "RESERVED">) {
+  withOwner(owner, (session) => {
+    const usage = session.usage.find((entry) => entry.id === id);
+    if (!usage) return;
+    usage.state = state;
+    usage.inputTokens = tokens?.input ?? null;
+    usage.outputTokens = tokens?.output ?? null;
+    usage.totalTokens = tokens?.total ?? null;
+  });
+}
 export function markVerified() { const db = database(); try { db.prepare("INSERT OR REPLACE INTO metadata VALUES ('verified', ?)").run(new Date().toISOString()); } finally { db.close(); } }
 export function lastVerified(): string | null { const db = database(); try { return (db.prepare("SELECT value FROM metadata WHERE key='verified'").get() as { value: string } | undefined)?.value ?? null; } finally { db.close(); } }

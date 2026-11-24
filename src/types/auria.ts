@@ -3,7 +3,7 @@ import type { DesignCardData, PublicDesign } from "./catalogue";
 export type Language = "auto" | "en" | "ur" | "roman-ur";
 export type MessageState = "COMPLETE" | "STREAMING" | "STOPPED" | "FAILED";
 export type ChatMode = "live" | "catalogue";
-export type ChatMessage = { id: string; role: "user" | "assistant"; text: string; createdAt: string; state: MessageState; cards: DesignCardData[]; errorCode?: string; failure?: { message: string; retryable: boolean }; source?: "CATALOGUE_DEMO" };
+export type ChatMessage = { id: string; role: "user" | "assistant"; text: string; createdAt: string; state: MessageState; cards: DesignCardData[]; errorCode?: string; failure?: { message: string; retryable: boolean }; source?: "CATALOGUE_DEMO" | "OLLAMA_LOCAL" };
 export type EnquiryStatus = "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "QUOTED" | "AWAITING_CUSTOMER_APPROVAL" | "CONFIRMED" | "IN_PRODUCTION" | "READY_FOR_COLLECTION" | "COMPLETED" | "CANCELLED";
 export type QuotePreferences = { size: { kind: "RING_SIZE" | "NECKLACE_LENGTH"; value: string } | null; stonePreferences: string; instructions: string };
 export type EnquiryEvent = { status: EnquiryStatus; at: string; source: "CUSTOMER" | "SERVER_DEMO"; note: string };
@@ -13,18 +13,18 @@ export type CallbackDraft = {
   status: "DRAFT" | "SUBMITTED"; reference: string | null; version: number; updatedAt: string;
   submissionKey: string | null; timeline: EnquiryEvent[];
 };
-export type Conversation = { id: string; title: string; language: Language; mode?: ChatMode; version: number; createdAt: string; updatedAt: string; selectedDesignId: string | null; recentDesignIds: string[]; shortlistDesignIds?: string[]; messages: ChatMessage[]; callback?: CallbackDraft; draft: QuoteDraft | null; activeTurn: { id: string; assistantId: string; expiresAt: number } | null; requests: Record<string, { hash: string; assistantId: string }> };
+export type Conversation = { id: string; title: string; language: Language; mode?: ChatMode; version: number; createdAt: string; updatedAt: string; selectedDesignId: string | null; recentDesignIds: string[]; shortlistDesignIds?: string[]; referenceNote?: string | null; messages: ChatMessage[]; callback?: CallbackDraft; draft: QuoteDraft | null; activeTurn: { id: string; assistantId: string; expiresAt: number } | null; requests: Record<string, { hash: string; assistantId: string }> };
 export type ConversationSummary = Pick<Conversation, "id" | "title" | "updatedAt" | "language">;
-export type Capability = { available: boolean; mode: "READY" | "UNAVAILABLE"; reason: string; provider: "gemini"; model: string; lastVerifiedAt: string | null };
+export type Capability = { available: boolean; mode: "READY" | "UNAVAILABLE"; reason: string; provider: "gemini" | "ollama"; localFallback?: boolean; model: string; lastVerifiedAt: string | null };
 export type Usage = { id: string; model: string; startedAt: string; state: "RESERVED" | "COMPLETE" | "FAILED" | "STOPPED"; inputTokens: number | null; outputTokens: number | null; totalTokens: number | null };
-export type ChatEvent = { type: "delta"; text: string } | { type: "cards"; cards: DesignCardData[] } | { type: "draft"; draft: QuoteDraft } | { type: "done"; conversation: Conversation } | { type: "error"; code: string; message: string; retryable: boolean };
+export type ChatEvent = { type: "source"; source: "OLLAMA_LOCAL" } | { type: "delta"; text: string } | { type: "cards"; cards: DesignCardData[] } | { type: "draft"; draft: QuoteDraft } | { type: "done"; conversation: Conversation } | { type: "error"; code: string; message: string; retryable: boolean };
 export type ToolCall = { name: string; args: unknown; id?: string };
 export type ToolResult = { data: unknown; cards?: DesignCardData[]; draft?: QuoteDraft };
 export type ToolDefinition = { name: string; description: string; parameters: Record<string, unknown> };
 export type ProviderTurn = { role: "user" | "assistant"; text: string };
 export type ProviderChunk = { text?: string; calls?: ToolCall[]; continuation?: unknown; usage?: { input: number | null; output: number | null; total: number | null }; finished?: boolean };
 export interface ChatProvider {
-  stream(input: { system: string; history: ProviderTurn[]; tools: ToolDefinition[]; exchanges: { continuation: unknown; results: { call: ToolCall; data: unknown }[] }[]; signal: AbortSignal; requireTool: boolean }): AsyncIterable<ProviderChunk>;
+  stream(input: { system: string; context?: string; history: ProviderTurn[]; tools: ToolDefinition[]; exchanges: { continuation: unknown; results: { call: ToolCall; data: unknown }[] }[]; signal: AbortSignal; requireTool: boolean }): AsyncIterable<ProviderChunk>;
 }
 // Future capabilities share application conversation IDs and ownership, never provider IDs.
 export interface VoiceConversation { start(conversationId: string): Promise<{ sessionId: string }>; stop(sessionId: string): Promise<void> }

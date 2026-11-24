@@ -193,6 +193,13 @@ a.atelier-text-action { display: inline-flex; align-items: center; }
 .atelier-reference__sample span { width: 20px; height: 20px; border: 1px solid #c4a579; }
 .atelier-reference__result ul { padding: 0; margin: 10px 0 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
 .atelier-reference__result small { display: block; margin-top: 3px; color: #ddc8ab; }
+.atelier-reference__vision { border-top: 1px solid #5d4837; padding-top: 12px; margin-block: 12px; }
+.atelier-reference__vision p { margin: 0 0 8px; line-height: 1.5; }
+.atelier-reference__matches li { flex: 1 1 120px; }
+.atelier-reference__matches button { display: flex; flex-direction: column; align-items: start; width: 100%; text-align: start; }
+.atelier-reference__matches .auria-product-image { position: relative; width: 100%; aspect-ratio: 2 / 1; overflow: hidden; margin-bottom: 6px; background: #2b2119; }
+.atelier-reference__matches img { object-fit: cover; }
+@media (max-width: 600px) { .atelier-reference__preview { max-height: 176px; } }
 
 @media (max-width: 900px) {
   .auria-workspace { grid-template-rows: auto auto minmax(0, 1fr); padding: 12px max(12px, env(safe-area-inset-right)) 18px max(12px, env(safe-area-inset-left)); }
