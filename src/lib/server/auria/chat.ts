@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { chatInput, AuriaError, readJson } from "@/lib/auria/validation";
 import { conciergeInstructions, orchestrate } from "@/lib/auria/orchestrate";
-import type { ChatEvent, ChatProvider, Conversation, ProviderTurn } from "@/types/auria";
+import type { ChatEvent, ChatProvider, Conversation } from "@/types/auria";
 import { ownedConversation, reserveCall, withOwner, markVerified, finishProviderCall } from "./store";
 import { geminiProvider, providerCapability, providerError } from "./provider";
 import { executeTool } from "./tools";
@@ -12,6 +12,7 @@ import { catalogueDemoProvider } from "./catalogue-demo";
 import { canUseLocalFallback, configuredCapability, isTransientProviderFailure, upstreamStatus } from "@/lib/auria/provider-policy";
 import { setTimeout as wait } from "node:timers/promises";
 import { budgetFrom, demoTitle } from "@/lib/auria/demo-intent";
+import { providerHistory } from "@/lib/auria/provider-history";
 import { ollamaModel, ollamaProvider } from "./ollama";
 
 type NamedProvider = { kind: "gemini" | "ollama" | "catalogue"; model: string; provider: ChatProvider };
@@ -71,8 +72,7 @@ export async function chat(request: Request, owner: string) {
       };
       const finish = (state: "COMPLETE" | "FAILED" | "STOPPED", failure?: AuriaError): Conversation => withOwner(owner, (s) => { const c = ownedConversation(s, body.conversationId); const m = c.messages.find((m) => m.id === conversation.activeTurn!.assistantId)!; m.text = text; m.cards = cards; if (usedOllama) m.source = "OLLAMA_LOCAL"; m.state = c.activeTurn?.id === body.requestId ? state : "STOPPED"; if (m.state === "COMPLETE" && cards.length === 1 && c.selectedDesignId !== cards[0].id) { c.selectedDesignId = cards[0].id; c.referenceNote = null; } if (failure && m.state === "FAILED") { m.errorCode = failure.code; m.failure = { message: failure.message, retryable: failure.retryable }; } if (c.activeTurn?.id === body.requestId) { c.activeTurn = null; c.version++; } c.updatedAt = new Date().toISOString(); return c; });
       try {
-        let remaining = 16_000;
-        const history: ProviderTurn[] = conversation.messages.filter((m) => m.role === "user" || m.state === "COMPLETE").slice(-12).reverse().flatMap((m) => { if (remaining <= 0) return []; const value = m.text.slice(0, Math.min(4000, remaining)); remaining -= value.length; return [{ role: m.role, text: value }]; }).reverse();
+        const history = providerHistory(conversation.messages);
         const describe = (id: string) => { const d = findPublicDesign(id); return d ? { id, designCode: d.designCode, title: d.title, category: d.categorySlug } : null; };
         const context = { language: conversation.language, selectedDesign: conversation.selectedDesignId ? describe(conversation.selectedDesignId) : null, displayedDesigns: conversation.recentDesignIds.flatMap((id, i) => { const d = describe(id); return d ? [{ position: i + 1, ...d }] : []; }), budgetPreferencePKR: conversation.messages.filter((message) => message.role === "user").map((message) => budgetFrom(message.text)).findLast((budget) => budget !== null) ?? null, shortlistDesigns: conversation.shortlistDesignIds?.flatMap((id) => { const design = describe(id); return design ? [design] : []; }), referenceNote: conversation.referenceNote ?? null, draft: conversation.draft ? { status: conversation.draft.status, designId: conversation.draft.designId, reference: conversation.draft.reference } : null };
         const providers: NamedProvider[] = [];

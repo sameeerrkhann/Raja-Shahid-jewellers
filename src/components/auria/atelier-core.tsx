@@ -17,6 +17,7 @@ export function AtelierCore({ state, compact = false }: { state: CoreState; comp
       <div className="atelier-orb__track atelier-orb__track--cross" />
       <div className="atelier-orb__sphere"><span /></div>
       <div className="atelier-orb__rim" />
+      <div className="atelier-orb__voice"><i /><i /><i /></div>
       <i className="atelier-orb__spark atelier-orb__spark--one" />
       <i className="atelier-orb__spark atelier-orb__spark--two" />
     </div>

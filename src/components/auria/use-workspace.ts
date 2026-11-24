@@ -102,6 +102,7 @@ export function useWorkspace() {
     sendLock.current = true;
     followsTail.current = true;
     setBusy(true); setError(""); setNotice(""); setRetryAllowed(false); setRetryText(text); setView("conversation"); const controller = new AbortController(); abortRef.current = controller; let c = conversation;
+    let completedReply: ChatMessage | undefined;
     try {
       if (!c) {
         c = await api<Conversation>("conversations", { language, mode });
@@ -122,16 +123,41 @@ export function useWorkspace() {
       const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = "", completed = false, failed = false;
       let newDesignId: string | null = null;
       const accept = (line: string) => {
-        if (!line.trim()) return; const event = JSON.parse(line) as ChatEvent;
+        if (!line.trim() || completed) return;
+        const event = JSON.parse(line) as ChatEvent;
         if (event.type === "source") setStreaming((m) => m ? { ...m, source: event.source } : m);
         if (event.type === "delta") setStreaming((m) => m ? { ...m, text: m.text + event.text } : m);
         if (event.type === "cards") setStreaming((m) => m ? { ...m, cards: event.cards } : m);
         if (event.type === "draft") setConversation((current) => current ? { ...current, draft: event.draft } : current);
         if (event.type === "error") { failed = true; setError(event.message); setRetryAllowed(event.retryable); }
-        if (event.type === "done") { completed = true; if (event.conversation.selectedDesignId !== c?.selectedDesignId) newDesignId = event.conversation.selectedDesignId; setConversation(event.conversation); setStreaming(null); if (!failed) { setRetryText(""); setNotice("Response saved."); } }
+        if (event.type === "done") {
+          completed = true;
+          if (event.conversation.selectedDesignId !== c?.selectedDesignId) newDesignId = event.conversation.selectedDesignId;
+          setConversation(event.conversation);
+          setStreaming(null);
+          const latest = event.conversation.messages.at(-1);
+          if (!failed && latest?.role === "assistant" && latest.state === "COMPLETE") {
+            completedReply = latest;
+            setRetryText("");
+            setNotice("Response saved.");
+          }
+        }
       };
-      while (true) { const next = await reader.read(); if (next.done) break; buffer += decoder.decode(next.value, { stream: true }); const lines = buffer.split("\n"); buffer = lines.pop()!; lines.forEach(accept); }
-      buffer += decoder.decode(); if (buffer.trim()) accept(buffer); if (!completed) throw new Error("Connection interrupted. Reload history before retrying.");
+      try {
+        while (true) {
+          const next = await reader.read();
+          if (next.done) break;
+          buffer += decoder.decode(next.value, { stream: true });
+          const lines = buffer.split("\n"); buffer = lines.pop()!;
+          lines.forEach(accept);
+        }
+        buffer += decoder.decode();
+        if (buffer.trim()) accept(buffer);
+        if (!completed) throw new Error("Connection interrupted. Reload history before retrying.");
+      } finally {
+        if (!completed) void reader.cancel().catch(() => undefined);
+        reader.releaseLock();
+      }
       if (newDesignId) {
         const response = await fetch(`/api/designs/${newDesignId}`).catch(() => null);
         if (response?.ok) setSelected(await response.json().then((payload) => payload.data).catch(() => null));
@@ -143,6 +169,7 @@ export function useWorkspace() {
       sendLock.current = false;
       setBusy(false);
     }
+    return controller.signal.aborted ? undefined : completedReply;
   }
   async function stop() { const c = conversationRef.current; if (!c) return; try { const updated = await api<Conversation>(`conversations/${c.id}/stop`, {}); setConversation(updated); abortRef.current?.abort(); setNotice("Response stopped."); } catch (e) { setError((e as Error).message); } }
   async function saveDraft(body: unknown) { if (!conversation) return; const draft = await api<QuoteDraft>(`conversations/${conversation.id}/draft`, body); setConversation((c) => c ? { ...c, draft } : c); setNotice("Demo draft saved. Nothing has been submitted."); }

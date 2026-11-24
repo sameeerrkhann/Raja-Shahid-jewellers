@@ -14,6 +14,7 @@ const providerFailures = {
   PROVIDER_ACCESS: ["Gemini rejected the server credentials or project access. Use the catalogue demo while access is checked.", 503, false],
   MODEL_UNAVAILABLE: ["The configured Gemini model is unavailable for this project. Use the catalogue demo while it is checked.", 503, false],
   PROVIDER_BUSY: ["Gemini is temporarily unavailable. Retry in a moment or use the catalogue demo.", 503, true],
+  PROVIDER_NETWORK: ["AURIA could not reach Gemini. Retry or continue with the catalogue demo.", 503, true],
   PROVIDER_TLS: ["The server could not verify the provider connection. You can continue in the catalogue demo.", 503, false],
   TIMEOUT: ["Gemini timed out. Retry or use the catalogue demo.", 504, true],
   PROVIDER_REQUEST: ["Gemini rejected this request. Try another wording or use the catalogue demo.", 502, false],
@@ -34,12 +35,13 @@ export function upstreamStatus(error: unknown) {
 
 export function isTransientProviderFailure(error: unknown) {
   const status = upstreamStatus(error);
-  return status !== null && [408, 500, 502, 503, 504].includes(status)
-    || error instanceof Error && error.name === "TimeoutError";
+  const code = providerError(error).code;
+  return (status !== null && [408, 500, 502, 503, 504].includes(status))
+    || ["TIMEOUT", "PROVIDER_NETWORK", "PROVIDER_INCOMPLETE"].includes(code);
 }
 
 export function canUseLocalFallback(error: unknown) {
-  return ["PROVIDER_RATE_LIMIT", "PROVIDER_ACCESS", "MODEL_UNAVAILABLE", "PROVIDER_BUSY", "PROVIDER_TLS", "TIMEOUT", "PROVIDER_INCOMPLETE"].includes(providerError(error).code);
+  return ["PROVIDER_RATE_LIMIT", "PROVIDER_ACCESS", "MODEL_UNAVAILABLE", "PROVIDER_BUSY", "PROVIDER_TLS", "PROVIDER_NETWORK", "TIMEOUT", "PROVIDER_INCOMPLETE"].includes(providerError(error).code);
 }
 
 export function providerError(error: unknown): AuriaError {
@@ -52,7 +54,8 @@ export function providerError(error: unknown): AuriaError {
   else if (status === 401 || status === 403 || (status === 400 && /API_KEY_(?:INVALID|EXPIRED)|API key not valid/i.test(detail))) code = "PROVIDER_ACCESS";
   else if (status === 404) code = "MODEL_UNAVAILABLE";
   else if (["UNABLE_TO_VERIFY_LEAF_SIGNATURE", "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_GET_ISSUER_CERT_LOCALLY"].includes(String(value.cause?.code))) code = "PROVIDER_TLS";
-  else if (status === 408 || status === 504 || value.name === "TimeoutError") code = "TIMEOUT";
+  else if (status === 408 || status === 504 || value.name === "TimeoutError" || value.cause?.code === "UND_ERR_CONNECT_TIMEOUT") code = "TIMEOUT";
+  else if (["ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "UND_ERR_SOCKET"].includes(String(value.cause?.code))) code = "PROVIDER_NETWORK";
   else if (status !== null && status >= 500) code = "PROVIDER_BUSY";
   else if (status === 400) code = "PROVIDER_REQUEST";
   const [message, httpStatus, retryable] = providerFailures[code];

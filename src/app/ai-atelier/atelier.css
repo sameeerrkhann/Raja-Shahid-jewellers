@@ -113,6 +113,13 @@ body:has(> .auria-workspace) > footer { display: none; }
 .atelier-orb__track { inset: 13%; border: 1px solid #d5a87473; border-bottom-color: #f7d69a; border-radius: 50%; transform: rotateZ(-28deg) rotateX(58deg); }
 .atelier-orb__track--cross { inset: 8%; transform: rotateZ(43deg) rotateY(58deg); border-color: #d5a8743b; border-right-color: #efc4889c; z-index: -1; }
 .atelier-orb__rim { inset: 4%; border: 1px dotted #e9bf824e; border-radius: 50%; }
+.atelier-orb__voice { right: 22%; bottom: 20%; display: flex; align-items: center; gap: 2px; opacity: 0; }
+.atelier-orb__voice i { width: 2px; height: 9px; border-radius: 2px; background: #fff0c5; }
+.atelier-orb__voice i:nth-child(2) { height: 13px; --voice-delay: -130ms; }
+.atelier-orb__voice i:nth-child(3) { height: 7px; --voice-delay: -260ms; }
+.auria-workspace[data-voice-activity] .atelier-orb__voice { opacity: 1; }
+.auria-workspace[data-voice-activity] .atelier-orb__voice i { animation: atelier-voice-pulse .64s ease-in-out var(--voice-delay, 0ms) alternate infinite; }
+@keyframes atelier-voice-pulse { from { transform: scaleY(.42); } to { transform: scaleY(1); } }
 .atelier-orb__spark { background: #ffefd1; width: 3px; height: 3px; border-radius: 50%; box-shadow: 0 0 8px 2px #ffaa5c75; }
 .atelier-orb__spark--one { top: 66%; left: 19%; }.atelier-orb__spark--two { top: 22%; right: 22%; }
 .atelier-core__caption { color: var(--stage-muted); font-size: 10px; text-align: center; }
@@ -180,6 +187,8 @@ body:has(> .auria-workspace) > footer { display: none; }
 .atelier-inspector__controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .atelier-inspector p { font-size: 12px; color: #d8c4ae; }
 .atelier-composer-tools { display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: center; margin-top: 3px; }
+.atelier-voice-toggle[aria-pressed=true] { color: #fff0c5; border-color: #c79a5b; }
+.atelier-voice-hint { color: var(--stage-muted); font-size: 11px; margin: 3px 0 0; }
 .atelier-text-action { border: 0; background: transparent; color: #e5c27e; padding: 5px 0; min-height: 32px; font: 600 11px/1.25 var(--font-sans); }
 a.atelier-text-action { display: inline-flex; align-items: center; }
 .atelier-text-action:hover { color: #fff0cd; text-decoration: underline; text-underline-offset: 3px; }
@@ -191,6 +200,11 @@ a.atelier-text-action { display: inline-flex; align-items: center; }
 .atelier-reference__preview { display: block; width: 100%; max-height: 240px; object-fit: contain; background: #131010; }
 .atelier-reference__sample { display: flex; align-items: center; gap: 8px; color: #d8c4ae; font-size: 12px; padding: 8px 0; }
 .atelier-reference__sample span { width: 20px; height: 20px; border: 1px solid #c4a579; }
+.atelier-reference__caption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.atelier-reference__filter { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 5px 12px; color: #e5d7c5; }
+.atelier-reference__filter select { color: inherit; background: #221915; border: 1px solid #806348; min-height: 36px; padding: 4px 7px; }
+.atelier-reference__vault { margin-top: 12px; }
+.atelier-reference__matches .atelier-reference__reason { color: #f2c982; }
 .atelier-reference__result ul { padding: 0; margin: 10px 0 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
 .atelier-reference__result small { display: block; margin-top: 3px; color: #ddc8ab; }
 .atelier-reference__vision { border-top: 1px solid #5d4837; padding-top: 12px; margin-block: 12px; }
@@ -199,6 +213,7 @@ a.atelier-text-action { display: inline-flex; align-items: center; }
 .atelier-reference__matches button { display: flex; flex-direction: column; align-items: start; width: 100%; text-align: start; }
 .atelier-reference__matches .auria-product-image { position: relative; width: 100%; aspect-ratio: 2 / 1; overflow: hidden; margin-bottom: 6px; background: #2b2119; }
 .atelier-reference__matches img { object-fit: cover; }
+.atelier-reference__matches .atelier-product-image { aspect-ratio: 4 / 3; }
 @media (max-width: 600px) { .atelier-reference__preview { max-height: 176px; } }
 
 @media (max-width: 900px) {

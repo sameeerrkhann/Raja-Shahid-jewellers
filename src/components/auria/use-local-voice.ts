@@ -7,9 +7,10 @@ export type DictationLanguage = "en-US" | "en-PK" | "ur-PK";
 type Recognition = {
   processLocally: boolean; lang: string; continuous: boolean; interimResults: boolean;
   onstart: (() => void) | null; onend: (() => void) | null;
+  onspeechstart: (() => void) | null; onspeechend: (() => void) | null;
   onerror: ((event: { error: string }) => void) | null;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  start(): void; abort(): void;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> }) => void) | null;
+  start(): void; stop?(): void; abort(): void;
 };
 type PackOptions = { langs: string[]; processLocally: true };
 type LocalEngine = {
@@ -26,7 +27,9 @@ function speechEngine() {
 }
 
 export function useLocalVoice() {
-  const [state, setState] = useState<"idle" | "checking" | "listening" | "speaking">("idle");
+  const [state, setState] = useState<"idle" | "checking" | "listening" | "finalizing" | "speaking">("idle");
+  const [voiceActivity, setVoiceActivity] = useState<"microphone" | "speaker" | null>(null);
+  const [retryDictation, setRetryDictation] = useState(false);
   const [voiceNotice, setVoiceNotice] = useState("");
   const [voiceReload, setVoiceReload] = useState(false);
   const [installLanguage, setInstallLanguage] = useState<DictationLanguage | null>(null);
@@ -51,6 +54,7 @@ export function useLocalVoice() {
     if (speech.current) window.speechSynthesis.cancel();
     speech.current = null;
     setInstallLanguage(null);
+    setVoiceActivity(null);
     setState("idle");
   }
 
@@ -84,10 +88,26 @@ export function useLocalVoice() {
     }
   }
 
+  function cancelDictation() {
+    stopVoice();
+    setRetryDictation(false);
+    setVoiceNotice("Dictation cancelled. Your message is unchanged.");
+  }
+
+  function finishDictation() {
+    const mic = recognition.current;
+    if (!mic?.stop) { cancelDictation(); return; }
+    setState("finalizing");
+    setVoiceActivity(null);
+    timeoutVoice(epoch.current, 5000, "The browser could not finish this dictation. Try again.");
+    try { mic.stop(); } catch { cancelDictation(); }
+  }
+
   async function dictate(language: DictationLanguage, onText: (text: string) => void) {
     stopVoice();
     setVoiceNotice("");
     setVoiceReload(false);
+    setRetryDictation(false);
     const Engine = speechEngine();
     if (!Engine?.available) { setVoiceNotice("This browser does not offer on-device dictation. You can still type your message."); return; }
     if ((document as VoiceDocument).featurePolicy?.allowsFeature("microphone") === false) {
@@ -112,6 +132,7 @@ export function useLocalVoice() {
         return;
       }
       const mic = new Engine();
+      let transcript = "";
       if (!("processLocally" in mic)) throw new Error("Unsupported");
       mic.processLocally = true;
       mic.lang = language;
@@ -122,25 +143,31 @@ export function useLocalVoice() {
         setState("listening");
         timeoutVoice(ticket, 35_000, "No dictation was added. Try again or type your message.");
       };
+      mic.onspeechstart = () => { if (ticket === epoch.current) setVoiceActivity("microphone"); };
+      mic.onspeechend = () => { if (ticket === epoch.current) setVoiceActivity(null); };
       mic.onresult = (event) => {
         if (ticket !== epoch.current) return;
-        const text = event.results[0]?.[0]?.transcript?.trim();
-        if (text) { onText(text); setVoiceNotice("Dictation added to your message. Review it before sending."); }
+        transcript = Array.from(event.results)
+          .filter((result) => result.isFinal !== false)
+          .map((result) => result[0]?.transcript ?? "").join(" ").trim();
       };
       mic.onerror = (event) => {
         if (ticket !== epoch.current) return;
         stopVoice();
+        setRetryDictation(true);
         setVoiceNotice(event.error === "not-allowed" || event.error === "service-not-allowed" ? "Microphone access was denied or the local speech service is unavailable. Check browser permissions, then try again." : "Dictation could not capture speech. Check the microphone or type instead.");
       };
       mic.onend = () => {
         if (ticket !== epoch.current) return;
         recognition.current = null;
         stopVoice();
+        if (transcript) { onText(transcript); setVoiceNotice("Dictation added to your message. Review it before sending."); }
+        else { setRetryDictation(true); setVoiceNotice("No speech was detected. Try dictation again or type your message."); }
       };
       recognition.current = mic;
       mic.start();
     } catch {
-      if (ticket === epoch.current) { stopVoice(); setVoiceNotice("On-device dictation could not start. Check microphone permissions or type instead."); }
+      if (ticket === epoch.current) { stopVoice(); setRetryDictation(true); setVoiceNotice("On-device dictation could not start. Check microphone permissions or type instead."); }
     }
   }
 
@@ -153,7 +180,7 @@ export function useLocalVoice() {
     const voices = window.speechSynthesis.getVoices().filter((item) => item.localService && item.lang.toLowerCase().split(/[-_]/)[0] === language);
     const voice = voices.find((item) => item.lang.toLowerCase() === preferredLanguage.toLowerCase()) ?? voices[0];
     if (!voice) { setVoiceNotice(`No local ${language === "ur" ? "Urdu" : "English"} voice is available yet. Check your device’s speech settings or try again.`); return; }
-    const utterance = new SpeechSynthesisUtterance(text.replace(/[*#`|]/g, " ").slice(0, 4000));
+    const utterance = new SpeechSynthesisUtterance(text.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/[*#`|]/g, " ").slice(0, 4000));
     utterance.voice = voice;
     utterance.lang = voice.lang;
     const ticket = epoch.current;
@@ -163,6 +190,7 @@ export function useLocalVoice() {
       if (ticket !== epoch.current) return;
       if (deadline.current) clearTimeout(deadline.current);
       setState("speaking");
+      setVoiceActivity("speaker");
     };
     utterance.onend = () => {
       if (ticket !== epoch.current) return;
@@ -171,11 +199,11 @@ export function useLocalVoice() {
     };
     utterance.onerror = () => {
       if (ticket !== epoch.current) return;
-      stopVoice(); setVoiceNotice("The local voice could not read this reply. Try again.");
+      stopVoice(); setVoiceNotice("The browser could not play this reply automatically. Select Read reply aloud to try again.");
     };
     speech.current = utterance;
     try { window.speechSynthesis.speak(utterance); }
     catch { stopVoice(); setVoiceNotice("This device could not start local playback."); }
   }
-  return { state, voiceNotice, voiceReload, dictate, stopVoice, readAloud, installLanguage, installVoicePack };
+  return { state, voiceActivity, voiceNotice, voiceReload, dictate, finishDictation, cancelDictation, retryDictation, stopVoice, readAloud, installLanguage, installVoicePack };
 }

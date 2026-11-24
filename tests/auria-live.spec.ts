@@ -49,8 +49,8 @@ test("vision schema rejects invented product facts and visual matching ranks act
     { id: "b", categorySlug: "earrings", subcategorySlug: "studs", title: "Floral oval earrings", description: "Floral" },
     { id: "c", categorySlug: "rings", subcategorySlug: "bands", title: "Oval blossom ring", description: "Floral mount" },
   ] as DesignCardData[];
-  expect(rankVisualMatches(visualSample, cards).map((card) => card.id)).toEqual(["c", "a"]);
-  expect(rankVisualMatches({ ...visualSample, type: "unclear" }, cards)).toEqual([]);
+  expect(rankVisualMatches(visualSample, cards).matches.map((card) => card.id)).toEqual(["c", "a"]);
+  expect(rankVisualMatches({ ...visualSample, type: "unclear" }, cards).matches).toEqual([]);
   const header = Uint8Array.from([0xff, 0xd8, 0xff, 0xc0, 0, 8, 8, 0, 120, 1, 64, 0, 0xff, 0xd9]);
   expect(referenceJpegSize(header)).toEqual({ width: 320, height: 120 });
   expect(referenceJpegSize(header.slice(0, -1))).toBeNull();
@@ -93,7 +93,8 @@ test("photo sharing is opt-in, local matching survives upstream quota, and a sel
       return;
     }
     const data = await (await page.request.get("/api/designs?q=RSJ-D007&limit=1")).json();
-    await route.fulfill({ json: { data: { observation: visualSample, matches: data.data.items } } });
+    const observation = visualObservation.parse({ type: "ring", tone: "yellow", stones: ["none visible"], shapes: ["arch"], settings: [], patterns: ["openwork"], features: ["filigree"] });
+    await route.fulfill({ json: { data: { observation, ...rankVisualMatches(observation, data.data.items) } } });
   });
   await page.goto("/ai-atelier");
   await page.getByRole("button", { name: "Add reference image" }).click();
@@ -108,6 +109,7 @@ test("photo sharing is opt-in, local matching survives upstream quota, and a sel
   const vision = dialog.getByRole("region", { name: "Visual observations" });
   await expect(vision).toContainText("yellow metal appearance");
   await expect(vision).toContainText("A photo cannot verify purity");
+  await expect(vision).toContainText("openwork pattern");
   const image = vision.getByRole("img").first();
   await expect(image).toBeVisible();
   await image.scrollIntoViewIfNeeded();

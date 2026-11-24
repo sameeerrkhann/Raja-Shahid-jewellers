@@ -46,7 +46,9 @@ function Message({ message, busy, selectDesign }: { message: ChatMessage; busy: 
 
 export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCardData[]; fontClass?: string }) {
   const { csrf, capability, history, conversation, selected, view, setView, input, setInput, language, setLanguage, mode, changeMode, error, busy, loading, streaming, notice, retryText, retryAllowed, newReply, updateFollow, jumpToReply, usageCount, scrollRef, inputRef, newConversation, openConversation, selectDesign, send, stop, saveDraft, submitDraft, reloadDraft, saveCallback, submitCallback } = useWorkspace();
-  const { state: voiceState, voiceNotice, voiceReload, dictate, stopVoice, readAloud, installLanguage, installVoicePack } = useLocalVoice();
+  const { state: voiceState, voiceActivity, voiceNotice, voiceReload, dictate, finishDictation, cancelDictation, retryDictation, stopVoice, readAloud, installLanguage, installVoicePack } = useLocalVoice();
+  const [voiceMode, setVoiceMode] = useState(false);
+  const voiceIntent = useRef({ enabled: false });
   const [historyOpen, setHistoryOpen] = useState(false);
   const [dictationLanguage, setDictationLanguage] = useState<DictationLanguage | "auto">("auto");
   const voiceLanguage = dictationLanguage === "auto" ? (conversation?.language ?? language) === "ur" ? "ur-PK" : "en-US" : dictationLanguage;
@@ -67,7 +69,7 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
   }
   const active = !!(streaming || conversation?.activeTurn);
   const blocked = busy || loading || active;
-  const state: CoreState = voiceState === "listening" || voiceState === "speaking" ? voiceState : error ? "attention" : streaming?.text ? "responding" : active || voiceState === "checking" ? "processing" : "idle";
+  const state: CoreState = voiceState === "listening" || voiceState === "speaking" ? voiceState : error ? "attention" : streaming?.text ? "responding" : active || voiceState === "checking" || voiceState === "finalizing" ? "processing" : "idle";
   const hasMessages = !!conversation?.messages.length || !!streaming;
   const budgetPreference = conversation?.messages.findLast((message) => message.role === "user" && budgetFrom(message.text));
   const lastReply = conversation?.messages.findLast((message) => message.role === "assistant" && message.state === "COMPLETE" && message.text);
@@ -76,8 +78,22 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
     if (historyOpen) closeHistory();
     void newConversation();
   }
-  function sendFromComposer() { stopVoice(); void send(); }
-  return <main id="main-content" ref={scene} className={["auria-workspace", fontClass].filter(Boolean).join(" ")} data-view={view}>
+  async function sendFromComposer(text?: string) {
+    stopVoice();
+    const intent = voiceIntent.current;
+    const reply = await send(text);
+    if (reply?.text && intent.enabled && intent === voiceIntent.current) readAloud(reply.text, voiceLanguage);
+  }
+  function toggleVoiceMode() {
+    const next = !voiceIntent.current.enabled;
+    voiceIntent.current = { enabled: next };
+    setVoiceMode(next);
+    if (!next) stopVoice();
+  }
+  function startDictation() {
+    void dictate(voiceLanguage, (text) => setInput((previous) => `${previous} ${text}`.trim().slice(0, 4000)));
+  }
+  return <main id="main-content" ref={scene} className={["auria-workspace", fontClass].filter(Boolean).join(" ")} data-view={view} data-voice-activity={voiceActivity ?? undefined}>
     <div className="auria-masthead">
       <div className="atelier-identity"><AtelierCore state={state} compact /><div><h1 translate="no">AURIA <span>Jewellery Atelier</span></h1><p>Your personal jewellery concierge</p></div></div>
       <div className="atelier-masthead-actions">
@@ -128,24 +144,28 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
           {newReply && <button type="button" className="auria-new-reply atelier-outline" onClick={jumpToReply}>New reply <span aria-hidden="true">↓</span></button>}
           {error && <div className="auria-error auria-composer-error" role="alert">
             <p>{error}</p>
-            {retryText && retryAllowed && (mode === "catalogue" || capability?.available) && <button type="button" disabled={blocked} onClick={() => void send(retryText)}>Retry response</button>}
+            {retryText && retryAllowed && (mode === "catalogue" || capability?.available) && <button type="button" disabled={blocked} onClick={() => void sendFromComposer(retryText)}>Retry response</button>}
             {mode === "live" && csrf && <button type="button" disabled={blocked} onClick={() => void changeMode("catalogue")}>Switch to catalogue demo</button>}
             {!csrf && <button type="button" onClick={() => window.location.reload()}>Reload workspace</button>}
           </div>}
-          <p className="auria-live-status" role="status">{active ? "Writing a response…" : busy ? "Saving or loading your changes…" : voiceState === "checking" ? "Checking local speech support…" : voiceState === "listening" ? "Listening on this device…" : voiceState === "speaking" ? "Reading aloud…" : voiceNotice || notice}</p>
-          <form onSubmit={(e) => { e.preventDefault(); sendFromComposer(); }}>
+          <p className="auria-live-status" role="status">{active ? "Writing a response…" : busy ? "Saving or loading your changes…" : voiceState === "checking" ? "Checking local speech support…" : voiceState === "listening" ? voiceActivity === "microphone" ? "Voice detected…" : "Listening on this device…" : voiceState === "finalizing" ? "Finishing dictation…" : voiceState === "speaking" ? "Reading aloud…" : voiceNotice || notice}</p>
+          <form onSubmit={(e) => { e.preventDefault(); void sendFromComposer(); }}>
             <label htmlFor="auria-message" className="sr-only">Message AURIA</label>
-            <textarea id="auria-message" name="message" ref={inputRef} dir="auto" value={input} maxLength={4000} rows={1} placeholder="Ask about jewellery…" onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); sendFromComposer(); } }} disabled={blocked} />
+            <textarea id="auria-message" name="message" ref={inputRef} dir="auto" value={input} maxLength={4000} rows={1} placeholder="Ask about jewellery…" onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void sendFromComposer(); } }} disabled={blocked} />
             {active ? <button type="button" className="atelier-send" onClick={stop}>Stop response</button> : <button type="submit" className="atelier-send" disabled={blocked || !input.trim() || (mode === "live" && !capability?.available) || !csrf}>Send <span aria-hidden="true">↑</span></button>}
           </form>
           <div className="atelier-composer-tools" aria-label="Reference and voice tools">
             <ReferencePanel disabled={blocked || !csrf} visionToken={mode === "live" && capability?.available && capability.provider === "gemini" ? csrf : undefined} onSelect={(card, note) => void selectDesign(card, note)} />
-            {voiceState !== "idle" ? <button type="button" className="atelier-text-action" onClick={stopVoice}>Stop voice</button>
-              : <button type="button" className="atelier-text-action" disabled={busy} onClick={() => { void dictate(voiceLanguage, (text) => setInput((previous) => `${previous} ${text}`.trim().slice(0, 4000))); }}>Dictate</button>}
+            <button type="button" className="atelier-text-action atelier-voice-toggle" aria-pressed={voiceMode} disabled={blocked && !voiceMode} onClick={toggleVoiceMode}>Voice mode</button>
+            {(voiceState === "idle" || voiceState === "speaking") && <button type="button" className="atelier-text-action" disabled={blocked} onClick={startDictation}>{retryDictation ? "Retry dictation" : "Dictate"}</button>}
+            {voiceState === "listening" && <button type="button" className="atelier-text-action" onClick={finishDictation}>Finish dictation</button>}
+            {(voiceState === "listening" || voiceState === "finalizing") && <button type="button" className="atelier-text-action" onClick={cancelDictation}>Cancel dictation</button>}
+            {(voiceState === "checking" || voiceState === "speaking") && <button type="button" className="atelier-text-action" onClick={stopVoice}>Stop voice</button>}
             {installLanguage && voiceState === "idle" && <button type="button" className="atelier-text-action" disabled={blocked} onClick={() => void installVoicePack()}>Install {installLanguage === "ur-PK" ? "Urdu" : "English"} dictation pack</button>}
             {voiceReload && <a className="atelier-text-action" href="/ai-atelier" target="_blank" rel="noopener">Open atelier in a new tab</a>}
             {lastReply && voiceState === "idle" && <button type="button" className="atelier-text-action" disabled={busy} onClick={() => readAloud(lastReply.text, voiceLanguage)}>Read reply aloud</button>}
           </div>
+          {voiceMode && <p className="atelier-voice-hint">Voice replies on · Dictate, review, then send. Speech runs on this device.</p>}
           <p className="auria-disclosure">{mode === "catalogue" ? "Private demo. Use fictional details. This mode sends no messages to an AI provider." : capability?.provider === "ollama" ? "Private demo. Use fictional details. Replies are generated by the local Ollama service." : "Private demo. Use fictional details. Google may use free-tier chat content to improve its products."}</p>
         </div>
       </section>
