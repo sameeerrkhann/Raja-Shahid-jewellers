@@ -241,3 +241,36 @@ a.atelier-text-action { display: inline-flex; align-items: center; }
 @media (prefers-reduced-motion: reduce) {
   .auria-workspace .atelier-orb *, .auria-workspace .atelier-stage__picture img { animation: none !important; transition: none !important; }
 }
+
+/* AURIA’s image stage and explicitly opened 3D study. */
+ .atelier-stage__study-open { position: absolute; z-index: 2; inset-block-start: 10px; inset-inline-start: 10px; }
+.auria-workspace .atelier-stage__study-open { background: #211814; color: #f4d9a7; border-color: #bd8d53; }
+.auria-workspace .atelier-stage__study-open:hover { background: #3a281d; }
+.atelier-stage__arrival { animation: atelier-photo-arrival .26s ease-out both; }
+@keyframes atelier-photo-arrival { from { opacity: .76; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.atelier-stage__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.atelier-stage__history { display: flex; flex: 1 1 220px; min-width: 0; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: #e5d7c5; font-size: 12px; }
+.atelier-stage__history select { flex: 1 1 145px; min-width: 0; max-width: 100%; color: #f5eee2; background: #201715; border: 1px solid #806348; min-height: 36px; padding: 4px 7px; }
+
+.atelier-study__scene { isolation: isolate; position: relative; min-height: 210px; height: clamp(210px, 47vh, 390px); border: 1px solid #7a5942; background: radial-gradient(ellipse at 50% 36%, #3c2a20, #161113 72%); overflow: hidden; display: grid; place-items: center; text-align: center; }
+.atelier-study__scene > p, .atelier-study__loading { position: relative; z-index: 2; margin: 0; max-width: 28ch; padding: 16px; pointer-events: none; }
+.atelier-study__canvas { position: absolute; inset: 0; }
+.atelier-study__canvas model-viewer { display: block; width: 100%; height: 100%; --progress-bar-height: 0; --poster-color: transparent; }
+.atelier-study__scene[data-ready=true] .atelier-study__canvas { animation: atelier-photo-arrival .32s ease-out both; }
+.atelier-study__loading progress { width: 128px; height: 3px; accent-color: #e8bd76; }
+.atelier-study__provenance, .atelier-study__hint { color: #dcc9b7; font-size: 13px; line-height: 1.5; }
+.atelier-study__controls { gap: 6px 9px; }
+.atelier-study__controls button, .atelier-study__controls a { min-height: 40px; }
+.atelier-comparison__cards { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px; }
+.atelier-comparison__cards li { min-width: 0; border: 1px solid #705541; padding: 9px; }
+.atelier-comparison__cards h3 { margin: 6px 0; font-size: clamp(19px, 3vw, 25px); line-height: 1.12; }
+.atelier-comparison__cards small, .atelier-comparison__cards dt { color: #ddc1a4; font-size: 12px; }
+.atelier-comparison__image { position: relative; aspect-ratio: 4 / 3; background: #35251d; margin-bottom: 6px; }
+.atelier-comparison__image img { object-fit: cover; }
+.atelier-comparison__cards dl { margin: 8px 0 10px; display: grid; gap: 6px; }
+.atelier-comparison__cards dd { margin: 2px 0 0; font-size: 13px; }
+
+:root[data-reduce-motion="true"] :is(.atelier-stage__arrival, .atelier-study__canvas) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.atelier-stage__arrival, .atelier-study__canvas) { animation: none !important; }
+}

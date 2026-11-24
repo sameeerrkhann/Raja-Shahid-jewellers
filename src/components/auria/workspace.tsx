@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ChatMessage, Language } from "@/types/auria";
 import type { DesignCardData } from "@/types/catalogue";
 import { statusLabels } from "@/config/catalogue";
@@ -45,11 +45,21 @@ function Message({ message, busy, selectDesign }: { message: ChatMessage; busy: 
 }
 
 export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCardData[]; fontClass?: string }) {
-  const { csrf, capability, history, conversation, selected, view, setView, input, setInput, language, setLanguage, mode, changeMode, error, busy, loading, streaming, notice, retryText, retryAllowed, newReply, updateFollow, jumpToReply, usageCount, scrollRef, inputRef, newConversation, openConversation, selectDesign, send, stop, saveDraft, submitDraft, reloadDraft, saveCallback, submitCallback } = useWorkspace();
+  const { csrf, capability, history, conversation, selected, view, setView, input, setInput, language, setLanguage, mode, changeMode, error, busy, loading, streaming, notice, retryText, retryAllowed, newReply, updateFollow, noteScrollIntent, jumpToStart, jumpToReply, usageCount, scrollRef, inputRef, newConversation, openConversation, selectDesign, send, stop, saveDraft, submitDraft, reloadDraft, saveCallback, submitCallback } = useWorkspace();
   const { state: voiceState, voiceActivity, voiceNotice, voiceReload, dictate, finishDictation, cancelDictation, retryDictation, stopVoice, readAloud, installLanguage, installVoicePack } = useLocalVoice();
   const [voiceMode, setVoiceMode] = useState(false);
   const voiceIntent = useRef({ enabled: false });
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [pinned, setPinned] = useState<{ conversationId?: string; recommendationId?: string; designId: string } | null>(null);
+  const messages = conversation?.messages;
+  const recommendations = useMemo(() => (messages ?? []).filter((message) => message.role === "assistant" && message.state === "COMPLETE" && message.cards.length).slice(-6).reverse().map(({ id, cards, createdAt }) => ({ id, cards, createdAt })), [messages]);
+  const recommendationId = recommendations[0]?.id;
+  const conversationId = conversation?.id;
+  const shownPin = pinned && pinned.conversationId === conversationId && pinned.recommendationId === recommendationId ? pinned.designId : undefined;
+  function chooseDesign(card: DesignCardData, note?: string) {
+    setPinned({ conversationId, recommendationId, designId: card.id });
+    void selectDesign(card, note);
+  }
   const [dictationLanguage, setDictationLanguage] = useState<DictationLanguage | "auto">("auto");
   const voiceLanguage = dictationLanguage === "auto" ? (conversation?.language ?? language) === "ur" ? "ur-PK" : "en-US" : dictationLanguage;
   const scene = useRef<HTMLElement>(null);
@@ -128,7 +138,16 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
           <div className="auria-chat-heading-copy"><AtelierCore state={state} compact /><div><h2>Conversation</h2><p>{mode === "catalogue" ? "Local catalogue demo" : capability?.available ? capability.provider === "ollama" ? "On-device Ollama" : "Gemini free-tier text" : loading ? "Opening your workspace…" : "Live text unavailable"}</p></div></div>
           <button type="button" className="auria-connection" disabled={blocked || !csrf} data-ready={mode === "catalogue" || !!capability?.available} onClick={() => changeMode(mode === "catalogue" ? "live" : "catalogue")}><i aria-hidden="true" />{mode === "catalogue" ? "Use live chat" : "Use catalogue demo"}</button>
         </div>
-        <div className="auria-transcript" ref={scrollRef} onScroll={updateFollow} aria-label="Messages" tabIndex={0}>
+        <div className="auria-transcript" ref={scrollRef} onScroll={updateFollow} onWheel={noteScrollIntent} onTouchMove={noteScrollIntent} onPointerDown={noteScrollIntent} onFocusCapture={noteScrollIntent} aria-label="Messages" tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.target === event.currentTarget && (event.key === "Home" || event.key === "End")) {
+              event.preventDefault();
+              if (event.key === "Home") jumpToStart();
+              else jumpToReply();
+            } else if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", " "].includes(event.key)) {
+              noteScrollIntent();
+            }
+          }}>
           {mode === "live" && !capability?.available && !loading && !error && <p className="auria-availability">{capability?.reason} You can switch to the catalogue demo or browse designs.</p>}
           {loading ? <div className="auria-skeleton" role="status">Restoring your atelier…<span /><span /></div> : !hasMessages ? <div className="auria-welcome">
             <span className="atelier-welcome__ornament" aria-hidden="true">✧</span>
@@ -136,8 +155,8 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
             <p>Explore a design, compare pieces or prepare a quotation.</p>
             <div className="auria-suggestions">{suggestions.map(({ label, prompt }) => <button type="button" key={label} onClick={() => { setInput(prompt); inputRef.current?.focus({ preventScroll: true }); }}>{label}<span aria-hidden="true">↗</span></button>)}</div>
           </div> : <div className="atelier-messages">
-            {conversation?.messages.map((message) => <Message key={message.id} message={message} busy={busy} selectDesign={selectDesign} />)}
-            {streaming && <Message message={streaming} busy={busy} selectDesign={selectDesign} />}
+            {conversation?.messages.map((message) => <Message key={message.id} message={message} busy={busy} selectDesign={chooseDesign} />)}
+            {streaming && <Message message={streaming} busy={busy} selectDesign={chooseDesign} />}
           </div>}
         </div>
         <div className="auria-chat-composer">
@@ -155,7 +174,7 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
             {active ? <button type="button" className="atelier-send" onClick={stop}>Stop response</button> : <button type="submit" className="atelier-send" disabled={blocked || !input.trim() || (mode === "live" && !capability?.available) || !csrf}>Send <span aria-hidden="true">↑</span></button>}
           </form>
           <div className="atelier-composer-tools" aria-label="Reference and voice tools">
-            <ReferencePanel disabled={blocked || !csrf} visionToken={mode === "live" && capability?.available && capability.provider === "gemini" ? csrf : undefined} onSelect={(card, note) => void selectDesign(card, note)} />
+            <ReferencePanel disabled={blocked || !csrf} visionToken={mode === "live" && capability?.available && capability.provider === "gemini" ? csrf : undefined} onSelect={chooseDesign} />
             <button type="button" className="atelier-text-action atelier-voice-toggle" aria-pressed={voiceMode} disabled={blocked && !voiceMode} onClick={toggleVoiceMode}>Voice mode</button>
             {(voiceState === "idle" || voiceState === "speaking") && <button type="button" className="atelier-text-action" disabled={blocked} onClick={startDictation}>{retryDictation ? "Retry dictation" : "Dictate"}</button>}
             {voiceState === "listening" && <button type="button" className="atelier-text-action" onClick={finishDictation}>Finish dictation</button>}
@@ -171,7 +190,7 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
       </section>
       <aside className="auria-selection" aria-label="Selected design and quotation">
         <div className="atelier-stage__heading"><span>Design stage</span><span aria-hidden="true">◇</span></div>
-        <JewelleryStage key={selected?.id ?? "discovery"} discovery={discovery} selected={selected} disabled={busy || !csrf} onSelect={selectDesign} />
+        <JewelleryStage key={`${conversationId ?? "new"}:${selected?.id ?? "discovery"}`} discovery={discovery} selected={selected} recommendations={recommendations} pinnedId={shownPin} disabled={busy || !csrf} onSelect={chooseDesign} />
         {selected && <Link className="atelier-vault atelier-stage__vault" href={`/designs?q=${selected.designCode}`}>View in the Design Vault <span aria-hidden="true">↗</span></Link>}
         {conversation && <QuotePanel key={`${conversation.id}-${conversation.draft?.version ?? 0}-${selected?.id ?? "none"}`} draft={conversation.draft} design={selected} budgetPreference={budgetPreference ? budgetFrom(budgetPreference.text) : null} referenceNote={conversation.selectedDesignId === selected?.id ? conversation.referenceNote ?? undefined : undefined} disabled={busy} save={saveDraft} submit={submitDraft} reload={reloadDraft} />}
         {!!csrf && <>

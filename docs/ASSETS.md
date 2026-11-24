@@ -72,3 +72,11 @@ This is original synthetic imagery for a demo, not final legal/client/brand clea
 ## Phase 04 homepage delivery derivatives
 
 The same permitted floral-necklace.jpg remains unchanged. Added public/images/editorial/derivatives/home-hero-{768,1280,1920}.webp at26,610 /52,574 /90,262 bytes. The responsive picture selects768px on mobile,1280px normally and1920px at wide desktops, with eager/high-priority static delivery. This bypasses the measured runtime image-transformation path for the LCP photo, not a new crop, source, 3D asset or brand approval. ASSETS records bytes/provenance; PROJECT_STATE and ignored performance JSON record measured before/after timing and limitations.
+
+## AURIA Phase 3 model provenance
+
+- The **3D jewellery study** uses [Grab3D’s Gold Ring](https://grab3d.com/models/props/ring/) from the Cozy Curiosities Kit. Grab3D released the mesh and textures under [CC0 1.0](https://grab3d.com/dl/ring/LICENSE.txt). The source [manifest](https://grab3d.com/dl/ring/manifest.json) records procedural Blender geometry and textures with AI-assisted scripting.
+- Source download [ring.glb](https://grab3d.com/dl/ring/ring.glb), obtained on 2026-11-24. Original 503,440 bytes. Source SHA-256 `2c4669d303e2e04fd9507095e1fd89db262288bca4ff0783434a9f8c086dd014`.
+- Served at `public/models/auria/grab3d-gold-ring-study.glb`, 317,244 bytes. SHA-256 `b065e8a8e68f5bfe2129f2d0ab280ef3077da2c88b292d960bce7f2f8565fdb4`. The AURIA derivative resized the three embedded JPEG textures from 2,048 px to 768 px and retained the 4,766 triangles. It is a self-contained glTF 2 binary with no remote buffers, textures or required decoder extensions.
+- This licensed reference ring is a separate demonstration. The 11 published sample catalogue designs retain their own concept photographs and zoom controls. None of the seeded designs has an approved matching 3D model, physical stock claim or manufacturing guarantee from this asset.
+- Viewer dependency `@google/model-viewer@4.4.0` ships under [Apache 2.0](https://github.com/google/model-viewer/blob/master/LICENSE). The workspace imports its engine only when a customer opens the 3D study and proceeds past any Data Saver prompt.

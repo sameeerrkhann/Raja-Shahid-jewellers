@@ -83,6 +83,13 @@ test("catalogue works without model calls, keeps its mode and follows enough rep
   await page.reload();
   await expect(page.getByRole("button", { name: "Use live chat", exact: true })).toBeEnabled();
   await expect.poll(() => transcript.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop)).toBeLessThan(4);
+  await transcript.evaluate((el) => { el.scrollTop = 0; });
+  await expect.poll(() => transcript.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop)).toBeLessThan(4);
+  await transcript.focus();
+  await transcript.press("Home");
+  await expect.poll(() => transcript.evaluate((el) => el.scrollTop)).toBeLessThan(4);
+  await transcript.press("End");
+  await expect.poll(() => transcript.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop)).toBeLessThan(4);
   const data = await (await page.request.get("/api/ai/conversations")).json();
   expect(data.data.usage).toEqual([]);
   await page.screenshot({ path: "artifacts/auria-audit/catalogue-after.png" });

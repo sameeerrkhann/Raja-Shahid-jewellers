@@ -31,6 +31,7 @@ export function useWorkspace() {
   const [retryAllowed, setRetryAllowed] = useState(false);
   const [newReply, setNewReply] = useState(false);
   const followsTail = useRef(true);
+  const lastScrollIntent = useRef(-Infinity);
   const sendLock = useRef(false);
   const abortRef = useRef<AbortController | null>(null); const scrollRef = useRef<HTMLDivElement>(null); const inputRef = useRef<HTMLTextAreaElement>(null); const conversationRef = useRef<Conversation | null>(null);
   useEffect(() => { conversationRef.current = conversation; }, [conversation]);
@@ -40,7 +41,7 @@ export function useWorkspace() {
   }, [csrf]);
   const refreshHistory = useCallback(async () => { const data = await api<{ conversations: ConversationSummary[]; capability: Capability; usage: unknown[] }>("conversations"); setHistory(data.conversations); setCapability(data.capability); setUsageCount(data.usage.length); }, [api]);
   const loadConversation = useCallback(async (id: string) => {
-    const c = await api<Conversation>(`conversations/${id}`); followsTail.current = true;
+    const c = await api<Conversation>(`conversations/${id}`); followsTail.current = true; lastScrollIntent.current = -Infinity;
     setConversation(c); setLanguage(c.language); setMode(restoredMode(c)); setSelected(null); setRetryText("");
     if (c.selectedDesignId) { const r = await fetch(`/api/designs/${c.selectedDesignId}`); const p = await r.json(); if (r.ok) setSelected(p.data); }
     return c;
@@ -59,21 +60,50 @@ export function useWorkspace() {
     })();
     return () => { live = false; abortRef.current?.abort(); };
   }, []);
+  function noteScrollIntent() {
+    lastScrollIntent.current = performance.now();
+  }
+
+  function jumpToStart() {
+    followsTail.current = false;
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }
+
   function updateFollow() {
     const el = scrollRef.current;
-    if (!el || !el.clientHeight) return;
-    followsTail.current = el.scrollHeight - el.clientHeight - el.scrollTop < 40;
-    if (followsTail.current) setNewReply(false);
+    if (loading || !el || !el.clientHeight) return;
+    const nearTail = el.scrollHeight - el.clientHeight - el.scrollTop < 40;
+    // Restore/resize can emit scroll events even if the customer has not left the latest reply.
+    if (!nearTail && followsTail.current && performance.now() - lastScrollIntent.current > 500) {
+      el.scrollTop = el.scrollHeight;
+      return;
+    }
+    followsTail.current = nearTail;
+    if (nearTail) setNewReply(false);
   }
 
   function jumpToReply() {
     followsTail.current = true;
+    lastScrollIntent.current = -Infinity;
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
     setNewReply(false);
   }
 
   const lastMessage = streaming ?? conversation?.messages.at(-1);
+  const transcriptReady = !loading && !!lastMessage;
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    const content = el?.querySelector(".atelier-messages");
+    if (!transcriptReady || view !== "conversation" || !el || !content || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (el.clientHeight && followsTail.current) el.scrollTop = el.scrollHeight;
+    });
+    observer.observe(el);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [conversation?.id, transcriptReady, view]);
+
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el || !el.clientHeight) return;
@@ -90,6 +120,7 @@ export function useWorkspace() {
   async function newConversation() {
     setBusy(true); setError(""); setNotice(""); setNewReply(false);
     followsTail.current = true;
+    lastScrollIntent.current = -Infinity;
     try { const c = await api<Conversation>("conversations", { language, mode }); setConversation(c); setSelected(null); setStreaming(null); setInput(""); setRetryText(""); setView("conversation"); window.history.replaceState(null, "", `/ai-atelier?conversation=${c.id}`); await refreshHistory(); inputRef.current?.focus(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
   async function openConversation(id: string) { setError(""); setNotice(""); setInput(""); setNewReply(false); setLoading(true); try { await loadConversation(id); setView("conversation"); window.history.replaceState(null, "", `/ai-atelier?conversation=${id}`); } catch (e) { setError((e as Error).message); } finally { setLoading(false); } }
@@ -101,6 +132,7 @@ export function useWorkspace() {
     if (busy || loading || sendLock.current || conversation?.activeTurn || !csrf || !text.trim()) return; if (mode === "live" && !capability?.available) { setError(capability?.reason || "Chat is unavailable."); return; }
     sendLock.current = true;
     followsTail.current = true;
+    lastScrollIntent.current = -Infinity;
     setBusy(true); setError(""); setNotice(""); setRetryAllowed(false); setRetryText(text); setView("conversation"); const controller = new AbortController(); abortRef.current = controller; let c = conversation;
     let completedReply: ChatMessage | undefined;
     try {
@@ -206,5 +238,5 @@ export function useWorkspace() {
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }
-  return { csrf, capability, history, conversation, selected, view, setView, input, setInput, language, setLanguage, mode, changeMode, error, busy, loading, streaming, notice, retryText, retryAllowed, newReply, updateFollow, jumpToReply, usageCount, scrollRef, inputRef, newConversation, openConversation, selectDesign, send, stop, saveDraft, submitDraft, reloadDraft, saveCallback, submitCallback };
+  return { csrf, capability, history, conversation, selected, view, setView, input, setInput, language, setLanguage, mode, changeMode, error, busy, loading, streaming, notice, retryText, retryAllowed, newReply, updateFollow, noteScrollIntent, jumpToStart, jumpToReply, usageCount, scrollRef, inputRef, newConversation, openConversation, selectDesign, send, stop, saveDraft, submitDraft, reloadDraft, saveCallback, submitCallback };
 }
