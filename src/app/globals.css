@@ -293,3 +293,6 @@ html[data-reduce-motion="true"] .product-card__image:hover img, html[data-reduce
   body { @apply bg-background text-foreground; }
   html { @apply font-sans; }
 }
+
+/* Gold scroll progress line for the inner pages (added by PageMotion). */
+.page-progress { position:fixed; z-index:60; left:0; right:0; top:0; height:2px; background:linear-gradient(90deg, #8a6a2c, #e8c77a, #fff1c9); transform-origin:left; transform:scaleX(0); pointer-events:none; }

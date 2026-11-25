@@ -227,3 +227,30 @@
   .catalogue-page *, .catalogue-page *::before, .catalogue-page *::after { animation:none !important; transition:none !important; }
   .design-card__image:hover img, .vault-collection-card:hover img { transform:none; }
 }
+
+/* ── Inner-page design pass (S-24): the hero becomes the vault stage, in the homepage film's charcoal and gold. */
+.catalogue-hero--vault, .collections-index-heading--vault { position:relative; isolation:isolate; color:var(--color-ivory); background:radial-gradient(70% 90% at 78% 40%, rgb(201 162 83 / 16%), transparent 60%), #0e0b0a; overflow:clip; }
+.catalogue-hero--vault::before, .collections-index-heading--vault::before { content:""; position:absolute; inset:0; z-index:-1; background:url("/images/hero/vault/r190.webp") 82% 40% / cover no-repeat; opacity:.38; -webkit-mask:linear-gradient(90deg, transparent 12%, #000 62%); mask:linear-gradient(90deg, transparent 12%, #000 62%); }
+.catalogue-hero--vault::after, .collections-index-heading--vault::after { content:""; position:absolute; inset:auto 0 0; z-index:-1; height:40%; background:linear-gradient(transparent, #0e0b0a); }
+.catalogue-hero--vault h1, .collections-index-heading--vault h1 { color:var(--color-ivory); }
+.catalogue-hero--vault h1 em, .collections-index-heading--vault h1 em { color:var(--color-champagne, #e8d5a6); }
+.catalogue-hero--vault .catalogue-hero__copy > p:not(.eyebrow), .collections-index-heading--vault p { color:var(--color-dark-muted, #b9ad9c); }
+.catalogue-hero--vault nav a, .catalogue-hero--vault nav span, .collections-index-heading--vault nav a, .collections-index-heading--vault nav span { color:rgb(246 241 232 / 70%); }
+.catalogue-hero--vault .catalogue-hero__image { background:#16110e; box-shadow:0 40px 90px rgb(0 0 0 / 55%); }
+.catalogue-hero--vault .catalogue-hero__art > p { color:var(--color-dark-muted, #b9ad9c); }
+.catalogue-hero--vault .text-link { color:var(--color-champagne, #e8d5a6); }
+.collections-index-heading--vault { padding-block:64px 76px; }
+
+/* Gold sheen across an image on hover (desktop pointers). */
+@media (hover:hover) {
+  .design-card__image, .vault-collection-card__image, .product-card__image { position:relative; overflow:hidden; }
+  .design-card__image::after, .vault-collection-card__image::after, .product-card__image::after { content:""; position:absolute; inset:-20%; z-index:2; pointer-events:none; background:linear-gradient(105deg, transparent 40%, rgb(255 232 180 / 38%) 50%, transparent 60%); transform:translateX(-120%); transition:transform 1.1s var(--ease-luxe, cubic-bezier(.16,1,.3,1)); }
+  .design-card:hover .design-card__image::after, .vault-collection-card:hover .vault-collection-card__image::after, .product-card:hover .product-card__image::after { transform:translateX(120%); }
+  .design-card, .vault-collection-card { transition:transform .6s var(--ease-luxe, cubic-bezier(.16,1,.3,1)); }
+  .design-card:hover, .vault-collection-card:hover { transform:translateY(-6px); }
+}
+
+/* Collections runway (wide screens, set by PageMotion): the edits sit in one row and slide sideways. */
+.is-runway { overflow:clip; }
+.is-runway .vault-collection-grid { display:flex; flex-wrap:nowrap; gap:48px; width:auto; }
+.is-runway .vault-collection-card { flex:0 0 min(34vw, 460px); }

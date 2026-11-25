@@ -21,6 +21,7 @@
 | S-21 | 2026-11-22 | Homepage polish: dark review strip, See it on with real worn photographs + zoom, 3D bridal jewellery box scene, AURIA design shell | Done (in review) | `src/components/home/try-on.tsx`, `src/components/home/bridal-box.tsx`, `src/app/showcase.css`, `src/app/home.css` |
 | S-22 | 2026-11-26 | Hero vault film (Google Flow, graded) with 10k-standard bands and scroll effects; See it on with one AI model each | Done (in review) | `src/components/home/scroll-showcase.tsx`, `src/components/home/try-on.tsx`, `src/config/showcase.ts`, `public/images/hero/vault/` |
 | S-23 | 2026-11-26 | Image audit; editorial photos replaced with AI images in the charcoal and gold palette | Done (in review) | `public/images/editorial/`, `src/config/preview-studies.ts`, `src/config/home.ts` |
+| S-24 | 2026-11-26 | Inner pages: vault-stage heroes, scroll motion (progress, reveals, parallax, collections runway), hover sheen | Done (in review) | `src/components/motion/page-motion.tsx`, `src/app/catalogue.css` |
 | S-13 | — | Design package step 2: Dual Portal (Women \| Men \| Made to order) with the reference model photos, labelled as reference photography | Next | — |
 | S-14 | — | Design package step 3: the Touchstone (gold streak, four buyer questions) and an illustrative gold-rate panel | Next | — |
 | S-15 | — | Design package step 4: Signature pieces rail and detail drawer (shadcn Sheet), real sample data only | Next | — |

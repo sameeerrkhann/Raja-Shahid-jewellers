@@ -257,6 +257,11 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-26 — Claude (Saad's session) — Inner pages design and scroll pass (S-24)
+- New `src/components/motion/page-motion.tsx` (GSAP ScrollTrigger, reduced-motion aware, start states set by JS only) mounted on /designs, /collections and /design-preview: gold scroll-progress line; hero heading words rise on load and the hero media settles/drifts as you scroll; headings and cards (design, collection, study) rise in sequence with a soft wipe; images drift inside their frames on wide screens; on /collections (wide screens) the four edits run sideways in a pinned row driven by vertical scroll.
+- Design: the Design Vault and Collections heroes are now dark "vault" stages in the homepage film's charcoal and gold (ending frame of the film as a masked backdrop); gold sheen sweeps across card images on hover, cards lift.
+- Tests: full suite passes except the known flaky catalogue fallback test (passes alone); design-preview search test now searches "necklace".
+
 ### 2026-11-26 — Claude (Saad's session) — Editorial images replaced (S-23, client point 2)
 - Image audit: the 11 catalogue product shots (gold on cream stone) are consistent and kept. The three Unsplash editorial photos were off-brief (diamond studs on a hand, violet-toned necklace, busy pendant) and are replaced with AI-generated images in the site's charcoal and gold palette: `public/images/editorial/bridal-set.webp`, `rani-haar.webp`, `jhumkas.webp` (Figma AI). Used by the homepage category cards and finale, the design-preview hero and its three studies.
 - Labels and credits updated: "AI-generated image" on cards, captions, alts and footer; the Unsplash photographer links are removed; docs/ASSETS.md updated. Unused `editorial/derivatives/` removed.

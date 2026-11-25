@@ -49,7 +49,7 @@ test("local search filters reference studies", async ({ page }) => {
   const dialog = page.getByRole("dialog", { name: "A closer look" });
   const input = dialog.getByRole("searchbox");
   await expect(input).toBeFocused();
-  await input.fill("layered");
+  await input.fill("necklace");
   await expect(dialog.getByRole("status")).toHaveText("1 study found");
   await dialog.getByRole("link", { name: /A little extraordinary/ }).click();
   await expect(dialog).not.toBeVisible();
