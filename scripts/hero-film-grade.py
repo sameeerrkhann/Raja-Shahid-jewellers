@@ -44,11 +44,20 @@ for i, f in enumerate(files):
     hsv[..., 1] = np.clip(hsv[..., 1] * (1 + .18 * gold), 0, 1)
     img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
-    # split tone: maroon shadows, warm gold highlights
+    # no maroon: velvet and silk go to a deep warm charcoal so the film matches the site's kohl and gold palette
+    hsv = cv2.cvtColor(np.clip(img, 0, 1), cv2.COLOR_BGR2HSV)
+    h2, s2, v2 = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    red = np.clip(1 - np.minimum(np.abs(h2 - 0), np.abs(h2 - 360)) / 26, 0, 1) * np.clip((s2 - .12) / .25, 0, 1)
+    hsv[..., 1] = s2 * (1 - .86 * red)
+    hsv[..., 2] = v2 * (1 - .28 * red)
+    img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    img[..., 0] *= (1 - .07 * red); img[..., 1] *= (1 - .02 * red)
+
+    # split tone: warm neutral shadows, warm gold highlights
     lum = (.0722 * img[..., 0] + .7152 * img[..., 1] + .2126 * img[..., 2])[..., None]
     shadow = np.clip(1 - lum * 2.4, 0, 1)
     high = np.clip((lum - .45) * 1.8, 0, 1)
-    img += shadow * np.array([.012, -.004, .028], np.float32)
+    img += shadow * np.array([.004, .006, .010], np.float32)
     img *= 1 + high * np.array([-.10, .02, .07], np.float32)
     img = np.clip(img, 0, 1)
 

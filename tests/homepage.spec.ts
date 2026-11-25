@@ -182,8 +182,8 @@ test("no-JavaScript story and native links remain readable", async ({ browser })
 });
 
 test("missing hero media becomes an honest designed fallback", async ({ page }) => {
-  // The gold film is the hero media; its failure must disable the page motion and keep the story readable.
-  await page.route("**/images/hero/gold/*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
+  // The vault film is the hero media; its failure must disable the page motion and keep the story readable.
+  await page.route("**/images/hero/vault/*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
   await ready(page);
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "fallback");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);

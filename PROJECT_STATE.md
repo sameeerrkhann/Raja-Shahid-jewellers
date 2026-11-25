@@ -257,6 +257,10 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-26 — Claude (Saad's session) — Hero regrade and speed (S-22b)
+- After Saad's review: the film is regraded without maroon (velvet and silk now deep warm charcoal; gold kept) so it matches the site's kohl and gold palette; the outlined "Raja Shahid" name over the film and the chain-curtain layer are removed; the film now runs at normal scroll speed (14 px per frame, scrub .5, frame-rate independent easing, canvas capped at 1.5x DPR). The unveiled headline uses a soft gold glow instead of the shimmer.
+- Tests: Playwright 83/83 (fallback test now blocks the vault frames).
+
 ### 2026-11-26 — Claude (Saad's session) — Hero vault film and one-model See it on (S-22)
 - Hero (scene 01) rebuilt to the 10k-websites scroll standard Saad supplied: a 16 s concept film in two Google Flow shots (Veo 3.1 Lite, 720p) joined frame to frame (seam PSNR 34.6 dB): the camera descends through hanging gold chains and a gold-dust burst to a silk-covered bust; the silk settles and a gold bridal set is revealed. Graded with `scripts/hero-film-grade.py` (filmic curve, split tone, bloom, streaks, light sweep, rays, dust, vignette, grain). 190 frames per size in `public/images/hero/vault/` (r = 1280 desktop, m = 720 mobile); the ring and molten-gold frames are removed.
 - Hero bands (`heroFilm.chapters` in `src/config/showcase.ts`): Descent (h1 + actions), Light ("Gold, in every sense.", word punch), Promise (blur-in, left), Unveiled (split, rise + gold shimmer, bridal designs link + visit). Each band has a riding scrim, eased edges, and a --k assembly value; the film plays forward once and rests on the composed ending. Scroll effects: chain-curtain parallax, dust-burst flash, closing spotlight, cinema bars that open at the ending, speed warp, chapter rail. Frames load in a window around the camera; initial transfer stays under the 1.5 MB test budget.

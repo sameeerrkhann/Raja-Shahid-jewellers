@@ -24,8 +24,8 @@ export const heroFilm = {
   segments,
   desktop: (index: number) => frameAt(index, "r"),
   mobile: (index: number) => frameAt(index, "m"),
-  /* Scroll distance per frame (px): about 4,900px for the whole 16 second film, so every band holds through several flicks. */
-  scrollPerFrame: 26,
+  /* Scroll distance per frame (px): about 2,700px for the 16 second film, so it moves at normal scroll speed and each band still holds through a few flicks. */
+  scrollPerFrame: 14,
   chapters: [
     { id: "descent", label: "Descent", from: 0, to: 30, place: "center", entrance: "drift" },
     { id: "light", label: "Light", from: 30, to: 70, place: "center", entrance: "punch", title: "Gold, in every sense." },

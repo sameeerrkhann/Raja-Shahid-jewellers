@@ -70,10 +70,11 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         };
         // Neighbouring frames are blended so the flight reads as motion rather than steps.
         const paint = (f: number) => { const a = Math.floor(f), A = near(a), B = near(Math.min(frames.length - 1, a + 1)); if (!A) return; draw(A, 1); if (B && f - a > .02) draw(B, f - a); };
-        const fit = () => { const r = Math.min(window.devicePixelRatio || 1, 2); canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; paint(current); };
+        const fit = () => { const r = Math.min(window.devicePixelRatio || 1, 1.5); canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; paint(current); };
         let target = 0, current = 0;
         // The film follows the scroll with its own easing, so it glides on briefly after the wheel stops.
-        const glide = () => { const d = target - current; if (Math.abs(d) < .002) return; current += d * .12; paint(current); };
+        // Frame-rate independent easing toward the scroll target (same feel at 60 and 120 Hz); rests when converged.
+        const glide = (_t: number, dt: number) => { const d = target - current; if (Math.abs(d) < .002) return; current += d * (1 - Math.pow(1 - .24, Math.min(100, dt) / 16.667)); paint(current); };
         gsap.ticker.add(glide);
         window.addEventListener("resize", fit); fit();
 
@@ -113,13 +114,11 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
 
         const film = { f: 0 }, last = heroFilm.frames - 1;
         const follow = () => { target = film.f; if (film.f > .5) loadAround(film.f); setChapter(film.f); };
-        gsap.timeline({ defaults: { ease: "none" }, scrollTrigger: { id: "showcase-film", trigger: "#entrance", start: () => `top ${header()}`, end: "bottom bottom", scrub: 1.2, invalidateOnRefresh: true,
+        gsap.timeline({ defaults: { ease: "none" }, scrollTrigger: { id: "showcase-film", trigger: "#entrance", start: () => `top ${header()}`, end: "bottom bottom", scrub: .5, invalidateOnRefresh: true,
             onUpdate: (self) => { const v = Math.min(1, Math.abs(self.getVelocity()) / 4200); warpTo?.(v * .9); punchTo(v * .06); } } })
           // One forward pass over the whole pinned range: the film comes to rest on its composed ending.
           .to(film, { f: last, duration: 1, onUpdate: follow }, 0)
-          .fromTo("[data-film]", { scale: 1.06 }, { scale: 1, duration: 1 }, 0)
-          .fromTo("[data-huge] span:first-child", { x: 0 }, { x: () => -window.innerWidth * .45, opacity: 0, duration: .14 }, .02)
-          .fromTo("[data-huge] span:last-child", { x: 0 }, { x: () => window.innerWidth * .45, opacity: 0, duration: .14 }, .02);
+          .fromTo("[data-film]", { scale: 1.06 }, { scale: 1, duration: 1 }, 0);
         railEls.forEach((element, i) => element.addEventListener("click", () => {
           const trigger = ScrollTrigger.getById("showcase-film"); if (!trigger) return;
           const f = chapters[i].from + 8; window.scrollTo({ top: trigger.start + (trigger.end - trigger.start) * Math.min(1, f / last), behavior: "smooth" });
@@ -218,9 +217,7 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         {/* The first frame is the still poster (and the largest paint); the canvas takes over once scrolling. */}
         <img className="showcase-film__poster" src={heroFilm.desktop(0)} alt="" width={1280} height={720} fetchPriority="high" data-hero-image />
         <canvas className="showcase-film__canvas" data-film aria-hidden="true" />
-        <div className="showcase-film__huge" data-huge aria-hidden="true"><span>Raja</span><span>Shahid</span></div>
         <span className="showcase-label">{heroFilm.label}</span>
-        <div className="showcase-film__chains" aria-hidden="true" />
         <div className="showcase-film__spot" aria-hidden="true" />
         <div className="showcase-film__burst" aria-hidden="true" />
         <div className="showcase-film__warp" data-warp aria-hidden="true" />

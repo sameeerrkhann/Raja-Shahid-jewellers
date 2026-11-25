@@ -21,7 +21,7 @@
 /* Speed warp: light streaks radiate from the focal point while the visitor scrolls fast. */
 .showcase-film__warp { position: absolute; z-index: 4; inset: -20%; pointer-events: none; opacity: 0; mix-blend-mode: screen;
   background: repeating-conic-gradient(from 0deg at 45% 42%, rgb(255 222 150 / 0%) 0deg 2.2deg, rgb(255 226 160 / 55%) 2.4deg, rgb(255 222 150 / 0%) 2.7deg 5.1deg);
-  -webkit-mask: radial-gradient(circle at 45% 42%, transparent 0 18%, #000 46%, transparent 78%); mask: radial-gradient(circle at 45% 42%, transparent 0 18%, #000 46%, transparent 78%); filter: blur(1.2px); }
+  -webkit-mask: radial-gradient(circle at 45% 42%, transparent 0 18%, #000 46%, transparent 78%); mask: radial-gradient(circle at 45% 42%, transparent 0 18%, #000 46%, transparent 78%); }
 .showcase-film__eyebrow { display: block; margin-bottom: 12px; font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--color-antique-gold); }
 
 /* ── Hero bands (10k standard): placement in the footage's calm space, a scrim that rides the band, and an
@@ -52,27 +52,22 @@
 /* rise: the ending arrives word by word, then its line, then the actions */
 .showcase-band--rise .w { --kc: clamp(0, var(--k, 0) * 1.8 - var(--i) * .16, 1); opacity: var(--kc); transform: translateY(calc((1 - var(--kc)) * 30px)); }
 .showcase-band--rise .showcase-band__side { opacity: clamp(0, (var(--k, 0) - .5) * 2.5, 1); transform: translateY(calc((1 - clamp(0, (var(--k, 0) - .5) * 2.5, 1)) * 16px)); }
-/* gold shimmer runs across the unveiled headline while it settles */
-.showcase-band--rise p { background: linear-gradient(100deg, var(--color-ivory) 0 40%, #ffe3a3 48%, #fff6dc 50%, #ffe3a3 52%, var(--color-ivory) 60% 100%); background-size: 260% 100%; background-position: calc(100% - var(--k, 0) * 100%) 0; -webkit-background-clip: text; background-clip: text; color: transparent; }
-.showcase-band--rise p .w { background: inherit; background-size: inherit; -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* the unveiled headline settles with a soft gold glow behind its words */
+.showcase-band--rise p { text-shadow: var(--tshadow), 0 0 calc(var(--k, 0) * 34px) rgb(255 206 120 / 35%); }
 
 /* ── Scroll effects layered over the film (all transform/opacity; JS drives the CSS variables). */
-.showcase-film__chains { position: absolute; inset: -20% -4%; z-index: 2; pointer-events: none; mix-blend-mode: screen; opacity: .55;
-  background: repeating-linear-gradient(90deg, transparent 0 3.2vw, rgb(255 214 140 / 26%) 3.25vw 3.35vw, transparent 3.4vw 7.6vw), repeating-linear-gradient(90deg, transparent 0 5.1vw, rgb(255 230 170 / 18%) 5.15vw 5.2vw, transparent 5.25vw 9.3vw);
-  -webkit-mask: linear-gradient(90deg, #000 0 16%, transparent 30% 70%, #000 84% 100%); mask: linear-gradient(90deg, #000 0 16%, transparent 30% 70%, #000 84% 100%);
-  filter: blur(1.6px); transform: translateY(calc(var(--descent, 0) * -38%)) scaleX(calc(1 + var(--descent, 0) * .5)); }
 .showcase-film__burst { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: var(--burst, 0); mix-blend-mode: screen;
   background: radial-gradient(circle at 50% 46%, rgb(255 244 214 / 95%) 0%, rgb(255 214 140 / 60%) 22%, rgb(201 162 83 / 0%) 62%); }
 .showcase-film__spot { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: var(--spot, 0);
   background: radial-gradient(ellipse 30% 46% at 50% 44%, transparent 0 40%, rgb(6 3 4 / 72%) 100%); }
 .showcase-film__bars::before, .showcase-film__bars::after { content: ""; position: absolute; left: 0; right: 0; z-index: 8; height: 7vh; background: #060304; pointer-events: none; transform: scaleY(var(--bars, 1)); }
 .showcase-film__bars::before { top: 0; transform-origin: top; } .showcase-film__bars::after { bottom: 0; transform-origin: bottom; }
-.showcase:not([data-showcase="live"]) :is(.showcase-film__chains, .showcase-film__burst, .showcase-film__spot, .showcase-film__bars) { display: none; }
+.showcase:not([data-showcase="live"]) :is(.showcase-film__burst, .showcase-film__spot, .showcase-film__bars) { display: none; }
 @media (max-width: 860px) {
   .showcase-band--left, .showcase-band--center { left: 20px; right: 20px; width: auto; top: auto; bottom: 12%; translate: none; text-align: center; }
   .showcase-band--split { flex-direction: column; align-items: center; gap: 18px; padding: 0 20px; bottom: 8%; text-align: center; }
   .showcase-band__lead, .showcase-band__side { width: auto; text-align: center; } .showcase-band__side .showcase-film__actions { justify-content: center; }
-  .showcase-band p { font-size: clamp(2rem, 9vw, 2.8rem); } .showcase-film__chains { display: none; }
+  .showcase-band p { font-size: clamp(2rem, 9vw, 2.8rem); }
 }
 
 /* Route rail: the film's chapters, filled as the camera travels. */
@@ -87,9 +82,6 @@
 .showcase-film__rail button::before { content: ""; position: absolute; left: -3px; width: 7px; height: 7px; margin-top: 3px; border-radius: 50%; background: rgb(232 213 166 / 30%); transition: background .5s, box-shadow .5s; }
 .showcase-film__rail li { position: relative; }
 .showcase-film__rail li:has(button[data-active]) button::before { background: var(--color-antique-gold); box-shadow: 0 0 12px rgb(255 214 140 / 90%); }
-.showcase-film__huge { position: absolute; z-index: 3; inset: 50% 0 auto; translate: 0 -50%; display: flex; justify-content: center; gap: .18em; pointer-events: none; font-family: var(--font-editorial), Georgia, serif; font-weight: 300; font-size: clamp(5rem, 15vw, 15rem); line-height: 1; letter-spacing: -.04em; color: transparent; -webkit-text-stroke: 1px rgb(246 241 232 / 55%); mix-blend-mode: screen; white-space: nowrap; }
-.showcase-film__huge span { display: inline-block; }
-/* removed: flare */ .showcase-film__flare-unused { position: absolute; z-index: 5; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at 45% 37%, #fff 0%, rgb(255 246 222 / 90%) 18%, rgb(232 213 166 / 60%) 40%, rgb(201 162 83 / 0%) 70%); }
 .showcase-film__intro { position: absolute; z-index: 6; left: 50%; bottom: 9%; translate: -50% 0; width: min(92%, 760px); text-align: center; text-shadow: var(--tshadow); }
 .showcase-film__intro h1 span { display: block; }
 .showcase-film__intro h1 { margin: 0; font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: clamp(2.6rem, 4.6vw, 4.8rem); line-height: .96; letter-spacing: -.03em; color: var(--color-ivory); }
@@ -289,7 +281,6 @@
 @media (max-width: 860px) {
   .showcase { --side: 20px; }
   .showcase-film__poster, .showcase-film__canvas { transform-origin: 50% 37%; }
-  .showcase-film__huge { top: 26%; font-size: 22vw; }
   .showcase-film__intro { right: 20px; bottom: 8%; }
   .showcase-film__intro h1 { font-size: clamp(2.4rem, 11vw, 3.2rem); }
   .showcase-film__rail { left: 10px; top: auto; bottom: 24%; translate: none; gap: 12px; } .showcase-film__rail button { font-size: 0; gap: 0; } .showcase-film__rail button b { font-size: 9px; }
