@@ -2,9 +2,9 @@
 /* eslint-disable @next/next/no-img-element -- frames and cut-outs are drawn, transformed and layered by GSAP. */
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { ShowcaseNote } from "@/config/showcase";
-import { ringFilm } from "@/config/showcase";
+import { heroFilm } from "@/config/showcase";
 import { useNear } from "./use-near";
 
 export type ShowcasePiece = { code: string; title: string; kind: string; facts: string[]; href: string; photo: string; cutout: string; focus: { x: number; y: number }; notes: ShowcaseNote[] };
@@ -12,7 +12,7 @@ export type ShowcasePiece = { code: string; title: string; kind: string; facts: 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.reduceMotion === "true";
 
 /* Three pinned scenes driven by scroll (GSAP ScrollTrigger):
-   01 the ring film turns frame by frame while the camera walks into the stone;
+   01 the gold film pours and settles frame by frame while the camera walks into the medallion;
    02 the collection turns on an arc (coverflow); the centred or tapped piece is chosen;
    03 the lens dives into the chosen piece's detail, pulls back, and notes what is visible. */
 export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
@@ -50,21 +50,25 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
 
         /* ── 01: the film ── */
         const canvas = $<HTMLCanvasElement>("[data-film]"), paint2d = canvas.getContext("2d")!;
-        const source = phone() ? ringFilm.mobile : ringFilm.desktop;
-        // Frames load in two passes so the page stays light: every eighth frame at once (enough to turn the
-        // ring coarsely), the rest only once the visitor starts scrolling.
-        const frames: HTMLImageElement[] = Array.from({ length: ringFilm.frames }, () => new Image());
-        const load = (i: number) => { const image = frames[i]; if (image.src) return; image.decoding = "async"; image.onload = () => { if (Math.abs(i - current) < 1.5) paint(current); }; image.src = source(i); };
-        for (let i = 0; i < frames.length; i += 8) load(i);
-        let loadedAll = false;
-        const loadRest = () => { if (loadedAll) return; loadedAll = true; frames.forEach((_, i) => load(i)); };
+        const source = phone() ? heroFilm.mobile : heroFilm.desktop;
+        const frames: HTMLImageElement[] = Array.from({ length: heroFilm.frames }, () => new Image());
+        const load = (i: number) => { const image = frames[i]; if (!image || image.src) return; image.decoding = "async"; image.onload = () => { if (Math.abs(i - current) < 1.5) paint(current); }; image.src = source(i); };
+        // Frames load lightly: every eighth frame of the opening first, then a moving window around the camera
+        // (coarse steps ahead first, every frame close by), so a long chain never downloads at once.
+        for (let i = 0; i < Math.min(frames.length, 120); i += 8) load(i);
+        let windowAt = -99;
+        const loadAround = (f: number) => {
+          const at = Math.round(f); if (Math.abs(at - windowAt) < 6) return; windowAt = at;
+          for (let i = at - 12; i <= at + 72; i += 4) load(i);
+          for (let i = at - 8; i <= at + 24; i++) load(i);
+        };
         const ready = (image?: HTMLImageElement) => Boolean(image && image.complete && image.naturalWidth);
         const near = (i: number) => { let image = frames[i]; for (let d = 1; !ready(image) && d < frames.length; d++) image = frames[i - d] ?? frames[i + d]; return ready(image) ? image : null; };
         const draw = (image: HTMLImageElement, alpha: number) => {
           const w = canvas.width, h = canvas.height, s = Math.max(w / image.naturalWidth, h / image.naturalHeight);
           paint2d.globalAlpha = alpha; paint2d.drawImage(image, (w - image.naturalWidth * s) / 2, (h - image.naturalHeight * s) / 2, image.naturalWidth * s, image.naturalHeight * s); paint2d.globalAlpha = 1;
         };
-        // Neighbouring frames are blended so the turn reads as motion rather than steps.
+        // Neighbouring frames are blended so the flight reads as motion rather than steps.
         const paint = (f: number) => { const a = Math.floor(f), A = near(a), B = near(Math.min(frames.length - 1, a + 1)); if (!A) return; draw(A, 1); if (B && f - a > .02) draw(B, f - a); };
         const fit = () => { const r = Math.min(window.devicePixelRatio || 1, 2); canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; paint(current); };
         let target = 0, current = 0;
@@ -72,19 +76,54 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         const glide = () => { const d = target - current; if (Math.abs(d) < .002) return; current += d * .12; paint(current); };
         gsap.ticker.add(glide);
         window.addEventListener("resize", fit); fit();
-        const film = { f: 0 }, last = ringFilm.frames - 1, follow = () => { target = film.f; if (film.f > 0) loadRest(); };
-        gsap.timeline({ defaults: { ease: "none" }, scrollTrigger: { id: "showcase-film", trigger: "#entrance", start: () => `top ${header()}`, end: "bottom bottom", scrub: 1.2, invalidateOnRefresh: true } })
-          .to(film, { f: last, duration: .3, onUpdate: follow }, 0)
-          .to(film, { f: last * .35, duration: .25, onUpdate: follow }, .3)
-          .to(film, { f: last, duration: .3, onUpdate: follow }, .55)
-          .fromTo("[data-film]", { rotate: -2.5, y: 0, scale: 1.04 }, { rotate: 2.5, y: () => -window.innerHeight * .04, scale: 1.12, duration: .6 }, 0)
-          .to("[data-film-intro]", { opacity: 0, y: -24, duration: .08 }, .1)
-          .fromTo("[data-huge] span:first-child", { x: 0 }, { x: () => -window.innerWidth * .45, opacity: .2, duration: .5 }, .05)
-          .fromTo("[data-huge] span:last-child", { x: 0 }, { x: () => window.innerWidth * .45, opacity: .2, duration: .5 }, .05)
-          .fromTo("[data-film-caption]", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: .06 }, .24)
-          .to("[data-film-caption]", { opacity: 0, duration: .05 }, .56)
-          .to("[data-film]", { scale: 3.4, rotate: 0, duration: .36, ease: "power2.in" }, .64)
-          .to("[data-flare]", { opacity: 1, duration: .14, ease: "power1.in" }, .86);
+
+        // Chapters: pinned copy for frame ranges of the chain, mirrored by the route rail.
+        const chapters = heroFilm.chapters, chapterEls = $$("[data-chapter]"), railEls = $$("[data-rail-item]"), railFill = scope!.querySelector<HTMLElement>("[data-rail-fill]");
+        let activeChapter = -1;
+        // Each band: an eased fade at its edges (the first band opens settled, the last one stays), a long readable
+        // plateau, and an assembly value --k that settles a short way in and drives that band's entrance.
+        const smooth = (p: number, a: number, b: number) => { const t = Math.min(1, Math.max(0, (p - a) / (b - a))); return t * t * (3 - 2 * t); };
+        const cache = new Map<HTMLElement, string>();
+        const setChapter = (f: number) => {
+          let index = chapters.findIndex((chapter) => f >= chapter.from && f < chapter.to); if (index < 0) index = chapters.length - 1;
+          chapterEls.forEach((element) => {
+            const i = chapters.findIndex((chapter) => chapter.id === element.dataset.chapter); if (i < 0) return;
+            const { from: a, to: b } = chapters[i], ramp = Math.min(6, (b - a) / 3);
+            const opacity = (i === 0 ? 1 : smooth(f, a - ramp, a + ramp)) * (i === chapters.length - 1 ? 1 : 1 - smooth(f, b - ramp, b + ramp));
+            const k = i === 0 ? 1 : Math.min(1, Math.max(0, (f - (a - ramp)) / (ramp * 2.2)));
+            const next = `${opacity.toFixed(3)}|${k.toFixed(2)}`;
+            if (cache.get(element) === next) return; cache.set(element, next);
+            element.style.opacity = opacity.toFixed(3); element.style.setProperty("--k", k.toFixed(2));
+            element.style.visibility = opacity < .01 ? "hidden" : "visible";
+          });
+          if (index !== activeChapter) { activeChapter = index; railEls.forEach((element, i) => element.toggleAttribute("data-active", i === index)); }
+          const stage = canvas.parentElement!, fx = (name: string, value: number) => { const v = value.toFixed(3); if (stage.style.getPropertyValue(name) !== v) stage.style.setProperty(name, v); };
+          fx("--descent", Math.min(1, f / 60));
+          fx("--burst", Math.max(0, 1 - Math.abs(f - 22) / 9) * .55);
+          fx("--spot", Math.min(1, Math.max(0, (f - 55) / 40)) * (1 - Math.min(1, Math.max(0, (f - 150) / 30)) * .5));
+          fx("--bars", 1 - Math.min(1, Math.max(0, (f - 160) / 28)));
+          if (railFill) railFill.style.transform = `scaleY(${(f / Math.max(1, heroFilm.frames - 1)).toFixed(3)})`;
+        };
+        setChapter(0);
+
+        // Speed warp: fast scrolling stretches light streaks and pushes the lens in a touch; it settles at rest.
+        const warp = scope!.querySelector<HTMLElement>("[data-warp]");
+        const warpTo = warp ? gsap.quickTo(warp, "opacity", { duration: .35, ease: "power2.out" }) : null;
+        const punchTo = gsap.quickTo(canvas, "--punch", { duration: .45, ease: "power2.out" });
+
+        const film = { f: 0 }, last = heroFilm.frames - 1;
+        const follow = () => { target = film.f; if (film.f > .5) loadAround(film.f); setChapter(film.f); };
+        gsap.timeline({ defaults: { ease: "none" }, scrollTrigger: { id: "showcase-film", trigger: "#entrance", start: () => `top ${header()}`, end: "bottom bottom", scrub: 1.2, invalidateOnRefresh: true,
+            onUpdate: (self) => { const v = Math.min(1, Math.abs(self.getVelocity()) / 4200); warpTo?.(v * .9); punchTo(v * .06); } } })
+          // One forward pass over the whole pinned range: the film comes to rest on its composed ending.
+          .to(film, { f: last, duration: 1, onUpdate: follow }, 0)
+          .fromTo("[data-film]", { scale: 1.06 }, { scale: 1, duration: 1 }, 0)
+          .fromTo("[data-huge] span:first-child", { x: 0 }, { x: () => -window.innerWidth * .45, opacity: 0, duration: .14 }, .02)
+          .fromTo("[data-huge] span:last-child", { x: 0 }, { x: () => window.innerWidth * .45, opacity: 0, duration: .14 }, .02);
+        railEls.forEach((element, i) => element.addEventListener("click", () => {
+          const trigger = ScrollTrigger.getById("showcase-film"); if (!trigger) return;
+          const f = chapters[i].from + 8; window.scrollTo({ top: trigger.start + (trigger.end - trigger.start) * Math.min(1, f / last), behavior: "smooth" });
+        }));
 
         /* ── 02: the arc ── */
         const cards = $$("[data-card]"), arc = { at: 0 };
@@ -174,19 +213,37 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
   };
 
   return <div ref={root} className="showcase">
-    <section id="entrance" className="showcase-pin showcase-film" data-scene="01" data-tone="dark" aria-labelledby="entrance-title">
+    <section id="entrance" className="showcase-pin showcase-film" data-scene="01" data-tone="dark" aria-labelledby="entrance-title" style={{ "--film-scroll": `${Math.max(1800, heroFilm.frames * heroFilm.scrollPerFrame)}px` } as CSSProperties}>
       <div className="showcase-stage">
         {/* The first frame is the still poster (and the largest paint); the canvas takes over once scrolling. */}
-        <img className="showcase-film__poster" src={ringFilm.desktop(0)} alt="" width={1280} height={720} fetchPriority="high" data-hero-image />
+        <img className="showcase-film__poster" src={heroFilm.desktop(0)} alt="" width={1280} height={720} fetchPriority="high" data-hero-image />
         <canvas className="showcase-film__canvas" data-film aria-hidden="true" />
         <div className="showcase-film__huge" data-huge aria-hidden="true"><span>Raja</span><span>Shahid</span></div>
-        <div className="showcase-film__flare" data-flare aria-hidden="true" />
-        <span className="showcase-label">{ringFilm.label}</span>
-        <div className="showcase-film__intro" data-film-intro>
+        <span className="showcase-label">{heroFilm.label}</span>
+        <div className="showcase-film__chains" aria-hidden="true" />
+        <div className="showcase-film__spot" aria-hidden="true" />
+        <div className="showcase-film__burst" aria-hidden="true" />
+        <div className="showcase-film__warp" data-warp aria-hidden="true" />
+        <div className="showcase-film__bars" aria-hidden="true" />
+        <div className="showcase-film__intro showcase-band showcase-band--center showcase-band--drift" data-film-intro data-chapter="descent">
           <h1 id="entrance-title"><span data-entrance-line>Crafted to be</span> <span data-entrance-line>remembered.</span></h1>
           <div className="showcase-film__actions"><Link className="button button--gold" href="/designs" prefetch={false}>Explore the Design Vault</Link><button type="button" className="showcase-link" data-home-action="appointment">Plan a showroom visit</button></div>
         </div>
-        <div className="showcase-caption showcase-film__caption" data-film-caption><p>Every angle,<br />considered.</p><small>Scroll turns the ring. Keep going and step inside the stone.</small></div>
+        {heroFilm.chapters.filter((chapter) => chapter.title).map((chapter) => <div key={chapter.id} className={`showcase-caption showcase-film__caption showcase-band showcase-band--${chapter.place} showcase-band--${chapter.entrance}`} data-chapter={chapter.id} data-film-caption={chapter.id === "promise" ? "" : undefined}>
+          <div className="showcase-band__lead">
+            {chapter.eyebrow && <span className="showcase-film__eyebrow">{chapter.eyebrow}</span>}
+            <p aria-label={chapter.title}>{chapter.title!.split(" ").map((word, i) => <span key={i} className="w" aria-hidden="true" style={{ "--i": i } as CSSProperties}>{word} </span>)}</p>
+            {chapter.body && chapter.place !== "split" && <small>{chapter.body}</small>}
+          </div>
+          {chapter.place === "split" && <div className="showcase-band__side">
+            {chapter.body && <small>{chapter.body}</small>}
+            <div className="showcase-film__actions"><Link className="button button--gold" href="/designs?category=bridal" prefetch={false}>Explore bridal designs</Link><button type="button" className="showcase-link" data-home-action="appointment">Plan a showroom visit</button></div>
+          </div>}
+        </div>)}
+        <ol className="showcase-film__rail" aria-label="Film chapters">
+          <span className="showcase-film__rail-line" aria-hidden="true"><i data-rail-fill /></span>
+          {heroFilm.chapters.map((chapter, i) => <li key={chapter.id}><button type="button" data-rail-item tabIndex={-1} aria-hidden="true"><b>{String(i + 1).padStart(2, "0")}</b>{chapter.label}</button></li>)}
+        </ol>
       </div>
     </section>
 

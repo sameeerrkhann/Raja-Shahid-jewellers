@@ -182,8 +182,8 @@ test("no-JavaScript story and native links remain readable", async ({ browser })
 });
 
 test("missing hero media becomes an honest designed fallback", async ({ page }) => {
-  // The ring film is the hero media; its failure must disable the page motion and keep the story readable.
-  await page.route("**/images/hero/ring/*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
+  // The gold film is the hero media; its failure must disable the page motion and keep the story readable.
+  await page.route("**/images/hero/gold/*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
   await ready(page);
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "fallback");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
@@ -241,7 +241,7 @@ test("cold local home transfer and animation profiling evidence", async ({ page 
   expect(initial.cls).toBeLessThanOrEqual(.1);
 });
 
-test("showcase: ring film, collection arc, lens and dropdown work both ways", async ({ page }) => {
+test("showcase: gold film, collection arc, lens and dropdown work both ways", async ({ page }) => {
   await ready(page);
   await expect(page.locator(".showcase")).toHaveAttribute("data-showcase", "live");
   const go = (id: string, at: number) => page.locator(`#${id}`).evaluate((element, progress) => { const { scrollStart, scrollEnd } = (element as HTMLElement).dataset; window.scrollTo({ top: Number(scrollStart) + (Number(scrollEnd) - Number(scrollStart)) * progress, behavior: "instant" }); }, at);
@@ -267,20 +267,22 @@ test("showcase: ring film, collection arc, lens and dropdown work both ways", as
   await expect.poll(() => page.locator("[data-film-caption]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
 });
 
-test("see it on: worn photographs zoom to each piece and link to the Design Vault", async ({ page }) => {
+test("see it on: one model each, every piece listed, the camera moves to it", async ({ page }) => {
   await ready(page);
   const section = page.locator("#try-on");
   await section.scrollIntoViewIfNeeded();
-  await expect(section.getByText("Reference photography. Not our jewellery.")).toBeVisible();
-  await section.getByRole("button", { name: "Necklace set", exact: true }).click();
+  await expect(section.getByText("AI-generated model. Jewellery is illustrative, not shop stock.")).toBeVisible();
+  await expect(section.locator(".tryon__item")).toHaveCount(6);
+  await section.locator(".tryon__item", { hasText: "Rani haar" }).click();
   await expect(section.locator(".tryon__camera")).toHaveAttribute("style", /scale\(2\.4\)/);
-  await expect(section.locator(".tryon__focus")).toContainText("Necklace set");
+  await expect(section.locator(".tryon__focus")).toContainText("Rani haar");
   await expect(section.getByRole("link", { name: /in the Design Vault/ })).toHaveAttribute("href", /q=necklace/);
   await section.getByRole("button", { name: "See the whole look" }).click();
   await expect(section.locator(".tryon__focus")).toHaveCount(0);
   await section.getByRole("button", { name: "Men", exact: true }).click();
-  await expect(section.getByRole("button", { name: "Necklace set", exact: true })).toHaveCount(0);
-  await expect(section.getByRole("button", { name: "Watch", exact: true })).toBeVisible();
+  await expect(section.locator(".tryon__item")).toHaveCount(4);
+  await expect(section.locator(".tryon__item", { hasText: "Watch" })).toBeVisible();
+  await page.screenshot({ path: `${screenshotFolder}/see-it-on-1440.png` });
 });
 
 test("bridal box lists the bridal sets and links to them", async ({ page }) => {

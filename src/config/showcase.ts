@@ -4,11 +4,35 @@
 export type ShowcaseNote = { x: number; y: number; side: "left" | "right"; title: string; text: string };
 export type ShowcaseEntry = { code: string; kind: string; focus: { x: number; y: number }; notes: ShowcaseNote[] };
 
-export const ringFilm = {
-  frames: 95,
-  desktop: (index: number) => `/images/hero/ring/r${String(index + 1).padStart(3, "0")}.webp`,
-  mobile: (index: number) => `/images/hero/ring/m${String(index + 1).padStart(3, "0")}.webp`,
-  label: "Concept video made with Google Flow. Not shop stock.",
+/* Hero film: the vault descent and the unveiling. Two Google Flow shots joined frame to frame and graded with
+   scripts/hero-film-grade.py; scrubbed by scroll as a frame sequence. Each segment folder holds r### (desktop)
+   and m### (mobile) frames. Chapters are caption bands over frame ranges of the whole chain; each band has its
+   own entrance, echoing what the footage does at that moment, and its own scrim placement. */
+export type FilmSegment = { dir: string; frames: number };
+export type FilmChapter = { id: string; label: string; from: number; to: number; place: "center" | "left" | "split"; entrance: "drift" | "punch" | "blur" | "rise"; eyebrow?: string; title?: string; body?: string };
+const segments: FilmSegment[] = [
+  { dir: "/images/hero/vault", frames: 190 },
+];
+const total = segments.reduce((sum, segment) => sum + segment.frames, 0);
+const frameAt = (index: number, kind: "r" | "m") => {
+  let i = Math.max(0, Math.min(total - 1, index));
+  for (const segment of segments) { if (i < segment.frames) return `${segment.dir}/${kind}${String(i + 1).padStart(3, "0")}.webp`; i -= segment.frames; }
+  return "";
+};
+export const heroFilm = {
+  frames: total,
+  segments,
+  desktop: (index: number) => frameAt(index, "r"),
+  mobile: (index: number) => frameAt(index, "m"),
+  /* Scroll distance per frame (px): about 4,900px for the whole 16 second film, so every band holds through several flicks. */
+  scrollPerFrame: 26,
+  chapters: [
+    { id: "descent", label: "Descent", from: 0, to: 30, place: "center", entrance: "drift" },
+    { id: "light", label: "Light", from: 30, to: 70, place: "center", entrance: "punch", title: "Gold, in every sense." },
+    { id: "promise", label: "Promise", from: 70, to: 124, place: "left", entrance: "blur", eyebrow: "Bridal", title: "Every set begins as a promise.", body: "Keep scrolling. The silk comes down." },
+    { id: "unveiled", label: "Unveiled", from: 124, to: 190, place: "split", entrance: "rise", eyebrow: "The Design Vault", title: "Bridal gold, unveiled.", body: "Sample designs to browse, compare and ask about." },
+  ] as FilmChapter[],
+  label: "Concept film made with Google Flow. Not shop stock.",
 };
 
 export const showcase: ShowcaseEntry[] = [
@@ -37,44 +61,27 @@ export const showcase: ShowcaseEntry[] = [
   ] },
 ];
 
-/* See it on. Reference photographs of people wearing jewellery (Pexels, credited). Each spot is where a
-   piece sits in the photo (x, y in % of the photo); choosing it moves the camera there. The pieces in these
-   photos are not shop stock; each spot links to the matching search in the Design Vault. Swap in the shop's
-   own shoot (or Google Flow photos of the actual pieces) by changing src, size and spots. */
 export type Wearer = "women" | "men";
-export type WornSpot = { name: string; x: number; y: number; zoom: number; search: string; vault: string };
-export type WornLook = { id: string; title: string; src: string; thumb: string; width: number; height: number; alt: string; credit: string; spots: WornSpot[] };
-
-const look = (id: string, title: string, size: [number, number], alt: string, credit: string, spots: WornSpot[]): WornLook =>
-  ({ id, title, src: `/images/models/${id}-1200.webp`, thumb: `/images/models/${id}-640.webp`, width: size[0], height: size[1], alt, credit, spots });
-
-export const wornLooks: Record<Wearer, WornLook[]> = {
-  women: [
-    look("women-bride-red", "Wedding day", [1200, 1800], "A bride in red wearing a gold necklace set, maang tikka and bangles", "aman ajimal", [
-      { name: "Maang tikka", x: 51, y: 8, zoom: 3, search: "tikka", vault: "Tikkas" },
-      { name: "Necklace set", x: 52, y: 30, zoom: 2.4, search: "necklace", vault: "Necklaces and sets" },
-      { name: "Bangles", x: 21, y: 48, zoom: 2.8, search: "bangle", vault: "Bangles and karas" },
-    ]),
-    look("women-bride-portrait", "Bridal portrait", [1200, 1432], "A bride wearing a maang tikka, jhumkas and a layered necklace", "Prajakt Rebeloma", [
-      { name: "Maang tikka", x: 46, y: 21, zoom: 2.8, search: "tikka", vault: "Tikkas" },
-      { name: "Jhumkas", x: 30, y: 63, zoom: 3, search: "jhumka", vault: "Earrings and jhumkas" },
-      { name: "Layered necklace", x: 58, y: 88, zoom: 2.4, search: "necklace", vault: "Necklaces and sets" },
-    ]),
-    look("women-choker-closeup", "Evening choker", [1200, 1698], "A close portrait of a woman wearing a beaded choker and earrings", "Arif khan", [
-      { name: "Choker", x: 74, y: 55, zoom: 2.4, search: "choker", vault: "Necklaces and sets" },
-      { name: "Earrings", x: 62, y: 21, zoom: 3, search: "earring", vault: "Earrings and jhumkas" },
-    ]),
-  ],
-  men: [
-    look("men-suit-watch", "Formal", [1200, 1800], "A man in a suit wearing a watch and a fine chain", "Jozef Fusung", [
-      { name: "Watch", x: 56, y: 58, zoom: 3, search: "men", vault: "Men's jewellery" },
-      { name: "Fine chain", x: 47, y: 45, zoom: 3, search: "chain", vault: "Chains" },
-    ]),
-    look("men-blazer-chain", "Everyday chain", [1200, 1800], "A man in a blazer wearing a gold chain", "_brunovisual", [
-      { name: "Gold chain", x: 50, y: 37, zoom: 2.6, search: "chain", vault: "Chains" },
-    ]),
-    look("men-fedora-chain", "Statement chain", [1200, 1812], "A man in a fedora wearing a long gold chain", "Frank K", [
-      { name: "Long chain", x: 46, y: 71, zoom: 2.6, search: "chain", vault: "Chains" },
-    ]),
-  ],
+export type WornSpot = { name: string; note: string; x: number; y: number; zoom: number; search: string; vault: string };
+export type Model = { src: string; width: number; height: number; alt: string; spots: WornSpot[] };
+/* See it on: one AI-generated model each, wearing every kind of piece we show. Spots are % of the photograph. */
+export const models: Record<Wearer, Model> = {
+  women: { src: "/images/models/rsj-woman.webp", width: 1024, height: 1536,
+    alt: "AI-generated model in a maroon lehenga wearing a gold maang tikka, jhumkas, a layered necklace set, bangles and rings",
+    spots: [
+      { name: "Maang tikka", note: "Sits at the parting", x: 43.3, y: 6.8, zoom: 3.2, search: "tikka", vault: "tikkas" },
+      { name: "Jhumkas", note: "Frames the face", x: 53.6, y: 13.4, zoom: 3, search: "jhumka", vault: "earrings" },
+      { name: "Choker", note: "Close at the collarbone", x: 51.2, y: 18.4, zoom: 2.8, search: "choker", vault: "chokers" },
+      { name: "Rani haar", note: "Falls to the waist", x: 45.9, y: 27.3, zoom: 2.4, search: "necklace", vault: "necklace sets" },
+      { name: "Bangles", note: "Stacked on both wrists", x: 35, y: 27.6, zoom: 3, search: "bangle", vault: "bangles" },
+      { name: "Rings", note: "Worn with the set", x: 40.2, y: 19.9, zoom: 3.4, search: "ring", vault: "rings" },
+    ] },
+  men: { src: "/images/models/rsj-man.webp", width: 1024, height: 1536,
+    alt: "AI-generated model in a black kurta and waistcoat wearing a gold chain, a gold watch, a gold kada and a gold ring",
+    spots: [
+      { name: "Gold chain", note: "Fine, at the open collar", x: 50.3, y: 22.3, zoom: 3, search: "chain", vault: "chains" },
+      { name: "Watch", note: "Gold on the left wrist", x: 57.8, y: 38.7, zoom: 3.2, search: "men", vault: "men's pieces" },
+      { name: "Signet ring", note: "One bold ring", x: 49.2, y: 40.7, zoom: 3.6, search: "ring", vault: "rings" },
+      { name: "Kada", note: "Solid, on the right wrist", x: 34.7, y: 46.9, zoom: 3.2, search: "kada", vault: "kadas" },
+    ] },
 };
