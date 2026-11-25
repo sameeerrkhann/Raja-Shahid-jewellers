@@ -257,6 +257,11 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-26 — Claude (Saad's session) — Editorial images replaced (S-23, client point 2)
+- Image audit: the 11 catalogue product shots (gold on cream stone) are consistent and kept. The three Unsplash editorial photos were off-brief (diamond studs on a hand, violet-toned necklace, busy pendant) and are replaced with AI-generated images in the site's charcoal and gold palette: `public/images/editorial/bridal-set.webp`, `rani-haar.webp`, `jhumkas.webp` (Figma AI). Used by the homepage category cards and finale, the design-preview hero and its three studies.
+- Labels and credits updated: "AI-generated image" on cards, captions, alts and footer; the Unsplash photographer links are removed; docs/ASSETS.md updated. Unused `editorial/derivatives/` removed.
+- Tests: homepage and design-preview specs pass (preview search and a11y label updated); full suite 83/83 before this change.
+
 ### 2026-11-26 — Claude (Saad's session) — Hero regrade and speed (S-22b)
 - After Saad's review: the film is regraded without maroon (velvet and silk now deep warm charcoal; gold kept) so it matches the site's kohl and gold palette; the outlined "Raja Shahid" name over the film and the chain-curtain layer are removed; the film now runs at normal scroll speed (14 px per frame, scrub .5, frame-rate independent easing, canvas capped at 1.5x DPR). The unveiled headline uses a soft gold glow instead of the shimmer.
 - Tests: Playwright 83/83 (fallback test now blocks the vault frames).

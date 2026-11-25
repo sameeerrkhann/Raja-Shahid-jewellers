@@ -8,9 +8,9 @@ The source pages explicitly list the free Unsplash License. License checked on 2
 
 | Local file | Photographer / source page | Verified dimensions / bytes | Treatment and use |
 |---|---|---|---|
-| `public/images/editorial/floral-necklace.jpg` | [Vaibhav Nagare](https://unsplash.com/photos/gold-and-silver-beaded-necklace-62sDgpfljOI) | 2000×1246; 180,821 bytes | Source JPEG delivered at 2000px/q88; hero, necklace study and occasion collection crop |
-| `public/images/editorial/pendant-detail.jpg` | [Vaibhav Nagare](https://unsplash.com/photos/gold-and-silver-beaded-necklace-VUwYKqNB3-s) | 1600×1117; 152,060 bytes | Source JPEG delivered at 1600px/q88; pendant study; shallow focus is part of original photography |
-| `public/images/editorial/drop-earrings.jpg` | [PRAHANT STUDIO](https://unsplash.com/photos/a-pair-of-gold-and-diamond-earrings-Eko2hYivl-s) | 1600×1600; 476,757 bytes | Source JPEG delivered at 1600px/q88; actual subject is round stud earrings on a hand (legacy filename is not a product specification); earring/everyday studies |
+| `public/images/editorial/bridal-set.webp` | AI-generated (Figma AI, 2026-11-26) | 1536×1024 | Bridal category card, design-preview hero and bridal study; labelled AI-generated, not shop stock |
+| `public/images/editorial/rani-haar.webp` | AI-generated (Figma AI, 2026-11-26) | 1536×1024 | Necklaces category card and necklace study |
+| `public/images/editorial/jhumkas.webp` | AI-generated (Figma AI, 2026-11-26) | 1024×1024 | Earrings category card, homepage finale and earring study |
 
 All three downloaded successfully and were visually inspected. Runtime uses local assets via Next Image with responsive sizes and AVIF/WebP negotiation; no remote-image host is needed. Hero is prioritized; later photographs are lazy-loaded. CSS crops preserve originals; full images are available in study dialogs. No local image manipulation or invented compositing was performed.
 
@@ -72,3 +72,5 @@ This is original synthetic imagery for a demo, not final legal/client/brand clea
 ## Phase 04 homepage delivery derivatives
 
 The same permitted floral-necklace.jpg remains unchanged. Added public/images/editorial/derivatives/home-hero-{768,1280,1920}.webp at26,610 /52,574 /90,262 bytes. The responsive picture selects768px on mobile,1280px normally and1920px at wide desktops, with eager/high-priority static delivery. This bypasses the measured runtime image-transformation path for the LCP photo, not a new crop, source, 3D asset or brand approval. ASSETS records bytes/provenance; PROJECT_STATE and ignored performance JSON record measured before/after timing and limitations.
+
+2026-11-26: the three Unsplash editorial photographs and the unused `editorial/derivatives/home-hero-*` files were replaced by AI-generated images in the charcoal and gold palette. See it on uses `public/images/models/rsj-woman.webp` and `rsj-man.webp` (AI-generated, Figma AI).

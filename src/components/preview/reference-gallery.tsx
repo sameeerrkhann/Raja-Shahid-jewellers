@@ -12,7 +12,7 @@ export function ReferenceGallery() {
   const [selected, setSelected] = useState<ReferenceStudy | null>(null);
   return <>
     <Section id="selection" className="selection-section"><SectionHeading eyebrow="01 / The selection" title={<>Extraordinary, in <em>every detail.</em></>}><p>Warmth. Intricacy. A certain quiet confidence.<br />Three editorial studies in a shared visual language.</p></SectionHeading>
-      <div className="product-grid">{referenceStudies.map((study) => <ProductCard key={study.id} study={study} onView={setSelected} />)}</div><p className="section-footnote">Reference photography for visual review. No stock, purity, price or manufacturing availability is asserted.</p>
+      <div className="product-grid">{referenceStudies.map((study) => <ProductCard key={study.id} study={study} onView={setSelected} />)}</div><p className="section-footnote">AI-generated images for visual review. No stock, purity, price or manufacturing availability is asserted.</p>
     </Section>
     <Section id="collections" className="collections-section"><SectionHeading eyebrow="02 / The editorial collections" title={<>For a moment.<br /><em>For a lifetime.</em></>}><p>Distinct moods, brought together<br />by a considered eye.</p></SectionHeading>
       <div className="collection-grid">
@@ -21,7 +21,7 @@ export function ReferenceGallery() {
       </div>
     </Section>
     <Modal open={selected !== null} onClose={() => setSelected(null)} title={selected?.title ?? "Reference study"} className="study-modal">
-      {selected && <><figure className="study-figure"><div className="study-figure__image"><Image src={selected.image} alt={selected.alt} fill sizes="(max-width: 767px) 90vw, 800px" quality={90} /></div><figcaption>Photo by {selected.photographer} · Licensed editorial reference</figcaption></figure><p>{selected.description}</p><p className="caption">Not a catalogue entry or an item offered for sale.</p><a className="text-link" href={selected.sourceUrl} target="_blank" rel="noreferrer">View photographer&apos;s original <Icon name="arrow" /></a></>}
+      {selected && <><figure className="study-figure"><div className="study-figure__image"><Image src={selected.image} alt={selected.alt} fill sizes="(max-width: 767px) 90vw, 800px" quality={90} /></div><figcaption>AI-generated image ({selected.photographer}) · Not shop stock</figcaption></figure><p>{selected.description}</p><p className="caption">Not a catalogue entry or an item offered for sale.</p>{selected.sourceUrl && <a className="text-link" href={selected.sourceUrl} target="_blank" rel="noreferrer">View the original <Icon name="arrow" /></a>}</>}
     </Modal>
   </>;
 }

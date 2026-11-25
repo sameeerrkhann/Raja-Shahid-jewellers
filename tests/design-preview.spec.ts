@@ -49,7 +49,7 @@ test("local search filters reference studies", async ({ page }) => {
   const dialog = page.getByRole("dialog", { name: "A closer look" });
   const input = dialog.getByRole("searchbox");
   await expect(input).toBeFocused();
-  await input.fill("pendant");
+  await input.fill("layered");
   await expect(dialog.getByRole("status")).toHaveText("1 study found");
   await dialog.getByRole("link", { name: /A little extraordinary/ }).click();
   await expect(dialog).not.toBeVisible();
@@ -58,12 +58,12 @@ test("local search filters reference studies", async ({ page }) => {
 
 test("reference dialog shows provenance and restores focus", async ({ page }) => {
   await page.goto("/design-preview");
-  const opener = page.getByRole("button", { name: "Editorial reference — View study: An ode to ornament", exact: true });
+  const opener = page.getByRole("button", { name: "AI-generated image — View study: An ode to ornament", exact: true });
   await opener.click();
   const dialog = page.getByRole("dialog", { name: "An ode to ornament" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Not a catalogue entry or an item offered for sale.")).toBeVisible();
-  await expect(dialog.getByRole("link", { name: /photographer/ })).toHaveAttribute("href", /unsplash.com/);
+  await expect(dialog.getByText("AI-generated image (Figma AI) · Not shop stock")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(opener).toBeFocused();
 });
