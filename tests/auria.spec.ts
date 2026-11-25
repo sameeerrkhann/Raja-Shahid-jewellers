@@ -51,7 +51,7 @@ test("local catalogue stream saves grounded context for a draft without recordin
 });
 test("disabled provider returns honest unavailable state without fake assistant message", async ({ request }) => {
   const csrf = await bootstrap(request); const c = await create(request, csrf);
-  const r = await request.post("/api/ai/chat", { headers: headers(csrf), data: { conversationId: c.id, expectedVersion: c.version, requestId: randomUUID(), message: "Show me traditional 22K rings" } });
+  const r = await request.post("/api/ai/chat", { headers: headers(csrf), data: { conversationId: c.id, expectedVersion: c.version, requestId: randomUUID(), message: "Show me traditional 22K rings", mode: "live" } });
   expect(r.status()).toBe(503); expect((await r.json()).error.code).toBe("CHAT_UNAVAILABLE");
   const stored = (await (await request.get(`/api/ai/conversations/${c.id}`)).json()).data; expect(stored.messages).toEqual([]);
 });
@@ -112,7 +112,8 @@ test("streamed quota error offers explicit retry without automatic provider requ
   let calls = 0;
   await page.route("**/api/ai/chat", async (route) => {
     calls++; const input = route.request().postDataJSON(); const c = (await (await page.request.get(`/api/ai/conversations/${input.conversationId}`)).json()).data as Conversation;
-    c.messages = [{ id: randomUUID(), role: "assistant", text: calls === 1 ? "" : "Test-only retry completed.", state: calls === 1 ? "FAILED" : "COMPLETE", createdAt: new Date().toISOString(), cards: [] }];
+    const createdAt = new Date().toISOString();
+    c.messages = [{ id: randomUUID(), role: "user", text: input.message, state: "COMPLETE", createdAt, cards: [] }, { id: input.retryOf ?? randomUUID(), role: "assistant", text: calls === 1 ? "" : "Test-only retry completed.", state: calls === 1 ? "FAILED" : "COMPLETE", createdAt, cards: [], ...(calls === 1 ? { errorCode: "PROVIDER_RATE_LIMIT", failure: { message: "Advanced assistance is temporarily at its request limit.", retryable: true } } : {}) }];
     const events = calls === 1 ? [{ type: "error", code: "PROVIDER_RATE_LIMIT", message: "Free quota unavailable; no paid fallback used.", retryable: true }, { type: "done", conversation: c }] : [{ type: "delta", text: "Test-only retry completed." }, { type: "done", conversation: c }];
     await route.fulfill({ contentType: "application/x-ndjson", body: events.map((e) => JSON.stringify(e)).join("\n") + "\n" });
   });

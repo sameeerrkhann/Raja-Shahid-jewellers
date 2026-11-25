@@ -34,7 +34,7 @@ export function CallbackPanel({ draft, disabled, save, confirm }: {
     try { await action(); } catch (e) { setError(e instanceof Error ? e.message : "The request could not be saved."); }
     finally { setBusy(false); }
   }
-  return <details className="auria-contact" open={draft ? true : undefined}>
+  return <details id="auria-contact" className="auria-contact" open={draft ? true : undefined}>
     <summary>Contact & visits</summary>
     <p>Record a fictional callback or showroom visit request. The demo sends no message or booking.</p>
     {draft?.status === "SUBMITTED" && draft.reference ? <>

@@ -20,8 +20,8 @@ export function QuotePanel({ draft, design, referenceNote, budgetPreference, dis
     e.preventDefault(); if (!source) return;
     void perform(() => save({ designId: source.id, expectedVersion: draft?.version ?? 0, variantId: form.variantId || null, quantity: Number(form.quantity), requestedChanges: form.requestedChanges, budgetPKR: budget ? Number(budget) : null, preferences: { size: sizeKind && form.size ? { kind: sizeKind, value: form.size } : null, stonePreferences: form.stones, instructions: form.instructions }, customer: { name: form.name, email: form.email } }));
   }
-  return <section className="auria-quote" aria-label="Demo quotation draft"><p className="eyebrow">Your next chapter</p><h3>A quotation, considered.</h3>{error && <div role="alert" className="auria-error"><p>{error}</p><button disabled={pending} onClick={() => perform(reload)}>Reload saved draft</button></div>}
-    {draft && draft.status !== "DRAFT" ? <div className="auria-receipt"><strong>Demo enquiry saved</strong><p className="auria-reference">{draft.reference}</p>{draft.reference && <CopyReference reference={draft.reference} />}<p>{draft.source.designCode} · {draft.source.title}</p><p>Quotation enquiry · {draft.status.replaceAll("_", " ")}</p><p>Fictional customer: {draft.customer.name}<br />{draft.customer.email}</p><EnquiryTimeline status={draft.status} timeline={draft.timeline} /><p>No real order, reservation, notification or delivery date.</p></div> : <>
+  return <section id="auria-quote" tabIndex={-1} className="auria-quote" aria-label="Demo quotation draft"><p className="eyebrow">Your next chapter</p><h3>A quotation, considered.</h3>{error && <div role="alert" className="auria-error"><p>{error}</p><button disabled={pending} onClick={() => perform(reload)}>Reload saved draft</button></div>}
+    {draft && draft.status !== "DRAFT" ? <div className="auria-receipt"><strong>Demo enquiry saved</strong><p className="auria-reference">{draft.reference}</p>{draft.reference && <CopyReference reference={draft.reference} />}<p>{draft.source.designCode} · {draft.source.title}</p><p>Quotation enquiry · {draft.status.replaceAll("_", " ")}</p><p>Fictional customer: {draft.customer.name}<br />{draft.customer.email}</p><EnquiryTimeline status={draft.status} timeline={draft.timeline} /><StaffSummary draft={draft} /><p>No real order, reservation, notification or delivery date.</p></div> : <>
       {source ? <form onSubmit={saveForm}><label htmlFor="quote-variant">Sample purity option</label><select id="quote-variant" value={form.variantId} onChange={(e) => change("variantId", e.target.value)}><option value="">Choose a recorded option</option>{source.variants.map((v) => <option key={v.id} value={v.id}>{v.karat ? `${v.karat}K` : "Purity to confirm"} · {v.code}</option>)}</select>
         <label htmlFor="quote-quantity">Quantity</label><input id="quote-quantity" type="number" min="1" max="5" required value={form.quantity} onChange={(e) => change("quantity", Number(e.target.value))} />
         <label htmlFor="quote-changes">Requested changes</label><textarea id="quote-changes" value={form.requestedChanges} onChange={(e) => change("requestedChanges", e.target.value)} maxLength={2000} rows={3} disabled={!source.customizationAvailable} />
@@ -40,4 +40,21 @@ export function QuotePanel({ draft, design, referenceNote, budgetPreference, dis
         <label className="auria-consent"><input type="checkbox" checked={consent} disabled={dirty || pending || disabled} onChange={(e) => setConsent(e.target.checked)} /><span>I approve saving this fictional demo enquiry. No real order or notification will be created.</span></label><button type="button" className="button button--gold" disabled={!consent || dirty || !draft.variantId || disabled || pending} onClick={() => perform(() => submit(draft.version, submissionKey))}>Confirm demo enquiry</button><small>Only the saved draft above is submitted. Save edits first.</small></div>}
     </>}
   </section>;
+}
+
+function StaffSummary({ draft }: { draft: QuoteDraft }) {
+  const variant = draft.source.variants.find((item) => item.id === draft.variantId);
+  return <details className="atelier-staff-summary">
+    <summary>Enquiry brief for the jeweller</summary>
+    <dl>
+      <dt>Enquiry reference</dt><dd>{draft.reference}</dd>
+      <dt>Design and purity</dt><dd>{draft.source.designCode} · {draft.source.title} · {variant?.karat ? variant.karat + "K" : unconfirmed}</dd>
+      <dt>Quantity</dt><dd>{draft.quantity}</dd>
+      <dt>Budget preference</dt><dd>{draft.budgetPKR ? "PKR " + draft.budgetPKR.toLocaleString() : "Not provided"}</dd>
+      <dt>Customization</dt><dd>{[draft.requestedChanges, draft.preferences.size?.value, draft.preferences.stonePreferences, draft.preferences.instructions].filter(Boolean).join(" · ") || unconfirmed}</dd>
+      <dt>Approved demo contact</dt><dd>{draft.customer.name} · {draft.customer.email}</dd>
+      <dt>Recorded status</dt><dd>{draft.status.replaceAll("_", " ")}</dd>
+      <dt>Next action</dt><dd>Review specifications, pricing and feasibility with the jeweller.</dd>
+    </dl>
+  </details>;
 }

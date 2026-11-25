@@ -6,8 +6,14 @@ import { AuriaError } from "@/lib/auria/validation";
 import { missingDraftDetails, unconfirmed } from "@/lib/auria/quotation";
 import { createQuoteDraft, getQuoteDraft, getOrderStatus } from "./quotations";
 export { createQuoteDraft, getQuoteDraft, getOrderStatus } from "./quotations";
-import type { ToolResult } from "@/types/auria";
+import type { QuoteDraft, ToolResult } from "@/types/auria";
 
+
+function quoteContext(draft: QuoteDraft | null) {
+  if (!draft) return null;
+  return { designId: draft.designId, designCode: draft.source.designCode, variantId: draft.variantId, status: draft.status, reference: draft.reference,
+    version: draft.version, quantity: draft.quantity, budgetPKR: draft.budgetPKR, requestedChanges: draft.requestedChanges, preferences: draft.preferences };
+}
 
 export function executeTool(owner: string, conversationId: string, name: string, args: unknown): ToolResult {
   if (!Object.hasOwn(toolSchemas, name)) return { data: { error: "UNKNOWN_TOOL" } };
@@ -15,8 +21,8 @@ export function executeTool(owner: string, conversationId: string, name: string,
     const key = name as ToolName; const parsed = toolSchemas[key].parse(args);
     const result = catalogueTool(key, parsed, { search: queryCatalogue, get: findPublicDesign });
     if (result) return result;
-    if (key === "createQuoteDraft") { const draft = createQuoteDraft(owner, conversationId, parsed, true); return { data: { draft, missingDetails: missingDraftDetails(draft), unsupportedFacts: unconfirmed, instruction: "Draft only. Ask for missing preferences; do not invent them. Review and explicitly confirm in the draft panel. Get the current draft/version before edits." }, draft }; }
-    if (key === "getQuoteDraft") return { data: getQuoteDraft(owner, conversationId) };
+    if (key === "createQuoteDraft") { const draft = createQuoteDraft(owner, conversationId, parsed, true); return { data: { draft: quoteContext(draft), missingDetails: missingDraftDetails(draft), unsupportedFacts: unconfirmed, instruction: "Draft only. Ask for missing preferences; do not invent them. Review and explicitly confirm in the draft panel. Get the current draft/version before edits." }, draft }; }
+    if (key === "getQuoteDraft") return { data: quoteContext(getQuoteDraft(owner, conversationId)) };
     if (key === "getOrderStatus") return { data: getOrderStatus(owner, conversationId, "reference" in parsed ? parsed.reference : undefined) };
     return { data: { error: "UNKNOWN_TOOL" } };
   } catch (error) {

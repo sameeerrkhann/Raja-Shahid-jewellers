@@ -10,16 +10,16 @@ export function configuredCapability(env: Record<string, string | undefined>): C
 }
 
 const providerFailures = {
-  PROVIDER_RATE_LIMIT: ["Gemini’s free quota is unavailable. Wait before retrying or use the catalogue demo.", 429, true],
-  PROVIDER_ACCESS: ["Gemini rejected the server credentials or project access. Use the catalogue demo while access is checked.", 503, false],
-  MODEL_UNAVAILABLE: ["The configured Gemini model is unavailable for this project. Use the catalogue demo while it is checked.", 503, false],
-  PROVIDER_BUSY: ["Gemini is temporarily unavailable. Retry in a moment or use the catalogue demo.", 503, true],
-  PROVIDER_NETWORK: ["AURIA could not reach Gemini. Retry or continue with the catalogue demo.", 503, true],
-  PROVIDER_TLS: ["The server could not verify the provider connection. You can continue in the catalogue demo.", 503, false],
-  TIMEOUT: ["Gemini timed out. Retry or use the catalogue demo.", 504, true],
-  PROVIDER_REQUEST: ["Gemini rejected this request. Try another wording or use the catalogue demo.", 502, false],
+  PROVIDER_RATE_LIMIT: ["Advanced assistance is temporarily at its request limit. You can still explore designs.", 429, true],
+  PROVIDER_ACCESS: ["Advanced assistance is temporarily unavailable. Catalogue assistance is still available.", 503, false],
+  MODEL_UNAVAILABLE: ["Advanced assistance is temporarily unavailable. Catalogue assistance is still available.", 503, false],
+  PROVIDER_BUSY: ["Advanced assistance is temporarily unavailable. Please try again in a moment.", 503, true],
+  PROVIDER_NETWORK: ["AURIA could not reach advanced assistance. Please try again in a moment.", 503, true],
+  PROVIDER_TLS: ["Advanced assistance could not connect securely. Catalogue assistance is still available.", 503, false],
+  TIMEOUT: ["The response took too long. You can retry.", 504, true],
+  PROVIDER_REQUEST: ["AURIA could not use that request. Try another wording.", 502, false],
   PROVIDER_ERROR: ["The AI service could not finish this response. You can retry when it is available.", 502, true],
-  RATE_LIMITED: ["The demo request limit is reached. Please wait before retrying.", 429, true],
+  RATE_LIMITED: ["Advanced assistance is temporarily at its request limit. You can still explore designs.", 429, true],
 } as const;
 
 export function savedProviderFailure(code?: string) {

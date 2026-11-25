@@ -67,7 +67,7 @@ export function geminiProvider(): ChatProvider & { model: string } {
           if (next.done) break;
           const chunk = next.value;
           const candidate = chunk.candidates?.[0];
-          if (chunk.promptFeedback?.blockReason) throw new AuriaError("PROVIDER_REFUSAL", "Gemini declined this input. Try rephrasing your jewellery question.", 422, true);
+          if (chunk.promptFeedback?.blockReason) throw new AuriaError("PROVIDER_REFUSAL", "AURIA could not use this input. Try rephrasing your jewellery question.", 422, true);
           if (candidate?.finishReason) finish = String(candidate.finishReason);
           for (const part of candidate?.content?.parts ?? []) {
             parts.push(part); // Preserve Gemini thought signatures for tool continuations.
@@ -76,7 +76,7 @@ export function geminiProvider(): ChatProvider & { model: string } {
           if (chunk.usageMetadata) yield { usage: { input: chunk.usageMetadata.promptTokenCount ?? null, output: chunk.usageMetadata.candidatesTokenCount ?? null, total: chunk.usageMetadata.totalTokenCount ?? null } };
         }
       } finally { void iterator.return?.(undefined).catch(() => undefined); }
-      if (!finish) throw new AuriaError("PROVIDER_INCOMPLETE", "Gemini ended the stream before finishing. Retry or continue with the catalogue demo.", 502, true);
+      if (!finish) throw new AuriaError("PROVIDER_INCOMPLETE", "The reply ended before it was complete. You can retry.", 502, true);
       if (finish === "MAX_TOKENS") throw new AuriaError("OUTPUT_LIMIT", "The response reached its length limit. Ask a shorter follow-up.", 422, true);
       if (finish !== "STOP") throw new AuriaError("PROVIDER_REFUSAL", "AURIA could not provide this response. Try rephrasing your jewellery question.", 422, true);
       const calls = parts.flatMap((part) => part.functionCall ? [{ name: part.functionCall.name ?? "", args: part.functionCall.args ?? {}, id: part.functionCall.id }] : []);

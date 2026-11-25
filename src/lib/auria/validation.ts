@@ -7,7 +7,7 @@ export const uuid = z.uuid();
 export const designRef = z.string().trim().regex(/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|RSJ-D\d{3,6})$/i, "Use a design UUID or code such as RSJ-D007");
 export const enquiryReference = z.string().trim().toUpperCase().regex(/^DEMO-(?:Q-[A-F0-9]{8,32}|C-[A-F0-9]{20})$/);
 export const language = z.enum(["auto", "en", "ur", "roman-ur"]);
-export const chatInput = z.strictObject({ conversationId: uuid, expectedVersion: z.number().int().nonnegative(), requestId: uuid, message: z.string().trim().min(1).max(4000), mode: z.enum(["live", "catalogue"]).optional() });
+export const chatInput = z.strictObject({ conversationId: uuid, expectedVersion: z.number().int().nonnegative(), requestId: uuid, message: z.string().trim().min(1).max(4000), retryOf: uuid.optional(), mode: z.enum(["live", "catalogue"]).optional() });
 export const selectionInput = z.strictObject({ selectedDesignId: uuid.nullable(), referenceNote: z.string().trim().min(1).max(600).optional(), expectedVersion: z.number().int().nonnegative() });
 export const draftInput = z.strictObject({
   designId: designRef.optional(), displayedPosition: z.number().int().min(1).max(6).optional(),

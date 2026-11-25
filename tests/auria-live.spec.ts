@@ -164,7 +164,6 @@ test("opt-in Urdu pack and playback use local voices and can be interrupted", as
     } });
   });
   await page.goto("/ai-atelier");
-  await page.getByRole("button", { name: "Use catalogue demo", exact: true }).click();
   await page.getByRole("button", { name: "Conversation history", exact: true }).click();
   await page.getByLabel("Dictation language").selectOption("ur-PK");
   await page.getByRole("button", { name: "Close history" }).click();

@@ -17,7 +17,7 @@ type Frame = {
 const readTools = new Set(["searchJewellery", "getProductDetails", "getDesignAvailability", "getCategories", "getAvailablePurities", "compareDesigns"]);
 
 function localFailure(code = "OLLAMA_UNAVAILABLE") {
-  return new AuriaError(code, "The local Ollama model could not finish this reply. You can continue in the catalogue demo.", 503, true);
+  return new AuriaError(code, "Advanced assistance could not finish this reply. You can retry.", 503, true);
 }
 
 function toToolCall({ function: call }: NativeCall): ToolCall {

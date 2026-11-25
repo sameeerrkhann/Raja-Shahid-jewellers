@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { chatInput, AuriaError, readJson } from "@/lib/auria/validation";
 import { conciergeInstructions, orchestrate } from "@/lib/auria/orchestrate";
-import type { ChatEvent, ChatProvider, Conversation } from "@/types/auria";
+import type { ChatEvent, ChatProvider, Conversation, ReplySource } from "@/types/auria";
 import { ownedConversation, reserveCall, withOwner, markVerified, finishProviderCall } from "./store";
 import { geminiProvider, providerCapability, providerError } from "./provider";
 import { executeTool } from "./tools";
@@ -14,6 +14,7 @@ import { setTimeout as wait } from "node:timers/promises";
 import { budgetFrom, demoTitle } from "@/lib/auria/demo-intent";
 import { providerHistory } from "@/lib/auria/provider-history";
 import { ollamaModel, ollamaProvider } from "./ollama";
+import { providerOrder, healthFor, recordProviderFailure, recordProviderSuccess } from "./provider-health";
 
 type NamedProvider = { kind: "gemini" | "ollama" | "catalogue"; model: string; provider: ChatProvider };
 
@@ -26,35 +27,44 @@ export function stopTurn(owner: string, conversationId: string) {
 }
 export async function chat(request: Request, owner: string) {
   const body = await readJson(request, chatInput);
-  const demo = body.mode === "catalogue";
-  const hash = createHash("sha256").update(JSON.stringify({ message: body.message, version: body.expectedVersion, ...(demo ? { mode: body.mode } : {}) })).digest("hex");
+  const diagnostic = process.env.AURIA_TEST_STORE === "true" ? body.mode : undefined;
+  const catalogueOnly = diagnostic === "catalogue";
+  const hash = createHash("sha256").update(JSON.stringify({ message: body.message, version: body.expectedVersion, ...(catalogueOnly ? { mode: "catalogue" } : {}), ...(body.retryOf ? { retryOf: body.retryOf } : {}) })).digest("hex");
   const replay = withOwner(owner, (s) => { const c = ownedConversation(s, body.conversationId); const previous = c.requests[body.requestId]; if (previous && previous.hash !== hash) throw new AuriaError("IDEMPOTENCY_CONFLICT", "This request ID belongs to another message.", 409); return previous ? c : null; });
   if (replay) {
     if (replay.activeTurn) throw new AuriaError("TURN_ACTIVE", "This response is still running. Reload history or stop it.", 409);
     return new Response(JSON.stringify({ type: "done", conversation: replay } satisfies ChatEvent) + "\n", { headers: { ...noStore, "Content-Type": "application/x-ndjson" } });
   }
-  const localEnabled = !demo && process.env.AURIA_OLLAMA_ENABLED === "true";
-  const liveProvider = !demo && configuredCapability(process.env).available ? geminiProvider() : null;
-  if (!demo && !liveProvider && !localEnabled) throw new AuriaError("CHAT_UNAVAILABLE", providerCapability().reason, 503);
+  const choices = catalogueOnly ? [] : providerOrder(process.env);
+  if (diagnostic === "live" && !choices.length) throw new AuriaError("CHAT_UNAVAILABLE", providerCapability().reason, 503);
   const conversation = withOwner(owner, (s) => {
     const c = ownedConversation(s, body.conversationId);
     if (c.activeTurn) throw new AuriaError("TURN_ACTIVE", "Stop the current response before sending another.", 409);
     if (c.version !== body.expectedVersion) throw new AuriaError("VERSION_CONFLICT", "History changed in another tab. Reload it before sending.", 409, true);
-    if (c.messages.length >= 80) throw new AuriaError("CONVERSATION_LIMIT", "Start a new conversation to continue.", 429);
-    const now = new Date().toISOString(); const assistantId = randomUUID();
-    c.messages.push({ id: randomUUID(), role: "user", text: body.message, createdAt: now, state: "COMPLETE", cards: [] }, { id: assistantId, role: "assistant", text: "", createdAt: now, state: "STREAMING", cards: [], ...(demo ? { source: "CATALOGUE_DEMO" as const } : {}) });
-    c.mode = demo ? "catalogue" : "live";
-    if (c.messages.length === 2) c.title = demo ? demoTitle(body.message) : body.message.slice(0, 55);
+    const previous = c.messages.at(-1);
+    if (body.retryOf && (previous?.id !== body.retryOf || previous.role !== "assistant" || c.messages.at(-2)?.text !== body.message || !(previous.state === "FAILED" || previous.state === "STOPPED" || previous.assistance?.retryable))) {
+      throw new AuriaError("VERSION_CONFLICT", "Reload the conversation before retrying this message.", 409, true);
+    }
+    if (!body.retryOf && c.messages.length >= 80) throw new AuriaError("CONVERSATION_LIMIT", "Start a new conversation to continue.", 429);
+    const now = new Date().toISOString(); const assistantId = body.retryOf ?? randomUUID();
+    if (body.retryOf) c.messages.pop();
+    else c.messages.push({ id: randomUUID(), role: "user", text: body.message, createdAt: now, state: "COMPLETE", cards: [] });
+    c.messages.push({ id: assistantId, role: "assistant", text: "", createdAt: now, state: "STREAMING", cards: [] });
+    if (c.messages.length === 2 && !body.retryOf) c.title = demoTitle(body.message);
     c.updatedAt = now; c.version++;
     c.requests[body.requestId] = { hash, assistantId }; c.activeTurn = { id: body.requestId, assistantId, expiresAt: Date.now() + 95_000 };
     return c;
   });
   const turnKey = `${owner}:${body.conversationId}:${body.requestId}`;
   const controller = new AbortController(); active.set(turnKey, controller);
-  const abort = () => controller.abort(); request.signal.addEventListener("abort", abort, { once: true });
+  const abort = () => controller.abort();
+  if (request.signal.aborted) abort();
+  else request.signal.addEventListener("abort", abort, { once: true });
   const timeout = setTimeout(() => controller.abort(new Error("TIMEOUT")), 90_000);
   let text = ""; let cards = conversation.messages.at(-1)!.cards;
-  let usedOllama = false;
+  let source: ReplySource | undefined;
+  let fallback = false;
+  let draftDesignId: string | undefined;
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(output) {
@@ -70,46 +80,66 @@ export async function chat(request: Request, owner: string) {
           controller.signal.throwIfAborted();
         }
       };
-      const finish = (state: "COMPLETE" | "FAILED" | "STOPPED", failure?: AuriaError): Conversation => withOwner(owner, (s) => { const c = ownedConversation(s, body.conversationId); const m = c.messages.find((m) => m.id === conversation.activeTurn!.assistantId)!; m.text = text; m.cards = cards; if (usedOllama) m.source = "OLLAMA_LOCAL"; m.state = c.activeTurn?.id === body.requestId ? state : "STOPPED"; if (m.state === "COMPLETE" && cards.length === 1 && c.selectedDesignId !== cards[0].id) { c.selectedDesignId = cards[0].id; c.referenceNote = null; } if (failure && m.state === "FAILED") { m.errorCode = failure.code; m.failure = { message: failure.message, retryable: failure.retryable }; } if (c.activeTurn?.id === body.requestId) { c.activeTurn = null; c.version++; } c.updatedAt = new Date().toISOString(); return c; });
+      const finish = (state: "COMPLETE" | "FAILED" | "STOPPED", failure?: AuriaError): Conversation => withOwner(owner, (s) => { const c = ownedConversation(s, body.conversationId); const m = c.messages.find((m) => m.id === conversation.activeTurn!.assistantId)!; m.text = text; m.cards = cards; if (source) m.source = source; if (fallback) m.assistance = { retryable: choices.length > 0 }; m.state = c.activeTurn?.id === body.requestId ? state : "STOPPED"; if (m.state === "COMPLETE" && draftDesignId && c.selectedDesignId !== draftDesignId) { c.selectedDesignId = draftDesignId; c.referenceNote = null; } if (m.state === "COMPLETE" && cards.length === 1 && c.selectedDesignId !== cards[0].id && (!c.selectedDesignId || body.message.toUpperCase().includes(cards[0].designCode) || /\b(prefer|choose|select|like|pasand)\b|پسند/i.test(body.message))) { c.selectedDesignId = cards[0].id; c.referenceNote = null; } if (failure && m.state === "FAILED") { m.errorCode = failure.code; m.failure = { message: failure.message, retryable: failure.retryable }; } if (c.activeTurn?.id === body.requestId) { c.activeTurn = null; c.version++; } c.updatedAt = new Date().toISOString(); return c; });
       try {
         const history = providerHistory(conversation.messages);
-        const describe = (id: string) => { const d = findPublicDesign(id); return d ? { id, designCode: d.designCode, title: d.title, category: d.categorySlug } : null; };
+        const describe = (id: string) => { const d = findPublicDesign(id); return d ? { id, designCode: d.designCode, title: d.title, category: d.categorySlug, purities: d.variants.flatMap((variant) => variant.karat ? [variant.karat] : []) } : null; };
         const context = { language: conversation.language, selectedDesign: conversation.selectedDesignId ? describe(conversation.selectedDesignId) : null, displayedDesigns: conversation.recentDesignIds.flatMap((id, i) => { const d = describe(id); return d ? [{ position: i + 1, ...d }] : []; }), budgetPreferencePKR: conversation.messages.filter((message) => message.role === "user").map((message) => budgetFrom(message.text)).findLast((budget) => budget !== null) ?? null, shortlistDesigns: conversation.shortlistDesignIds?.flatMap((id) => { const design = describe(id); return design ? [design] : []; }), referenceNote: conversation.referenceNote ?? null, draft: conversation.draft ? { status: conversation.draft.status, designId: conversation.draft.designId, reference: conversation.draft.reference } : null };
-        const providers: NamedProvider[] = [];
-        if (demo) providers.push({ kind: "catalogue", model: "local", provider: catalogueDemoProvider(body.message, context) });
-        if (liveProvider) providers.push({ kind: "gemini", model: liveProvider.model, provider: liveProvider });
-        if (localEnabled) providers.push({ kind: "ollama", model: ollamaModel, provider: ollamaProvider() });
+        const providers: NamedProvider[] = choices.filter((kind) => !healthFor(kind)).map((kind) => kind === "gemini"
+          ? { kind, model: configuredCapability(process.env).model, provider: geminiProvider() }
+          : { kind, model: ollamaModel, provider: ollamaProvider() });
+        if (diagnostic !== "live") providers.push({ kind: "catalogue", model: "catalogue", provider: catalogueDemoProvider(body.message, context, history) });
         const greeting = /^(?:hi|hello|hey|salaam|salam|assalam(?:u)? alaikum|السلام علیکم|thank you|thanks|shukriya|شکریہ)[.!؟!\s]*$/iu.test(body.message.trim());
         const contextJson = JSON.stringify(context);
         async function* responseEvents(): AsyncGenerator<ChatEvent> {
+          if (!providers.length) throw new AuriaError("CHAT_UNAVAILABLE", "Advanced assistance is temporarily unavailable.", 503, true);
           for (const entry of providers) {
-            let started = false;
-            if (entry.kind === "ollama") {
-              usedOllama = true;
-              yield { type: "source", source: "OLLAMA_LOCAL" };
-            }
+            const startedAt = Date.now();
+            const isCatalogue = entry.kind === "catalogue";
+            const provenance: ReplySource = isCatalogue ? "CATALOGUE_DEMO" : entry.kind === "gemini" ? "GEMINI" : "OLLAMA_LOCAL";
+            let visible = false, draftWrite = false;
+            const pending: ChatEvent[] = [];
             try {
               for await (const event of orchestrate({
-                provider: entry.provider, groundFirst: !demo && !greeting, requireInitialTool: demo || !greeting,
-                system: `${conciergeInstructions}\nApplication context (IDs in displayed order): ${contextJson}`, context: contextJson,
-                history, signal: controller.signal,
-                beforeCall: () => { stillActive(); return demo ? "local" : reserveCall(owner, entry.model); },
-                usage: (id, usage, state) => { if (!demo) finishProviderCall(owner, id, usage, state); },
+                provider: entry.provider, groundFirst: !isCatalogue && !greeting, requireInitialTool: !isCatalogue && !greeting,
+                system: conciergeInstructions + "\nApplication context (IDs in displayed order): " + contextJson,
+                context: contextJson, history, signal: controller.signal,
+                beforeCall: () => { stillActive(); return isCatalogue ? "local" : reserveCall(owner, entry.model); },
+                usage: (id, usage, state) => { if (!isCatalogue) finishProviderCall(owner, id, usage, state); },
                 retry: entry.kind === "gemini" ? async (error) => {
-                  if (!isTransientProviderFailure(error) || (localEnabled && !started && canUseLocalFallback(error))) return false;
-                  console.info("[auria] transient provider retry", { requestId: body.requestId, upstreamStatus: upstreamStatus(error), code: providerError(error).code });
-                  await wait(650, undefined, { signal: controller.signal });
+                  if (!isTransientProviderFailure(error) || draftWrite || visible || providers.some((candidate) => candidate.kind === "ollama")) return false;
+                  await wait(750, undefined, { signal: controller.signal });
                   return true;
                 } : undefined,
-                execute: (call) => { stillActive(); started = true; return executeTool(owner, body.conversationId, call.name, call.args); },
+                execute: (call) => {
+                  stillActive();
+                  const result = executeTool(owner, body.conversationId, call.name, call.args);
+                  if (result.draft && call.name === "createQuoteDraft") { draftWrite = true; draftDesignId = result.draft.designId; }
+                  return result;
+                },
               })) {
-                started = true;
+                if (!visible && event.type !== "delta" && !draftWrite) { pending.push(event); continue; }
+                if (!visible) {
+                  visible = true;
+                  source = provenance;
+                  fallback = isCatalogue && !catalogueOnly;
+                  yield { type: "source", source, ...(fallback ? { assistance: { retryable: choices.length > 0 } } : {}) };
+                  yield* pending;
+                }
                 yield event;
+              }
+              if (entry.kind !== "catalogue") {
+                recordProviderSuccess(entry.kind);
+                console.info("[auria] reply completed", { provider: entry.kind, model: entry.model, durationMs: Date.now() - startedAt });
               }
               return;
             } catch (error) {
-              if (entry.kind !== "gemini" || !localEnabled || started || controller.signal.aborted || !canUseLocalFallback(error)) throw error;
-              console.info("[auria] switching to opt-in local provider", { upstreamStatus: upstreamStatus(error), code: providerError(error).code });
+              if (entry.kind !== "catalogue" && !controller.signal.aborted) {
+                const code = providerError(error).code;
+                recordProviderFailure(entry.kind, code);
+                console.warn("[auria] provider attempt failed", { provider: entry.kind, upstreamStatus: upstreamStatus(error), code, durationMs: Date.now() - startedAt });
+              }
+              if (isCatalogue || visible || draftWrite || controller.signal.aborted || diagnostic === "live" && (!canUseLocalFallback(error) || entry === providers.at(-1))) throw error;
             }
           }
         }
@@ -127,7 +157,7 @@ export async function chat(request: Request, owner: string) {
           }
           send(event);
         }
-        stillActive(); const completed = finish("COMPLETE"); if (!demo && !usedOllama && completed.messages.at(-1)?.state === "COMPLETE") markVerified(); send({ type: "done", conversation: completed });
+        stillActive(); const completed = finish("COMPLETE"); if (source === "GEMINI" && completed.messages.at(-1)?.state === "COMPLETE") markVerified(); send({ type: "done", conversation: completed });
       } catch (error) {
         const timedOut = controller.signal.aborted && controller.signal.reason instanceof Error && controller.signal.reason.message === "TIMEOUT";
         const safe = timedOut ? new AuriaError("TIMEOUT", "The response timed out. You can retry.", 504, true) : controller.signal.aborted ? new AuriaError("STOPPED", "Response stopped. Partial text may be incomplete.", 409, true) : providerError(error);

@@ -20,7 +20,7 @@ for (const [width, height] of [[1440, 900], [1280, 660], [768, 900], [390, 844],
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/ai-atelier");
     await expect(page.getByRole("heading", { name: /AURIA Jewellery Atelier/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Use catalogue demo" })).toBeEnabled();
+    await expect(page.getByLabel("Message AURIA")).toBeEnabled();
     await expect(page.getByLabel("Message AURIA")).toBeInViewport({ ratio: 1 });
     await expect(page.getByRole("button", { name: "Send", exact: true })).toBeInViewport({ ratio: 1 });
     expect(await page.evaluate(() => ({ scroll: scrollY, overflow: document.documentElement.scrollWidth > innerWidth }))).toEqual({ scroll: 0, overflow: false });
@@ -37,12 +37,11 @@ for (const [width, height] of [[1440, 900], [1280, 660], [768, 900], [390, 844],
 test("local catalogue conversation persists and can lead to a saved, trackable enquiry", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/ai-atelier");
-  await page.getByRole("button", { name: "Use catalogue demo" }).click();
   await page.getByRole("button", { name: "22K gold rings" }).click();
   await expect(page.getByLabel("Message AURIA")).toHaveValue("Show me 22K gold rings.");
   await page.getByRole("button", { name: "Send", exact: true }).click();
   const reply = page.getByRole("article", { name: "AURIA response" }).last();
-  await expect(reply.getByText("Catalogue demo", { exact: true })).toBeVisible();
+  await expect(reply.getByText("Catalogue assistance", { exact: true })).toBeVisible();
   await expect(reply.getByText("These pieces come from the sample catalogue.")).toBeVisible();
   const jali = reply.locator(".auria-recommendations button").filter({ hasText: "RSJ-D007" });
   await jali.click();
@@ -57,7 +56,7 @@ test("local catalogue conversation persists and can lead to a saved, trackable e
   const ref = (await page.locator(".auria-reference").textContent())!.trim();
   expect(ref).toMatch(/^DEMO-Q-[A-F0-9]{32}$/);
   await page.reload();
-  await expect(page.getByText("Catalogue demo", { exact: true })).toBeVisible();
+  await expect(page.getByText("Catalogue assistance", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Design & draft", exact: true }).click();
   await page.getByLabel("Enquiry reference", { exact: true }).fill(ref);
   await page.getByRole("button", { name: "Check recorded status" }).click();
@@ -146,7 +145,6 @@ test("on-device dictation populates the editable composer without sending", asyn
     Object.defineProperty(window, "SpeechRecognition", { value: LocalSpeech, configurable: true });
   });
   await page.goto("/ai-atelier");
-  await page.getByRole("button", { name: "Use catalogue demo" }).click();
   await page.getByRole("button", { name: "Dictate", exact: true }).click();
   await expect(page.getByLabel("Message AURIA")).toHaveValue("Show gold rings");
   await expect(page.getByRole("article", { name: "Your message" })).toHaveCount(0);

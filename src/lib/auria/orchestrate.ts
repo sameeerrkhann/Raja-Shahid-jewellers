@@ -50,7 +50,7 @@ export async function* orchestrate(input: {
       throw error;
     }
     if (!calls.length) {
-      if (!hasEvidence) throw new AuriaError("GROUNDING_REQUIRED", "AURIA could not verify this answer with the catalogue or enquiry records. Try a design code, a more specific request, or the catalogue demo.", 502, true);
+      if (!hasEvidence) throw new AuriaError("GROUNDING_REQUIRED", "AURIA could not verify this answer with the catalogue or enquiry records. Try a design code or a more specific request.", 502, true);
       if (!emittedText) throw new AuriaError("EMPTY_RESPONSE", "AURIA returned no answer. Please retry.", 502, true);
       return;
     }

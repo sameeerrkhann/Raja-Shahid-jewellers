@@ -9,7 +9,7 @@ function stage(page: Page) { return page.getByRole("complementary", { name: "Sel
 async function ask(page: Page, message: string) {
   await page.getByLabel("Message AURIA").fill(message);
   await page.getByRole("button", { name: "Send", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Use live chat", exact: true })).toBeEnabled();
+  await expect(page.getByLabel("Message AURIA")).toBeEnabled();
 }
 
 type Orbit = { theta: number; phi: number; radius: number };
@@ -132,7 +132,6 @@ test("Data Saver holds back the engine and the photo path survives an asset fail
 
 test("new recommendations focus the photo stage, preserve quotes, and can be compared and revisited", async ({ page }) => {
   await page.goto("/ai-atelier");
-  await page.getByRole("button", { name: "Use catalogue demo", exact: true }).click();
   await ask(page, "Show me 22K gold rings.");
   const visual = stage(page);
   const title = visual.locator(".atelier-stage__details h2");
@@ -153,5 +152,5 @@ test("new recommendations focus the photo stage, preserve quotes, and can be com
   await page.reload();
   await expect(title).toHaveText("Mehr Crescent Collar");
   await expect(history.locator("option")).toHaveCount(2);
-  await expect(page.getByRole("button", { name: "Use live chat", exact: true })).toBeEnabled();
+  await expect(page.getByLabel("Message AURIA")).toBeEnabled();
 });

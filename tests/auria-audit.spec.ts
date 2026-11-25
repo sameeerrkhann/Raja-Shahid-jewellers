@@ -5,7 +5,7 @@ import { providerError, isTransientProviderFailure } from "../src/lib/auria/prov
 
 async function catalogue(page: Page) {
   await page.goto("/ai-atelier");
-  await page.getByRole("button", { name: "Use catalogue demo", exact: true }).click();
+  await expect(page.getByLabel("Message AURIA")).toBeEnabled();
 }
 
 async function send(page: Page, text: string) {
@@ -15,7 +15,7 @@ async function send(page: Page, text: string) {
   const response = await responsePromise;
   expect(response.ok()).toBe(true);
   const events = (await response.text()).trim().split("\n").map((line) => JSON.parse(line));
-  await expect(page.getByRole("button", { name: "Use live chat", exact: true })).toBeEnabled();
+  await expect(page.getByLabel("Message AURIA")).toBeEnabled();
   return events;
 }
 
@@ -61,16 +61,16 @@ test("transient retry is accounted once and cannot replay a partially streamed m
   expect(attempts).toBe(3);
 });
 
-test("catalogue works without model calls, keeps its mode and follows enough replies to overflow", async ({ page }) => {
+test("catalogue works without model calls, restores the same thread and follows enough replies to overflow", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 560 });
   const bootstraps: string[] = [];
   page.on("request", (request) => { if (request.url().endsWith("/api/ai/session")) bootstraps.push(request.method()); });
   await catalogue(page);
   expect(bootstraps).toEqual(["POST"]);
   const older = await send(page, "Do you have 21K gold earrings under PKR 300,000?");
-  expect(older.map((event) => event.type)).toEqual(["delta", "done"]);
-  expect(older[0].text).toContain("no 21K");
-  expect(older[0].text).not.toMatch(/never imply|before claiming|offer the supported purities/i);
+  expect(older.map((event) => event.type)).toEqual(["source", "delta", "done"]);
+  expect(older[1].text).toContain("no 21K");
+  expect(older[1].text).not.toMatch(/never imply|before claiming|offer the supported purities/i);
   const necklaces = await send(page, "Show me necklaces.");
   expect(necklaces.find((event) => event.type === "cards").cards.map((card: { designCode: string }) => card.designCode)).toEqual(["RSJ-D001", "RSJ-D002", "RSJ-D003", "RSJ-D004"]);
   const filtered = await send(page, "Show me 22K gold rings.");
@@ -81,7 +81,7 @@ test("catalogue works without model calls, keeps its mode and follows enough rep
   await expect.poll(() => transcript.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop)).toBeLessThan(4);
   expect(await page.evaluate(() => scrollY)).toBe(0);
   await page.reload();
-  await expect(page.getByRole("button", { name: "Use live chat", exact: true })).toBeEnabled();
+  await expect(page.getByLabel("Message AURIA")).toBeEnabled();
   await expect.poll(() => transcript.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop)).toBeLessThan(4);
   await transcript.evaluate((el) => { el.scrollTop = 0; });
   await expect.poll(() => transcript.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop)).toBeLessThan(4);
@@ -95,7 +95,7 @@ test("catalogue works without model calls, keeps its mode and follows enough rep
   await page.screenshot({ path: "artifacts/auria-audit/catalogue-after.png" });
 });
 
-test("a zero-delta provider failure keeps its actual error and retry by the composer", async ({ page }) => {
+test("a zero-delta provider failure keeps a customer-safe error and retry by the composer", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 560 });
   await catalogue(page);
   await send(page, "Show me 22K gold rings.");
@@ -103,14 +103,15 @@ test("a zero-delta provider failure keeps its actual error and retry by the comp
   await page.route("**/api/ai/chat", async (route) => {
     const id = route.request().postDataJSON().conversationId;
     const { data } = await (await page.request.get("/api/ai/conversations/" + id)).json();
-    const failure = { message: "Gemini is temporarily unavailable.", retryable: true };
+    const failure = { message: "Advanced assistance is temporarily unavailable.", retryable: true };
+    data.messages.push({ id: "current-question", role: "user", text: "Hello", createdAt: now, state: "COMPLETE", cards: [] });
     data.messages.push({ id: "failed", role: "assistant", text: "", createdAt: now, state: "FAILED", cards: [], errorCode: "PROVIDER_BUSY", failure });
     const events = [{ type: "error", code: "PROVIDER_BUSY", ...failure }, { type: "done", conversation: data }];
     await route.fulfill({ status: 200, contentType: "application/x-ndjson", body: events.map((event) => JSON.stringify(event)).join("\n") + "\n" });
   });
   const events = await send(page, "Hello");
   expect(events.map((event) => event.type)).toEqual(["error", "done"]);
-  await expect(page.getByRole("article", { name: "AURIA response" }).last()).toContainText("Gemini is temporarily unavailable.");
+  await expect(page.getByRole("article", { name: "AURIA response" }).last()).toContainText("Advanced assistance could not finish this reply.");
   await expect(page.getByText("Partial response", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Retry response", exact: true })).toBeInViewport({ ratio: 1 });
   expect(await page.evaluate(() => scrollY)).toBe(0);
@@ -151,8 +152,8 @@ test("honest business replies lead to a consented fictional callback with owned 
     "Old-gold exchange and buyback", "Talk to a human salesperson", "Care tips and payment methods",
   ]) {
     const result = await send(page, prompt);
-    expect(result.map((event) => event.type)).toEqual(["delta", "done"]);
-    expect(result[0].text).toContain("Contact & visits");
+    expect(result.map((event) => event.type)).toEqual(["source", "delta", "done"]);
+    expect(result[1].text).toContain("Contact & visits");
   }
   await page.getByRole("button", { name: "Design & draft", exact: true }).click();
   await page.locator(".auria-contact summary").click();
@@ -178,7 +179,7 @@ test("atelier stays in the viewport, opens history and supports wheel image zoom
     await page.setViewportSize({ width, height });
     await page.goto("/ai-atelier");
     await expect(page.getByLabel("Message AURIA")).toBeInViewport({ ratio: 1 });
-    await expect(page.getByRole("button", { name: "Use catalogue demo", exact: true })).toBeEnabled();
+    await expect(page.getByLabel("Message AURIA")).toBeEnabled();
     expect(await page.evaluate(() => ({ y: scrollY, pageCanScroll: document.documentElement.scrollHeight > innerHeight, horizontalOverflow: document.documentElement.scrollWidth > innerWidth }))).toEqual({ y: 0, pageCanScroll: false, horizontalOverflow: false });
     await page.screenshot({ path: `artifacts/auria-audit/atelier-${width}x${height}.png`, animations: "disabled" });
   }

@@ -2,8 +2,9 @@ import type { DesignCardData, PublicDesign } from "./catalogue";
 
 export type Language = "auto" | "en" | "ur" | "roman-ur";
 export type MessageState = "COMPLETE" | "STREAMING" | "STOPPED" | "FAILED";
-export type ChatMode = "live" | "catalogue";
-export type ChatMessage = { id: string; role: "user" | "assistant"; text: string; createdAt: string; state: MessageState; cards: DesignCardData[]; errorCode?: string; failure?: { message: string; retryable: boolean }; source?: "CATALOGUE_DEMO" | "OLLAMA_LOCAL" };
+export type ChatMode = "live" | "catalogue"; // Legacy stored records and isolated diagnostics.
+export type ReplySource = "CATALOGUE_DEMO" | "OLLAMA_LOCAL" | "GEMINI";
+export type ChatMessage = { id: string; role: "user" | "assistant"; text: string; createdAt: string; state: MessageState; cards: DesignCardData[]; errorCode?: string; failure?: { message: string; retryable: boolean }; source?: ReplySource; assistance?: { retryable: boolean } };
 export type EnquiryStatus = "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "QUOTED" | "AWAITING_CUSTOMER_APPROVAL" | "CONFIRMED" | "IN_PRODUCTION" | "READY_FOR_COLLECTION" | "COMPLETED" | "CANCELLED";
 export type QuotePreferences = { size: { kind: "RING_SIZE" | "NECKLACE_LENGTH"; value: string } | null; stonePreferences: string; instructions: string };
 export type EnquiryEvent = { status: EnquiryStatus; at: string; source: "CUSTOMER" | "SERVER_DEMO"; note: string };
@@ -17,7 +18,7 @@ export type Conversation = { id: string; title: string; language: Language; mode
 export type ConversationSummary = Pick<Conversation, "id" | "title" | "updatedAt" | "language">;
 export type Capability = { available: boolean; mode: "READY" | "UNAVAILABLE"; reason: string; provider: "gemini" | "ollama"; localFallback?: boolean; model: string; lastVerifiedAt: string | null };
 export type Usage = { id: string; model: string; startedAt: string; state: "RESERVED" | "COMPLETE" | "FAILED" | "STOPPED"; inputTokens: number | null; outputTokens: number | null; totalTokens: number | null };
-export type ChatEvent = { type: "source"; source: "OLLAMA_LOCAL" } | { type: "delta"; text: string } | { type: "cards"; cards: DesignCardData[] } | { type: "draft"; draft: QuoteDraft } | { type: "done"; conversation: Conversation } | { type: "error"; code: string; message: string; retryable: boolean };
+export type ChatEvent = { type: "source"; source: ReplySource; assistance?: { retryable: boolean } } | { type: "delta"; text: string } | { type: "cards"; cards: DesignCardData[] } | { type: "draft"; draft: QuoteDraft } | { type: "done"; conversation: Conversation } | { type: "error"; code: string; message: string; retryable: boolean };
 export type ToolCall = { name: string; args: unknown; id?: string };
 export type ToolResult = { data: unknown; cards?: DesignCardData[]; draft?: QuoteDraft };
 export type ToolDefinition = { name: string; description: string; parameters: Record<string, unknown> };

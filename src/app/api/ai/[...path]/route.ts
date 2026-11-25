@@ -32,12 +32,12 @@ async function handle(request: Request, context: Context) {
     if (route === "conversations" && method === "GET") return json(withOwner(owner, (s) => ({ conversations: s.conversations.map(({ id, title, updatedAt, language }) => ({ id, title, updatedAt, language })).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)), capability: providerCapability(), usage: s.usage.map(({ model, startedAt, state, inputTokens, outputTokens, totalTokens }) => ({ model, startedAt, state, inputTokens, outputTokens, totalTokens })) })));
     if (route === "conversations" && method === "POST") {
       const input = await readJson(request, z.strictObject({ language: language.default("auto"), mode: z.enum(["live", "catalogue"]).optional() }));
-      return json(withOwner(owner, (s) => { if (s.conversations.length >= 30) throw new AuriaError("HISTORY_LIMIT", "This session has reached its 30 conversation limit.", 429); const now = new Date().toISOString(); const c = { id: randomUUID(), title: "A new inspiration", language: input.language, mode: input.mode, version: 0, createdAt: now, updatedAt: now, selectedDesignId: null, recentDesignIds: [], messages: [], draft: null, activeTurn: null, requests: {} }; s.conversations.push(c); return c; }), 201);
+      return json(withOwner(owner, (s) => { if (s.conversations.length >= 30) throw new AuriaError("HISTORY_LIMIT", "This session has reached its 30 conversation limit.", 429); const now = new Date().toISOString(); const c = { id: randomUUID(), title: "A new inspiration", language: input.language, ...(process.env.AURIA_TEST_STORE === "true" && input.mode ? { mode: input.mode } : {}), version: 0, createdAt: now, updatedAt: now, selectedDesignId: null, recentDesignIds: [], messages: [], draft: null, activeTurn: null, requests: {} }; s.conversations.push(c); return c; }), 201);
     }
     if (path[0] !== "conversations" || !uuid.safeParse(path[1]).success || path.length > 3) throw new AuriaError("NOT_FOUND", "Route unavailable.", 404);
     const id = path[1];
     if (path.length === 2 && method === "GET") return json(withOwner(owner, (s) => ownedConversation(s, id)));
-    if (path[2] === "mode" && method === "POST") {
+    if (path[2] === "mode" && method === "POST" && process.env.AURIA_TEST_STORE === "true") {
       const input = await readJson(request, z.strictObject({ mode: z.enum(["live", "catalogue"]), expectedVersion: z.number().int().nonnegative() }));
       return json(withOwner(owner, (s) => {
         const c = ownedConversation(s, id);

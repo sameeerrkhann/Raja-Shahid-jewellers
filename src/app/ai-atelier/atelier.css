@@ -274,3 +274,9 @@ a.atelier-text-action { display: inline-flex; align-items: center; }
 @media (prefers-reduced-motion: reduce) {
   :is(.atelier-stage__arrival, .atelier-study__canvas) { animation: none !important; }
 }
+
+.auria-workspace .atelier-assistance { margin-bottom: 8px; padding: 6px 9px; line-height: 1.45; }
+.atelier-assistance button { margin-inline-start: .45em; }
+.atelier-next-action { display: block; margin-bottom: 3px; }
+.atelier-staff-summary { margin-block: 12px; }
+.atelier-staff-summary summary { cursor: pointer; }

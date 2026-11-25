@@ -1,6 +1,7 @@
 import type { Language } from "@/types/auria";
 
 const groups = [
+  ["mens", /\b(men['’]?s|for men|gents|mardon)\b|مردانہ|مردوں/i],
   ["bridal", /\b(bridal|wedding|shaadi|shadi|haar|choker|collar)\b|دلہن|عروسی|شادی|ہار/i],
   ["rings", /\b(rings?|angoothi|anguthi|signet)\b|انگوٹھی|انگوٹھیاں/i],
   ["bangles", /\b(bangles?|kada|kara|cuffs?|choori)\b|چوڑی|چوڑیاں|کڑا/i],
@@ -10,16 +11,22 @@ const groups = [
 
 export function categoryFrom(text: string) {
   // In a phrase such as "bridal rings" the object is more specific than the occasion.
-  return (groups.slice(1).find(([, pattern]) => pattern.test(text)) ?? groups.find(([, pattern]) => pattern.test(text)))?.[0];
+  return (groups.find(([name, pattern]) => name !== "bridal" && pattern.test(text)) ?? groups.find(([, pattern]) => pattern.test(text)))?.[0];
+}
+function latinDigits(text: string) {
+  return text.replace(/[۰-۹٠-٩]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩".indexOf(digit) % 10));
 }
 export function purityFrom(text: string) {
-  return text.replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+  return latinDigits(text)
     .match(/(18|21|22|24)\s*(?:k\b|karats?\b|قیراط|کیرٹ)/i)?.[1] as "18" | "21" | "22" | "24" | undefined;
 }
 export function budgetFrom(text: string) {
-  const match = text.match(/\b(?:PKR|Rs\.?)\s*([0-9]+(?:,[0-9]{3})*)(?![0-9,]|\.[0-9])/i);
-  const amount = match ? Number(match[1].replaceAll(",", "")) : 0;
-  return amount >= 1 && amount <= 10_000_000 ? amount : null;
+  const normalized = latinDigits(text);
+  const match = normalized.match(/(?:\b(?:PKR|Rs\.?|budget(?:\s+of)?)|بجٹ)\s*[:=]?\s*(\d[\d,]*(?:\.\d+)?)(?:\s*(lakh|lac|k|لاکھ)\b)?/i)
+    ?? normalized.match(/(\d[\d,]*(?:\.\d+)?)(?:\s*(lakh|lac|k|لاکھ))?\s*(?:PKR\b|rupees\b|روپے)/i);
+  const unit = match?.[2]?.toLowerCase();
+  const amount = match ? Number(match[1].replaceAll(",", "")) * (unit === "k" ? 1000 : unit ? 100_000 : 1) : 0;
+  return Number.isSafeInteger(amount) && amount >= 1 && amount <= 10_000_000 ? amount : null;
 }
 export function demoLanguage(text: string, preference: Language) {
   if (preference !== "auto") return preference;

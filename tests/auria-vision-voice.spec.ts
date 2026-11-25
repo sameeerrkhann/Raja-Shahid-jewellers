@@ -119,7 +119,6 @@ test("mobile Urdu voice mode cancels stale transcripts and auto-plays one new co
     } });
   });
   await page.goto("/ai-atelier");
-  await page.getByRole("button", { name: "Use catalogue demo" }).click();
   await page.getByRole("button", { name: "History", exact: true }).click();
   await page.getByLabel("Dictation language").selectOption("ur-PK");
   await page.getByRole("button", { name: "Conversation", exact: true }).click();
@@ -176,7 +175,6 @@ test("voice mode reads the English retry once after a failed turn", async ({ pag
     await route.continue();
   });
   await page.goto("/ai-atelier");
-  await page.getByRole("button", { name: "Use catalogue demo" }).click();
   await page.getByRole("button", { name: "Voice mode", exact: true }).click();
   await page.getByLabel("Message AURIA").fill("Show me 22K gold rings.");
   await page.getByRole("button", { name: "Send", exact: true }).click();
