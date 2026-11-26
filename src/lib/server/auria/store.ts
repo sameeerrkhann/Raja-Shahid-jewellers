@@ -3,7 +3,7 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import type { Conversation, Usage } from "@/types/auria";
+import type { Conversation, ModelProvider, Usage } from "@/types/auria";
 import { AuriaError } from "@/lib/auria/validation";
 import { normalizeDraft } from "@/lib/auria/quotation";
 
@@ -12,7 +12,9 @@ export type OwnerState = { conversations: Conversation[]; usage: Usage[] };
 function database() {
   const directory = join(process.cwd(), ".auria-data");
   mkdirSync(directory, { recursive: true, mode: 0o700 });
-  const db = new DatabaseSync(join(directory, process.env.AURIA_TEST_STORE === "true" ? "test.sqlite" : "private.sqlite"));
+  const testRun = process.env.AURIA_TEST_RUN_ID;
+  const testFile = testRun && /^[a-f0-9-]{36}$/i.test(testRun) ? "test-" + testRun + ".sqlite" : "test.sqlite";
+  const db = new DatabaseSync(join(directory, process.env.AURIA_TEST_STORE === "true" ? testFile : "private.sqlite"));
   db.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, expires INTEGER NOT NULL, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS calls (id TEXT PRIMARY KEY, owner TEXT NOT NULL, created INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
   db.exec("CREATE TABLE IF NOT EXISTS enquiry_references (reference TEXT PRIMARY KEY, owner TEXT NOT NULL, conversation_id TEXT NOT NULL, draft_id TEXT NOT NULL UNIQUE);");
   return db;
@@ -63,5 +65,6 @@ export function finishProviderCall(owner: string, id: string, tokens: { input: n
     usage.totalTokens = tokens?.total ?? null;
   });
 }
-export function markVerified() { const db = database(); try { db.prepare("INSERT OR REPLACE INTO metadata VALUES ('verified', ?)").run(new Date().toISOString()); } finally { db.close(); } }
-export function lastVerified(): string | null { const db = database(); try { return (db.prepare("SELECT value FROM metadata WHERE key='verified'").get() as { value: string } | undefined)?.value ?? null; } finally { db.close(); } }
+function verificationKey(provider: ModelProvider) { return provider === "gemini" ? "verified" : "verified:" + provider; }
+export function markVerified(provider: ModelProvider = "gemini") { const db = database(); try { db.prepare("INSERT OR REPLACE INTO metadata VALUES (?, ?)").run(verificationKey(provider), new Date().toISOString()); } finally { db.close(); } }
+export function lastVerified(provider: ModelProvider = "gemini"): string | null { const db = database(); try { return (db.prepare("SELECT value FROM metadata WHERE key=?").get(verificationKey(provider)) as { value: string } | undefined)?.value ?? null; } finally { db.close(); } }

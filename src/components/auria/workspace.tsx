@@ -77,6 +77,8 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
     setHistoryOpen(false);
     historyToggle.current?.focus({ preventScroll: true });
   }
+  const supportsGemini = capability?.referenceAvailable ?? (capability?.available && capability.provider === "gemini");
+  const usesGroq = capability?.hostedProviders?.includes("groq");
   const active = !!(streaming || conversation?.activeTurn);
   const blocked = busy || loading || active;
   const state: CoreState = voiceState === "listening" || voiceState === "speaking" ? voiceState : error ? "attention" : streaming?.text ? "responding" : active || voiceState === "checking" || voiceState === "finalizing" ? "processing" : "idle";
@@ -190,7 +192,7 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
             {active ? <button type="button" className="atelier-send" onClick={stop}>Stop response</button> : <button type="submit" className="atelier-send" disabled={blocked || !input.trim() || !csrf}>Send <span aria-hidden="true">↑</span></button>}
           </form>
           <div className="atelier-composer-tools" aria-label="Reference and voice tools">
-            <ReferencePanel disabled={blocked || !csrf} visionToken={capability?.available && capability.provider === "gemini" ? csrf : undefined} onSelect={chooseDesign} />
+            <ReferencePanel disabled={blocked || !csrf} visionToken={supportsGemini ? csrf : undefined} onSelect={chooseDesign} />
             <button type="button" className="atelier-text-action atelier-voice-toggle" aria-pressed={voiceMode} disabled={blocked && !voiceMode} onClick={toggleVoiceMode}>Voice mode</button>
             {(voiceState === "idle" || voiceState === "speaking") && <button type="button" className="atelier-text-action" disabled={blocked} onClick={startDictation}>{retryDictation ? "Retry dictation" : "Dictate"}</button>}
             {voiceState === "listening" && <button type="button" className="atelier-text-action" onClick={finishDictation}>Finish dictation</button>}
@@ -201,7 +203,7 @@ export function AuriaWorkspace({ discovery, fontClass }: { discovery: DesignCard
             {lastReply && voiceState === "idle" && <button type="button" className="atelier-text-action" disabled={busy} onClick={() => readAloud(lastReply.text, spokenLanguage(lastReply.text))}>Read reply aloud</button>}
           </div>
           {voiceMode && <p className="atelier-voice-hint">Voice replies on · Dictate, review, then send. Speech runs on this device.</p>}
-          <p className="auria-disclosure">Private demo. Use fictional details. {capability?.available && capability.provider === "gemini" ? "Google may use free-tier chat content to improve its products." : "Catalogue support is available in this workspace."}</p>
+          <p className="auria-disclosure">Private demo. Use fictional details. {usesGroq && "Groq may process chat messages. "}{supportsGemini ? "Google may use free-tier chat content to improve its products." : !usesGroq && "Catalogue support is available in this workspace."}</p>
         </div>
       </section>
       <aside className="auria-selection" aria-label="Selected design and quotation">

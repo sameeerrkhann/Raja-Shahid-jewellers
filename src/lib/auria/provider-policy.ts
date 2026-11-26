@@ -1,4 +1,4 @@
-import type { Capability } from "@/types/auria";
+import type { Capability, ModelProvider } from "@/types/auria";
 import { AuriaError } from "./validation";
 
 export function configuredCapability(env: Record<string, string | undefined>): Capability {
@@ -7,6 +7,39 @@ export function configuredCapability(env: Record<string, string | undefined>): C
   const reason = !hasKey ? "AURIA is waiting for a server-side Gemini API key." : env.AI_CHAT_ENABLED !== "true" ? "Live chat is disabled in this private demo." : env.GEMINI_FREE_TIER_CONFIRMED !== "true" ? "Confirm the Gemini project is on the Free tier with billing disabled before enabling chat." : (env.AI_CHAT_PROVIDER || "gemini") !== "gemini" || model !== "gemini-3.1-flash-lite" ? "This provider or model has not been approved for free-tier use." : "Ready for a free-tier conversation. Availability depends on provider quota.";
   const available = hasKey && env.AI_CHAT_ENABLED === "true" && env.GEMINI_FREE_TIER_CONFIRMED === "true" && (env.AI_CHAT_PROVIDER || "gemini") === "gemini" && model === "gemini-3.1-flash-lite";
   return { available, mode: available ? "READY" : "UNAVAILABLE", reason, provider: "gemini", model, lastVerifiedAt: null };
+}
+
+
+export const groqModel = "openai/gpt-oss-20b";
+
+export function configuredGroq(env: Record<string, string | undefined>): Capability {
+  const allowed = env.AI_CHAT_ENABLED === "true" && env.GROQ_FREE_TIER_CONFIRMED === "true" &&
+    !!env.GROQ_API_KEY?.trim() && (env.GROQ_CHAT_MODEL || groqModel) === groqModel;
+  return {
+    available: allowed, mode: allowed ? "READY" : "UNAVAILABLE", model: groqModel, provider: "groq",
+    lastVerifiedAt: null, reason: allowed ? "Ready for free-tier text." : "Groq requires an approved model and a key from a confirmed Free organization.",
+  };
+}
+
+export function providerOrder(env: Record<string, string | undefined>): ModelProvider[] {
+  const requested = (env.AURIA_PROVIDER_PRIORITY ?? "").split(",").map((value) => value.trim());
+  const hosted = [...new Set([...requested, "gemini", "groq"])].filter((name): name is "gemini" | "groq" =>
+    name === "gemini" ? configuredCapability(env).available : name === "groq" && configuredGroq(env).available);
+  return env.AURIA_OLLAMA_ENABLED === "true" ? [...hosted, "ollama"] : hosted;
+}
+
+export function upstreamRetryAfter(error: unknown): number {
+  if (error && typeof error === "object" && "retryAfterMs" in error && typeof error.retryAfterMs === "number" && Number.isFinite(error.retryAfterMs)) {
+    return Math.max(0, Math.min(86_400_000, error.retryAfterMs));
+  }
+  return 0;
+}
+
+export function parseRetryAfter(header: string | null, now = Date.now()) {
+  if (!header?.trim()) return 0;
+  const seconds = Number(header);
+  const interval = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(header) - now;
+  return upstreamRetryAfter({ retryAfterMs: interval });
 }
 
 const providerFailures = {
@@ -55,9 +88,9 @@ export function providerError(error: unknown): AuriaError {
   else if (status === 404) code = "MODEL_UNAVAILABLE";
   else if (["UNABLE_TO_VERIFY_LEAF_SIGNATURE", "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_GET_ISSUER_CERT_LOCALLY"].includes(String(value.cause?.code))) code = "PROVIDER_TLS";
   else if (status === 408 || status === 504 || value.name === "TimeoutError" || value.cause?.code === "UND_ERR_CONNECT_TIMEOUT") code = "TIMEOUT";
-  else if (["ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "UND_ERR_SOCKET"].includes(String(value.cause?.code))) code = "PROVIDER_NETWORK";
+  else if (["ENOTFOUND", "ECONNREFUSED", "ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "UND_ERR_SOCKET"].includes(String(value.cause?.code))) code = "PROVIDER_NETWORK";
   else if (status !== null && status >= 500) code = "PROVIDER_BUSY";
-  else if (status === 400) code = "PROVIDER_REQUEST";
+  else if (status === 400 || status === 409 || status === 422) code = "PROVIDER_REQUEST";
   const [message, httpStatus, retryable] = providerFailures[code];
   return new AuriaError(code, message, httpStatus, retryable);
 }

@@ -3,17 +3,25 @@ import { GoogleGenAI, FunctionCallingConfigMode, ThinkingLevel, type Content, ty
 import type { Capability, ChatProvider, ProviderChunk } from "@/types/auria";
 import { AuriaError } from "@/lib/auria/validation";
 import { lastVerified } from "./store";
-import { configuredCapability } from "@/lib/auria/provider-policy";
+import { configuredCapability, configuredGroq, providerOrder } from "@/lib/auria/provider-policy";
 import { ollamaModel } from "./ollama";
+import { healthFor } from "./provider-health";
 export { providerError } from "@/lib/auria/provider-policy";
 
 export function providerCapability(): Capability {
-  const capability = configuredCapability(process.env);
-  const localFallback = process.env.AURIA_OLLAMA_ENABLED === "true";
-  if (!capability.available && localFallback) {
-    return { ...capability, available: true, mode: "READY", provider: "ollama", model: ollamaModel, reason: "The on-device Ollama model is enabled. Availability depends on the local Ollama service." };
-  }
-  return { ...capability, localFallback, lastVerifiedAt: capability.available ? lastVerified() : null };
+  const gemini = configuredCapability(process.env);
+  const groq = configuredGroq(process.env);
+  const ordered = providerOrder(process.env);
+  const first = ordered.find((kind) => !healthFor(kind));
+  const hostedProviders = ordered.filter((kind) => kind !== "ollama");
+  const selected: Capability = first === "gemini" ? gemini : first === "groq" ? groq : first === "ollama"
+    ? { available: true, mode: "READY", provider: "ollama", model: ollamaModel, lastVerifiedAt: null, reason: "The on-device model is enabled." }
+    : { ...gemini, available: false, mode: "UNAVAILABLE", reason: ordered.length ? "Advanced assistance is temporarily unavailable." : gemini.reason };
+  return {
+    ...selected, hostedProviders, localFallback: ordered.includes("ollama"),
+    ...(gemini.available ? { referenceAvailable: true } : {}),
+    lastVerifiedAt: first && first !== "ollama" ? lastVerified(first) : null,
+  };
 }
 
 export function geminiClient() {

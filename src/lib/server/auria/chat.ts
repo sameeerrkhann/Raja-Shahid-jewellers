@@ -2,21 +2,29 @@ import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { chatInput, AuriaError, readJson } from "@/lib/auria/validation";
 import { conciergeInstructions, orchestrate } from "@/lib/auria/orchestrate";
-import type { ChatEvent, ChatProvider, Conversation, ReplySource } from "@/types/auria";
+import type { ChatEvent, ChatProvider, Conversation, ModelProvider, ReplySource } from "@/types/auria";
 import { ownedConversation, reserveCall, withOwner, markVerified, finishProviderCall } from "./store";
 import { geminiProvider, providerCapability, providerError } from "./provider";
 import { executeTool } from "./tools";
 import { findPublicDesign } from "@/lib/server/catalogue";
 import { noStore } from "./http";
 import { catalogueDemoProvider } from "./catalogue-demo";
-import { canUseLocalFallback, configuredCapability, isTransientProviderFailure, upstreamStatus } from "@/lib/auria/provider-policy";
+import { canUseLocalFallback, isTransientProviderFailure, providerOrder, upstreamRetryAfter, upstreamStatus } from "@/lib/auria/provider-policy";
 import { setTimeout as wait } from "node:timers/promises";
 import { budgetFrom, demoTitle } from "@/lib/auria/demo-intent";
 import { providerHistory } from "@/lib/auria/provider-history";
 import { ollamaModel, ollamaProvider } from "./ollama";
-import { providerOrder, healthFor, recordProviderFailure, recordProviderSuccess } from "./provider-health";
+import { healthFor, recordProviderFailure, recordProviderSuccess } from "./provider-health";
+import { groqProvider } from "./groq";
 
-type NamedProvider = { kind: "gemini" | "ollama" | "catalogue"; model: string; provider: ChatProvider };
+type NamedProvider = { kind: ModelProvider | "catalogue"; model: string; provider: ChatProvider };
+const sourceByKind = { gemini: "GEMINI", groq: "GROQ", ollama: "OLLAMA_LOCAL", catalogue: "CATALOGUE_DEMO" } as const satisfies Record<NamedProvider["kind"], ReplySource>;
+
+function hostedOrLocal(kind: ModelProvider): NamedProvider {
+  if (kind === "ollama") return { kind, model: ollamaModel, provider: ollamaProvider() };
+  const provider = kind === "gemini" ? geminiProvider() : groqProvider();
+  return { kind, model: provider.model, provider };
+}
 
 const globalState = globalThis as typeof globalThis & { auriaTurns?: Map<string, AbortController> };
 const active = globalState.auriaTurns ??= new Map<string, AbortController>();
@@ -85,9 +93,8 @@ export async function chat(request: Request, owner: string) {
         const history = providerHistory(conversation.messages);
         const describe = (id: string) => { const d = findPublicDesign(id); return d ? { id, designCode: d.designCode, title: d.title, category: d.categorySlug, purities: d.variants.flatMap((variant) => variant.karat ? [variant.karat] : []) } : null; };
         const context = { language: conversation.language, selectedDesign: conversation.selectedDesignId ? describe(conversation.selectedDesignId) : null, displayedDesigns: conversation.recentDesignIds.flatMap((id, i) => { const d = describe(id); return d ? [{ position: i + 1, ...d }] : []; }), budgetPreferencePKR: conversation.messages.filter((message) => message.role === "user").map((message) => budgetFrom(message.text)).findLast((budget) => budget !== null) ?? null, shortlistDesigns: conversation.shortlistDesignIds?.flatMap((id) => { const design = describe(id); return design ? [design] : []; }), referenceNote: conversation.referenceNote ?? null, draft: conversation.draft ? { status: conversation.draft.status, designId: conversation.draft.designId, reference: conversation.draft.reference } : null };
-        const providers: NamedProvider[] = choices.filter((kind) => !healthFor(kind)).map((kind) => kind === "gemini"
-          ? { kind, model: configuredCapability(process.env).model, provider: geminiProvider() }
-          : { kind, model: ollamaModel, provider: ollamaProvider() });
+        const providers: NamedProvider[] = choices.filter((kind) => !healthFor(kind)).map(hostedOrLocal);
+        const hasModelAlternative = providers.length > 1;
         if (diagnostic !== "live") providers.push({ kind: "catalogue", model: "catalogue", provider: catalogueDemoProvider(body.message, context, history) });
         const greeting = /^(?:hi|hello|hey|salaam|salam|assalam(?:u)? alaikum|السلام علیکم|thank you|thanks|shukriya|شکریہ)[.!؟!\s]*$/iu.test(body.message.trim());
         const contextJson = JSON.stringify(context);
@@ -96,7 +103,7 @@ export async function chat(request: Request, owner: string) {
           for (const entry of providers) {
             const startedAt = Date.now();
             const isCatalogue = entry.kind === "catalogue";
-            const provenance: ReplySource = isCatalogue ? "CATALOGUE_DEMO" : entry.kind === "gemini" ? "GEMINI" : "OLLAMA_LOCAL";
+            const provenance = sourceByKind[entry.kind];
             let visible = false, draftWrite = false;
             const pending: ChatEvent[] = [];
             try {
@@ -106,9 +113,9 @@ export async function chat(request: Request, owner: string) {
                 context: contextJson, history, signal: controller.signal,
                 beforeCall: () => { stillActive(); return isCatalogue ? "local" : reserveCall(owner, entry.model); },
                 usage: (id, usage, state) => { if (!isCatalogue) finishProviderCall(owner, id, usage, state); },
-                retry: entry.kind === "gemini" ? async (error) => {
-                  if (!isTransientProviderFailure(error) || draftWrite || visible || providers.some((candidate) => candidate.kind === "ollama")) return false;
-                  await wait(750, undefined, { signal: controller.signal });
+                retry: entry.kind === "gemini" || entry.kind === "groq" ? async (error) => {
+                  if (hasModelAlternative || !isTransientProviderFailure(error) || draftWrite || visible || upstreamRetryAfter(error) > 1500) return false;
+                  await wait(Math.max(750, upstreamRetryAfter(error)) + Math.floor(Math.random() * 150), undefined, { signal: controller.signal });
                   return true;
                 } : undefined,
                 execute: (call) => {
@@ -136,7 +143,7 @@ export async function chat(request: Request, owner: string) {
             } catch (error) {
               if (entry.kind !== "catalogue" && !controller.signal.aborted) {
                 const code = providerError(error).code;
-                recordProviderFailure(entry.kind, code);
+                recordProviderFailure(entry.kind, code, error);
                 console.warn("[auria] provider attempt failed", { provider: entry.kind, upstreamStatus: upstreamStatus(error), code, durationMs: Date.now() - startedAt });
               }
               if (isCatalogue || visible || draftWrite || controller.signal.aborted || diagnostic === "live" && (!canUseLocalFallback(error) || entry === providers.at(-1))) throw error;
@@ -157,7 +164,7 @@ export async function chat(request: Request, owner: string) {
           }
           send(event);
         }
-        stillActive(); const completed = finish("COMPLETE"); if (source === "GEMINI" && completed.messages.at(-1)?.state === "COMPLETE") markVerified(); send({ type: "done", conversation: completed });
+        stillActive(); const completed = finish("COMPLETE"); if ((source === "GEMINI" || source === "GROQ") && completed.messages.at(-1)?.state === "COMPLETE") markVerified(source === "GEMINI" ? "gemini" : "groq"); send({ type: "done", conversation: completed });
       } catch (error) {
         const timedOut = controller.signal.aborted && controller.signal.reason instanceof Error && controller.signal.reason.message === "TIMEOUT";
         const safe = timedOut ? new AuriaError("TIMEOUT", "The response timed out. You can retry.", 504, true) : controller.signal.aborted ? new AuriaError("STOPPED", "Response stopped. Partial text may be incomplete.", 409, true) : providerError(error);
