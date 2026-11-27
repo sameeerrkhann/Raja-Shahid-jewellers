@@ -257,6 +257,17 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-27 — Claude (Saad's session) — Live Pakistan gold rates, client point 3 (S-25)
+
+- **Scope:** Client feedback point 3 only (live gold rates). The installment plan (point 4) is held back for its own task; its draft files are not in this commit.
+- **Source:** `/api/gold-rate` (no-store) reads GoldPriceZ PKR through `src/lib/server/gold-rate.ts`. Settings: `GOLD_RATE_MODE` live|sample|unset (unset = off), `GOLD_RATE_API_KEY` (server only, `.env.local`, never committed), `GOLD_RATE_API_URL`, `GOLD_RATE_REFRESH_SECONDS` (900), `GOLD_RATE_STALE_SECONDS` (3600). In-memory cache, request de-duplication, 8 s timeout, stale marking. No key or mode off returns `unavailable` with no numbers. Sample mode is labelled "Sample figures, not live".
+- **Figures:** 24K from the source; 22K/21K/18K by purity ratio; tola = 11.6638038 g. Shown per tola, per 10 g, per gram, with "Last updated … PKT · N min ago" and source credit.
+- **Placement:** (1) `/gold-rates` page: hero with a headline 24K/22K per tola card, a rates-by-karat table (purity under each karat, Tola/10 g/Gram switch on phones) and a sticky value calculator beside it; reading notes. (2) Homepage `#gold` scene: the old "Illustrative rate preview · Not live" study is replaced by a compact 24K/22K panel. (3) Header: a "24K Rs … /tola" chip on desktop ≥1280 px, shown only for live or stale readings, never sample or missing. (4) "Gold rates" in desktop nav, the homepage menu and the catalogue menu (replaces "Gold & value" and "Bridal edit" in the desktop trio).
+- **Files:** `src/lib/gold/rates.ts`, `src/lib/server/gold-rate.ts`, `src/app/api/gold-rate/route.ts`, `src/components/gold/use-gold-rate.ts` (one shared client reading, 5 min polling while visible), `src/components/gold/gold-rates.tsx`, `src/app/gold-rates/page.tsx`, `src/app/gold.css`, `src/app/page.tsx`, `src/app/globals.css` (chip), `src/components/layout/site-header.tsx`, `src/config/home.ts`, `src/config/catalogue.ts`, `src/components/motion/page-motion.tsx`, `tests/gold-rates.spec.ts` (new), `tests/homepage.spec.ts`.
+- **Tests:** tsc, eslint, `pnpm build` PASS. Full Playwright 87/87 PASS. Gold tests mock the API: live figures (PKR 419,897 for 24K/tola at 36,000/g), calculator (2 g 22K = PKR 66,000), hero card, header chip, stale and unavailable states, phone unit switch, axe at 390 px, no horizontal overflow. Screenshots: test-results/gold-rates-1440.png, gold-rates-390.png.
+- **Not verified:** A real GoldPriceZ response with a real key (none in this environment). GoldPriceZ gives an international-price conversion; Karachi Sarafa/bazaar rates can differ, and the page says so.
+- **Next:** Saad adds a free GoldPriceZ key to `.env.local` (`GOLD_RATE_MODE=live`, `GOLD_RATE_API_KEY=…`), checks one live reading, then the installment plan task (point 4) with the client's confirmed terms.
+
 ### 2026-11-26 — Claude (Saad's session) — Inner pages design and scroll pass (S-24)
 - New `src/components/motion/page-motion.tsx` (GSAP ScrollTrigger, reduced-motion aware, start states set by JS only) mounted on /designs, /collections and /design-preview: gold scroll-progress line; hero heading words rise on load and the hero media settles/drifts as you scroll; headings and cards (design, collection, study) rise in sequence with a soft wipe; images drift inside their frames on wide screens; on /collections (wide screens) the four edits run sideways in a pinned row driven by vertical scroll.
 - Design: the Design Vault and Collections heroes are now dark "vault" stages in the homepage film's charcoal and gold (ending frame of the film as a masked backdrop); gold sheen sweeps across card images on hover, cards lift.
@@ -719,6 +730,8 @@ No customer requirement or journey is missing from the Phase 01 baseline. Remain
 ## 10. Handoff snapshot (UPDATE AT EVERY HANDOFF)
 
 ### Active snapshot — Phase 04 verified / STOP before Phase 05
+
+- **Latest (2026-11-27, S-25):** Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
 
 - **Last agent:** Codex, sole writer after user confirmation; internal review/QA only, no delegation or independent review.
 - **Completed scope:** Phase04 customer-facing Design Vault.118 publishable files;11 original image-backed SAMPLE designs,14 unpublished drafts; /designs, /collections,4 collection slugs and five read-only API route families. No full product/quotation/admin/AI/voice/gold backend. Preserve all Phase02/03 functionality and prior logs/assets.

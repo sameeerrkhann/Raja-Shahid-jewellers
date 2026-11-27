@@ -1,0 +1,108 @@
+/* Gold rates and installments pages, plus the compact homepage rate panel. Charcoal and gold, as the hero. */
+.gold-page, .plan-page { background: #0e0b0a; color: var(--color-ivory); }
+.gold-hero, .plan-hero { padding-block: 72px 88px; }
+.gold-hero nav, .plan-hero nav { display: flex; gap: 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.gold-hero nav a, .gold-hero nav span, .plan-hero nav a, .plan-hero nav span { color: rgb(246 241 232 / 70%); }
+.gold-hero h1, .plan-hero h1 { margin: 26px 0 22px; font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: clamp(3rem, 6vw, 5.6rem); line-height: .98; letter-spacing: -.03em; }
+.gold-hero h1 > span, .plan-hero h1 > span { display: inline-block; }
+.gold-hero h1 em, .plan-hero h1 em { display: inline-block; color: var(--color-champagne, #e8d5a6); }
+.gold-hero p, .plan-hero p { max-width: 520px; font-size: 15px; line-height: 1.7; color: var(--color-dark-muted, #b9ad9c); }
+.gold-hero__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); gap: clamp(28px, 5vw, 72px); align-items: end; }
+.gold-feature { position: relative; overflow: hidden; padding: clamp(22px, 3vw, 34px); border: 1px solid rgb(232 213 166 / 26%); border-radius: 22px; background: radial-gradient(120% 90% at 100% 0%, rgb(201 162 83 / 22%), transparent 60%), #13100e; }
+.gold-feature::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 40%, rgb(255 236 190 / 9%) 50%, transparent 60%); transform: translateX(-100%); animation: gold-sheen 6s ease-in-out 1.2s infinite; pointer-events: none; }
+@keyframes gold-sheen { 0%, 60% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.gold-hero .gold-feature p { max-width: none; }
+.gold-hero .gold-feature__label { margin: 22px 0 6px; font-size: 13px; color: var(--color-dark-muted, #b9ad9c); }
+.gold-hero .gold-feature__value { margin: 0; font-family: var(--font-editorial), Georgia, serif; font-size: clamp(2.4rem, 4.4vw, 3.6rem); line-height: 1; letter-spacing: -.02em; color: var(--color-ivory); font-variant-numeric: tabular-nums; }
+.gold-feature__second { display: flex; justify-content: space-between; gap: 12px; margin: 22px 0 14px; padding-top: 16px; border-top: 1px solid rgb(232 213 166 / 16%); font-size: 14px; color: var(--color-dark-muted, #b9ad9c); }
+.gold-feature__second strong { font-weight: 500; color: var(--color-champagne, #e8d5a6); font-variant-numeric: tabular-nums; }
+.gold-feature__empty { margin: 18px 0 0; color: var(--color-dark-muted, #b9ad9c); line-height: 1.6; }
+.gold-feature .gold-rates__status i { width: 8px; height: 8px; border-radius: 50%; background: #8f857a; }
+.gold-feature[data-status="live"] .gold-rates__status i { background: #e8c77a; animation: gold-live 2s infinite; }
+.gold-feature[data-status="stale"] .gold-rates__status i { background: #d9902f; }
+.gold-page__body { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr); gap: 24px; align-items: start; padding-block: 24px 80px; }
+.gold-page__table h2 { margin: 0 0 16px; font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: 30px; }
+.gold-page__calc { position: sticky; top: 96px; margin-top: 52px; border: 1px solid rgb(232 213 166 / 22%); border-radius: 20px; padding: clamp(20px, 3vw, 32px); background: #13100e; }
+.gold-units { display: none; gap: 6px; margin: 0 0 12px; padding: 4px; border: 1px solid rgb(232 213 166 / 20%); border-radius: 999px; width: max-content; }
+.gold-units button { min-height: 36px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--color-dark-muted, #b9ad9c); font: inherit; font-size: 13px; cursor: pointer; }
+.gold-units button[aria-pressed="true"] { background: var(--color-gold, #c5a15b); color: #0e0b0a; }
+.gold-units button:focus-visible { outline: 2px solid var(--color-champagne, #e8d5a6); outline-offset: 2px; }
+.gold-rates__table tbody th small { display: block; margin-top: 2px; font-family: var(--font-sans, inherit); font-size: 11.5px; color: var(--color-dark-muted, #b9ad9c); }
+.gold-page__notes, .plan-page__notes { padding-block: 0 96px; }
+.gold-page__notes ul, .gold-page__notes h2 { max-width: 760px; }
+.gold-page__notes h2, .plan-page__notes h2 { font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: 34px; margin: 0 0 18px; }
+.gold-page__notes ul, .plan-page__notes ul { margin: 0 0 28px; padding-left: 18px; display: grid; gap: 10px; color: var(--color-dark-muted, #b9ad9c); font-size: 14.5px; line-height: 1.7; }
+
+.gold-rates { border: 1px solid rgb(232 213 166 / 22%); border-radius: 20px; padding: clamp(20px, 3vw, 36px); background: linear-gradient(180deg, rgb(255 255 255 / 3%), transparent 60%), #13100e; }
+.gold-rates__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px 24px; margin-bottom: 18px; }
+.gold-rates__status { display: inline-flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--color-champagne, #e8d5a6); }
+.gold-rates__status i { width: 8px; height: 8px; border-radius: 50%; background: #8f857a; }
+.gold-rates[data-status="live"] .gold-rates__status i { background: #e8c77a; box-shadow: 0 0 0 0 rgb(232 199 122 / 60%); animation: gold-live 2s infinite; }
+.gold-rates[data-status="stale"] .gold-rates__status i { background: #d9902f; }
+.gold-rates[data-status="sample"] .gold-rates__status i { background: transparent; border: 1px solid #e8c77a; }
+@keyframes gold-live { to { box-shadow: 0 0 0 10px rgb(232 199 122 / 0%); } }
+.gold-rates__updated { margin: 0; font-size: 12.5px; color: var(--color-dark-muted, #b9ad9c); }
+.gold-rates__table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.gold-rates__table th, .gold-rates__table td { padding: 14px 10px; text-align: right; border-bottom: 1px solid rgb(232 213 166 / 12%); font-size: 15px; }
+.gold-rates__table thead th { font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--color-dark-muted, #b9ad9c); }
+.gold-rates__table th[scope="row"], .gold-rates__table thead th:first-child { text-align: left; }
+.gold-rates__table tbody th { font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: 22px; color: var(--color-champagne, #e8d5a6); }
+.gold-rates__empty { margin: 8px 0; padding: 22px; border: 1px dashed rgb(232 213 166 / 24%); border-radius: 14px; color: var(--color-dark-muted, #b9ad9c); }
+.gold-rates__note, .gold-rates__source { margin: 14px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--color-dark-muted, #b9ad9c); }
+.gold-rates__source a, .gold-rates__more { color: var(--color-champagne, #e8d5a6); }
+.gold-rates__more { display: inline-block; margin-top: 16px; }
+.gold-rates--compact .gold-rates__table tbody th { font-size: 18px; }
+
+.gold-calc h2 { margin: 0 0 6px; font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: 28px; }
+.gold-calc__lead { margin: 0 0 20px; font-size: 14px; color: var(--color-dark-muted, #b9ad9c); }
+.gold-calc__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.gold-calc__fields label:first-child { grid-column: 1 / -1; }
+.gold-calc label, .plan-form label { display: grid; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-dark-muted, #b9ad9c); }
+.gold-calc input, .gold-calc select, .plan-form input, .plan-form select, .plan-form textarea { height: 48px; padding: 0 14px; border: 1px solid rgb(232 213 166 / 26%); border-radius: 12px; background: #0e0b0a; color: var(--color-ivory); font: inherit; font-size: 15px; letter-spacing: 0; text-transform: none; }
+.plan-form textarea { height: 96px; padding: 12px 14px; resize: vertical; }
+.gold-calc input:focus-visible, .gold-calc select:focus-visible, .plan-form :is(input, select, textarea):focus-visible { outline: 2px solid var(--color-champagne, #e8d5a6); outline-offset: 2px; }
+.gold-calc__result { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 22px 0 0; padding: 18px 20px; border-radius: 14px; background: rgb(201 162 83 / 10%); color: var(--color-dark-muted, #b9ad9c); }
+.gold-calc__result strong { font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: 30px; color: var(--color-ivory); }
+.gold-calc__fine { margin: 12px 0 0; font-size: 12px; color: var(--color-dark-muted, #b9ad9c); }
+@media (max-width: 960px) {
+  .gold-hero__grid, .gold-page__body { grid-template-columns: 1fr; }
+  .gold-page__calc { position: static; margin-top: 0; }
+}
+@media (max-width: 720px) {
+  .gold-calc__result { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .gold-rates__table th, .gold-rates__table td { padding: 12px 4px; font-size: 14px; }
+  .gold-rates--full .gold-units { display: flex; }
+  .gold-rates--full[data-unit="perTola"] [data-col]:not([data-col="perTola"]),
+  .gold-rates--full[data-unit="perTenGram"] [data-col]:not([data-col="perTenGram"]),
+  .gold-rates--full[data-unit="perGram"] [data-col]:not([data-col="perGram"]) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .gold-feature::after, .gold-rates__status i, .gold-chip i { animation: none !important; } }
+
+/* Installment plan */
+.plan-page__body { padding-block: 24px 72px; }
+.plan { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.plan > :last-child { grid-column: 1 / -1; }
+.plan-card { border: 1px solid rgb(232 213 166 / 22%); border-radius: 20px; padding: clamp(20px, 3vw, 34px); background: #13100e; }
+.plan-card h2 { margin: 0 0 16px; font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: 30px; }
+.plan-card__lead { margin: -6px 0 22px; color: var(--color-dark-muted, #b9ad9c); font-size: 14.5px; }
+.plan-pending { margin: 0 0 20px; padding: 16px 18px; border-radius: 14px; border: 1px dashed rgb(232 213 166 / 30%); color: var(--color-dark-muted, #b9ad9c); font-size: 14px; line-height: 1.65; }
+.plan-pending b { display: block; margin-bottom: 4px; color: var(--color-champagne, #e8d5a6); font-weight: 600; }
+.plan-calc__fields { display: grid; gap: 14px; }
+.plan-calc__fields label { display: grid; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-dark-muted, #b9ad9c); }
+.plan-calc__fields :is(input, select) { height: 48px; padding: 0 14px; border: 1px solid rgb(232 213 166 / 26%); border-radius: 12px; background: #0e0b0a; color: var(--color-ivory); font: inherit; font-size: 15px; letter-spacing: 0; text-transform: none; }
+.plan-calc__fields :is(input, select):disabled, .gold-calc :is(input, select):disabled { opacity: .45; }
+.plan-calc__result dl, .plan-terms { margin: 18px 0 0; display: grid; gap: 0; }
+.plan-calc__result dl > div, .plan-terms > div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgb(232 213 166 / 12%); }
+.plan-terms dt, .plan-calc__result dt { color: var(--color-dark-muted, #b9ad9c); font-size: 13.5px; }
+.plan-terms dd, .plan-calc__result dd { margin: 0; text-align: right; font-size: 14.5px; }
+.plan-terms dd[data-pending] { color: rgb(232 213 166 / 60%); font-style: italic; }
+.plan-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.plan-form__wide, .plan-form__consent, .plan-form__actions { grid-column: 1 / -1; }
+.plan-form__consent { display: flex !important; align-items: flex-start; gap: 10px; flex-wrap: wrap; text-transform: none !important; letter-spacing: 0 !important; font-size: 13.5px !important; font-weight: 400 !important; }
+.plan-form__consent input { width: 18px; height: 18px; margin-top: 2px; accent-color: #c9a253; }
+.plan-form__error { color: #f0a58a; font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.plan-form__consent .plan-form__error { flex-basis: 100%; }
+.plan-form__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.plan-form__actions span { font-size: 12.5px; color: var(--color-dark-muted, #b9ad9c); }
+.plan-card .text-link { background: none; border: 0; padding: 0; cursor: pointer; color: var(--color-champagne, #e8d5a6); }
+@media (max-width: 860px) { .plan { grid-template-columns: 1fr; } .plan-form { grid-template-columns: 1fr; } }

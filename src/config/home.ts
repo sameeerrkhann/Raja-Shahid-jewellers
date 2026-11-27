@@ -14,5 +14,5 @@ export const homeNavigation = [
   { label: "See it on", href: "/#try-on" },
   { label: "Bridal", href: "/#bridal" },
   { label: "AURIA", href: "/#auria" },
-  { label: "Gold & value", href: "/#gold" },
+  { label: "Gold rates", href: "/gold-rates" },
 ] as const;

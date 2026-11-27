@@ -27,7 +27,7 @@ test("homepage has eight honest connected scenes and proper metadata", async ({ 
   await expect(page).toHaveTitle("Raja Shahid Jewellers — Beyond the Moment");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Crafted to be remembered.");
   await expect(page.locator("[data-scene]")).toHaveCount(8);
-  await expect(page.getByText("Illustrative rate preview · Not live")).toBeVisible();
+  await expect(page.locator("#gold .gold-rates")).toContainText(/Live gold rates are not connected yet|Rate unavailable|Live rate|Sample figures/);
   await expect(page.getByText("Not connected yet. No message, photo or voice leaves this page.")).toBeAttached();
   expect((await request.get("/admin")).status()).toBe(404);
   expect((await request.get("/designs")).status()).toBe(200);

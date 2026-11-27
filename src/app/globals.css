@@ -64,6 +64,13 @@ section, article { scroll-margin-top: 120px; }
 .header-auria { display: inline-flex; align-items: center; gap: 10px; min-height: 34px; padding: 0 14px; border: 1px solid rgb(232 213 166 / 16%); border-radius: 999px; transition: color var(--duration-fast), border-color var(--duration-fast), background var(--duration-fast); }
 .header-auria svg { width: 13px; height: 13px; color: var(--color-gold); }
 .header-auria:hover { border-color: var(--color-gold); background: rgb(197 161 91 / 10%); }
+.gold-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 14px; border-radius: 999px; background: rgb(197 161 91 / 12%); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; transition: background var(--duration-fast); }
+.gold-chip span { color: var(--color-champagne); font-weight: 600; }
+.gold-chip small { font-size: 11px; opacity: .7; }
+.gold-chip i { width: 6px; height: 6px; border-radius: 50%; background: #e8c77a; }
+.gold-chip[data-status="stale"] i { background: #d9902f; }
+.gold-chip:hover { background: rgb(197 161 91 / 22%); }
+@media (max-width: 1279px) { .gold-chip { display: none; } }
 .header-search { border: 0; border-radius: 50%; width: 38px; height: 38px; transition: border-color var(--duration-fast), color var(--duration-fast); }
 .header-search:hover { background: rgb(232 213 166 / 8%); color: var(--color-champagne); }
 .header-search svg { width: 17px; height: 17px; }

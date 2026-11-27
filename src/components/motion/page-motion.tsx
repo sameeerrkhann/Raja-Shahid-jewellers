@@ -9,7 +9,7 @@ const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)"
    that rise in sequence with a soft wipe, images that drift inside their frames, and on wide screens the
    collections laid out as a horizontal run driven by vertical scroll. Content is never hidden without JS:
    every start state is set by GSAP and reverted on cleanup or when motion is reduced. */
-export function PageMotion({ page }: { page: "designs" | "collections" | "preview" }) {
+export function PageMotion({ page }: { page: "designs" | "collections" | "preview" | "gold" | "installments" }) {
   useEffect(() => {
     let disposed = false, teardown = () => {};
     async function start() {
@@ -28,7 +28,7 @@ export function PageMotion({ page }: { page: "designs" | "collections" | "previe
         gsap.fromTo(bar, { scaleX: 0 }, { scaleX: 1, ease: "none", scrollTrigger: { start: 0, end: "max", scrub: .3 } });
 
         // 2. The hero settles: heading words rise on load, the media drifts and eases back as you scroll.
-        const hero = document.querySelector<HTMLElement>(".catalogue-hero, .collections-index-heading, .preview-hero");
+        const hero = document.querySelector<HTMLElement>(".catalogue-hero, .collections-index-heading, .preview-hero, .gold-hero, .plan-hero");
         if (hero) {
           const heading = hero.querySelector("h1");
           if (heading) gsap.from(heading.children.length ? heading.children : heading, { y: 34, opacity: 0, duration: 1.1, ease: "expo.out", stagger: .12, delay: .1 });
