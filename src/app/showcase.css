@@ -17,7 +17,7 @@
 /* 01 the film */
 .showcase-film__poster, .showcase-film__canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 45% 37%; }
 .showcase:not([data-showcase="live"]) .showcase-film__canvas { display: none; }
-.showcase-film__canvas { scale: calc(1 + var(--punch, 0)); }
+
 /* Speed warp: light streaks radiate from the focal point while the visitor scrolls fast. */
 .showcase-film__warp { position: absolute; z-index: 4; inset: -20%; pointer-events: none; opacity: 0; mix-blend-mode: screen;
   background: repeating-conic-gradient(from 0deg at 45% 42%, rgb(255 222 150 / 0%) 0deg 2.2deg, rgb(255 226 160 / 55%) 2.4deg, rgb(255 222 150 / 0%) 2.7deg 5.1deg);

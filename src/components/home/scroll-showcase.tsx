@@ -68,10 +68,11 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
           const w = canvas.width, h = canvas.height, s = Math.max(w / image.naturalWidth, h / image.naturalHeight);
           paint2d.globalAlpha = alpha; paint2d.drawImage(image, (w - image.naturalWidth * s) / 2, (h - image.naturalHeight * s) / 2, image.naturalWidth * s, image.naturalHeight * s); paint2d.globalAlpha = 1;
         };
-        // Neighbouring frames are blended so the flight reads as motion rather than steps.
-        const paint = (f: number) => { const a = Math.floor(f), A = near(a), B = near(Math.min(frames.length - 1, a + 1)); if (!A) return; draw(A, 1); if (B && f - a > .02) draw(B, f - a); };
+        // One whole frame at a time. Blending two neighbours made a double image (ghosting) while scrolling.
+        let painted = -1;
+        const paint = (f: number) => { const i = Math.round(f), A = near(i); if (!A) return; if (A === frames[painted] && i === painted) return; draw(A, 1); painted = ready(frames[i]) ? i : -1; };
         // Backing store capped near the 1440px frames: a bigger canvas costs every frame and adds no detail.
-        const fit = () => { const r = Math.min(window.devicePixelRatio || 1, 1.5, 1600 / Math.max(1, canvas.clientWidth)); canvas.width = Math.round(canvas.clientWidth * r); canvas.height = Math.round(canvas.clientHeight * r); paint2d.imageSmoothingQuality = "high"; paint(current); };
+        const fit = () => { const r = Math.min(window.devicePixelRatio || 1, 1.5, 1600 / Math.max(1, canvas.clientWidth)); canvas.width = Math.round(canvas.clientWidth * r); canvas.height = Math.round(canvas.clientHeight * r); paint2d.imageSmoothingQuality = "high"; painted = -1; paint(current); };
         let target = 0, current = 0;
         // The film follows the scroll with its own easing, so it glides on briefly after the wheel stops.
         // Frame-rate independent easing toward the scroll target (same feel at 60 and 120 Hz); rests when converged.
@@ -111,16 +112,13 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         // Speed warp: fast scrolling stretches light streaks and pushes the lens in a touch; it settles at rest.
         const warp = scope!.querySelector<HTMLElement>("[data-warp]");
         const warpTo = warp ? gsap.quickTo(warp, "opacity", { duration: .35, ease: "power2.out" }) : null;
-        const punchTo = gsap.quickTo(canvas, "--punch", { duration: .45, ease: "power2.out" });
 
         const film = { f: 0 }, last = heroFilm.frames - 1;
         const follow = () => { target = film.f; if (film.f > .5) loadAround(film.f); setChapter(film.f); };
         gsap.timeline({ defaults: { ease: "none" }, scrollTrigger: { id: "showcase-film", trigger: "#entrance", start: () => `top ${header()}`, end: "bottom bottom", scrub: .5, invalidateOnRefresh: true,
-            onUpdate: (self) => { const v = Math.min(1, Math.abs(self.getVelocity()) / 4200); warpTo?.(v * .9); punchTo(v * .06); } } })
+            onUpdate: (self) => { const v = Math.min(1, Math.abs(self.getVelocity()) / 4200); warpTo?.(v * .35); } } })
           // One forward pass over the whole pinned range: the film comes to rest on its composed ending.
           .to(film, { f: last, duration: 1, onUpdate: follow }, 0)
-          // Fly-over: a slow forward push with a gentle lateral glide, as if the camera travels over the scene.
-          .fromTo("[data-film]", { scale: 1.05, xPercent: -1.2, yPercent: -1 }, { scale: 1.1, xPercent: 1.2, yPercent: 1, duration: 1 }, 0)
           .fromTo("[data-film-depth]", { yPercent: 0 }, { yPercent: -18, duration: 1 }, 0);
         railEls.forEach((element, i) => element.addEventListener("click", () => {
           const trigger = ScrollTrigger.getById("showcase-film"); if (!trigger) return;

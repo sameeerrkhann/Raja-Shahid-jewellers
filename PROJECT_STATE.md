@@ -257,6 +257,13 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-28 — Claude (Saad's session) — Hero blur while scrolling (S-29)
+
+- **Feedback:** the hero still blurred while scrolling.
+- **Causes found:** (1) the canvas blended two neighbouring frames with partial alpha, a double image during motion; (2) the S-26 fly-over scaled the canvas 1.05→1.10, so every frame was resampled; (3) a velocity "punch" scaled the canvas up to 6% and the warp streak overlay reached 0.9 opacity on fast scrolls.
+- **Fix:** paint one whole frame at a time (nearest frame, skips redundant repaints), removed the canvas scale and punch, warp capped at 0.35. Frames, chapters and text are unchanged.
+- **Tests:** tsc, eslint, build PASS; Playwright 87/87 PASS. Mid-scroll capture shows no ghosting; the remaining softness in the light chapter is the bloom in the Flow source itself.
+
 ### 2026-11-28 — Claude (Saad's session) — Hero clarity and weight fix (S-28)
 
 - **Feedback:** hero looked dull and low resolution, scrolling felt heavy; the Reduce motion bar showed a cream block.
@@ -759,7 +766,7 @@ No customer requirement or journey is missing from the Phase 01 baseline. Remain
 
 ### Active snapshot — Phase 04 verified / STOP before Phase 05
 
-- **Latest (2026-11-28, S-28):** hero clarity fix; S-27 dust plane removed (see S-28). S-26: client polish pass done. Earlier S-25: Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
+- **Latest (2026-11-28, S-29):** hero scroll blur fixed (see S-29); S-28 clarity fix before it. S-26: client polish pass done. Earlier S-25: Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
 
 - **Last agent:** Codex, sole writer after user confirmation; internal review/QA only, no delegation or independent review.
 - **Completed scope:** Phase04 customer-facing Design Vault.118 publishable files;11 original image-backed SAMPLE designs,14 unpublished drafts; /designs, /collections,4 collection slugs and five read-only API route families. No full product/quotation/admin/AI/voice/gold backend. Preserve all Phase02/03 functionality and prior logs/assets.
