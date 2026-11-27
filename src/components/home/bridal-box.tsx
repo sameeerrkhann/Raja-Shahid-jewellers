@@ -68,7 +68,6 @@ export function BridalBox({ pieces }: { pieces: BridalPiece[] }) {
       <ul className="bridal-box__names" aria-label="Bridal sets in this box">
         {pieces.map((piece) => <li key={piece.code}><Link href={`/designs?q=${encodeURIComponent(piece.code)}`} prefetch={false}>{piece.title}</Link></li>)}
       </ul>
-      <span className="bridal-box__label">Sample designs, concept images. Not shop stock.</span>
     </div>
   </section>;
 }

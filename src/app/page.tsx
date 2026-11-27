@@ -43,7 +43,7 @@ export default function Home() {
   const bridal: BridalPiece[] = ["RSJ-D001", "RSJ-D002", "RSJ-D003", "RSJ-D004"].map((code) => ({ code, title: record(code).title, cutout: `/images/catalogue/cut/${code === "RSJ-D001" || code === "RSJ-D002" ? "design" : "wear"}-${number(code)}.webp` }));
   return <HomeExperience>
     <ScrollShowcase pieces={pieces} />
-    <TryOn />
+    <TryOn designs={sampleDesigns.filter((design) => design.publicationState === "PUBLISHED").map((design) => ({ title: design.title, slug: design.slug, category: design.categorySlug, subcategory: design.subcategorySlug, image: design.images[0]?.url ?? "", alt: design.images[0]?.alt ?? "" })).filter((design) => design.image)} />
     <BridalBox pieces={bridal} />
     <section className="begin" aria-labelledby="begin-title"><h2 id="begin-title">Where would you like to begin?</h2>
       <ul>{collections.map((entry) => <li key={entry.href}><a href={entry.href}>{entry.image ? <img src={entry.image} alt="" loading="lazy" /> : <span className="begin__more" aria-hidden="true">→</span>}<strong>{entry.title}</strong><em>{entry.count}</em></a></li>)}</ul>
@@ -76,7 +76,7 @@ export default function Home() {
     </div></section>
     <section id="gold" className="home-gold home-scene" data-scene="08" data-tone="dark" aria-labelledby="gold-title"><div className="container">
       <div className="home-gold__intro"><div><h2 id="gold-title" data-home-reveal>Precious, in<br /><em>every sense.</em></h2><p>The beauty of a piece is personal.<br />Its material value deserves clarity.</p></div><GoldRates variant="compact" /></div>
-      <div className="home-finale"><div className="home-finale__copy"><h3 data-home-reveal>Some things<br />become <em>part of you.</em></h3><p>Begin with a little inspiration.<br />Let the rest be a conversation.</p><div className="home-finale__actions"><Button data-home-action="appointment">Plan a private visit <Icon name="arrow" /></Button><Button data-home-action="enquiry" variant="outline">A jewellery enquiry <Icon name="arrow" /></Button></div><p className="home-reference-note">Service previews only. Requests are not connected;<br />official shop details and appointment policies await approval.</p></div><div className="home-finale__image"><EditorialImage src="/images/editorial/jhumkas.webp" alt="AI-generated image of gold jhumka earrings on a dark stand; not shop stock" fill sizes="(max-width: 767px) 85vw, 34vw" quality={85} /><span>AI-generated image / A certain radiance</span></div></div>
+      <div className="home-finale"><div className="home-finale__copy"><h3 data-home-reveal>Some things<br />become <em>part of you.</em></h3><p>Begin with a little inspiration.<br />Let the rest be a conversation.</p><div className="home-finale__actions"><Button data-home-action="appointment">Plan a private visit <Icon name="arrow" /></Button><Button data-home-action="enquiry" variant="outline">A jewellery enquiry <Icon name="arrow" /></Button></div></div><div className="home-finale__image"><EditorialImage src="/images/editorial/jhumkas.webp" alt="AI-generated image of gold jhumka earrings on a dark stand; not shop stock" fill sizes="(max-width: 767px) 85vw, 34vw" quality={85} /><span>AI-generated image / A certain radiance</span></div></div>
     </div></section>
   </HomeExperience>;
 }

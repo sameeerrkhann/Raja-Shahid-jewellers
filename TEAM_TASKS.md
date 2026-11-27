@@ -23,6 +23,7 @@
 | S-23 | 2026-11-26 | Image audit; editorial photos replaced with AI images in the charcoal and gold palette | Done (in review) | `public/images/editorial/`, `src/config/preview-studies.ts`, `src/config/home.ts` |
 | S-24 | 2026-11-26 | Inner pages: vault-stage heroes, scroll motion (progress, reveals, parallax, collections runway), hover sheen | Done (in review) | `src/components/motion/page-motion.tsx`, `src/app/catalogue.css` |
 | S-25 | 2026-11-27 | Live Pakistan gold rates: /gold-rates page, homepage panel, header chip, value calculator, honest unavailable/stale/sample states | Done (in review) | `src/components/gold/`, `src/lib/server/gold-rate.ts`, `src/app/gold-rates/` |
+| S-26 | 2026-11-27 | Client polish: text cleanup, scroll reset, new footer, visit/enquiry forms (not connected), See it on loupe and details, collections chapters, hero fly-over | Done (in review) | `src/components/services/`, `src/components/layout/`, `src/components/catalogue/collection-chapters.tsx` |
 | S-13 | — | Design package step 2: Dual Portal (Women \| Men \| Made to order) with the reference model photos, labelled as reference photography | Next | — |
 | S-14 | — | Design package step 3: the Touchstone (gold streak, four buyer questions) and an illustrative gold-rate panel | Next | — |
 | S-15 | — | Design package step 4: Signature pieces rail and detail drawer (shadcn Sheet), real sample data only | Next | — |

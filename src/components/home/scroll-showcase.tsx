@@ -90,8 +90,9 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
           chapterEls.forEach((element) => {
             const i = chapters.findIndex((chapter) => chapter.id === element.dataset.chapter); if (i < 0) return;
             const { from: a, to: b } = chapters[i], ramp = Math.min(6, (b - a) / 3);
-            const opacity = (i === 0 ? 1 : smooth(f, a - ramp, a + ramp)) * (i === chapters.length - 1 ? 1 : 1 - smooth(f, b - ramp, b + ramp));
-            const k = i === 0 ? 1 : Math.min(1, Math.max(0, (f - (a - ramp)) / (ramp * 2.2)));
+            // Sequential, never crossed: a band leaves before the next one arrives, so two headlines never overlap.
+            const opacity = (i === 0 ? 1 : smooth(f, a + 1, a + 1 + ramp)) * (i === chapters.length - 1 ? 1 : 1 - smooth(f, b - ramp, b - 1));
+            const k = i === 0 ? 1 : Math.min(1, Math.max(0, (f - (a + 1)) / (ramp * 2.2)));
             const next = `${opacity.toFixed(3)}|${k.toFixed(2)}`;
             if (cache.get(element) === next) return; cache.set(element, next);
             element.style.opacity = opacity.toFixed(3); element.style.setProperty("--k", k.toFixed(2));
@@ -102,7 +103,6 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
           fx("--descent", Math.min(1, f / 60));
           fx("--burst", Math.max(0, 1 - Math.abs(f - 22) / 9) * .55);
           fx("--spot", Math.min(1, Math.max(0, (f - 55) / 40)) * (1 - Math.min(1, Math.max(0, (f - 150) / 30)) * .5));
-          fx("--bars", 1 - Math.min(1, Math.max(0, (f - 160) / 28)));
           if (railFill) railFill.style.transform = `scaleY(${(f / Math.max(1, heroFilm.frames - 1)).toFixed(3)})`;
         };
         setChapter(0);
@@ -118,7 +118,9 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
             onUpdate: (self) => { const v = Math.min(1, Math.abs(self.getVelocity()) / 4200); warpTo?.(v * .9); punchTo(v * .06); } } })
           // One forward pass over the whole pinned range: the film comes to rest on its composed ending.
           .to(film, { f: last, duration: 1, onUpdate: follow }, 0)
-          .fromTo("[data-film]", { scale: 1.06 }, { scale: 1, duration: 1 }, 0);
+          // Fly-over: a slow forward push with a gentle lateral glide, as if the camera travels over the scene.
+          .fromTo("[data-film]", { scale: 1.05, xPercent: -1.2, yPercent: -1 }, { scale: 1.1, xPercent: 1.2, yPercent: 1, duration: 1 }, 0)
+          .fromTo("[data-film-depth]", { yPercent: 0 }, { yPercent: -18, duration: 1 }, 0);
         railEls.forEach((element, i) => element.addEventListener("click", () => {
           const trigger = ScrollTrigger.getById("showcase-film"); if (!trigger) return;
           const f = chapters[i].from + 8; window.scrollTo({ top: trigger.start + (trigger.end - trigger.start) * Math.min(1, f / last), behavior: "smooth" });
@@ -217,11 +219,10 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         {/* The first frame is the still poster (and the largest paint); the canvas takes over once scrolling. */}
         <img className="showcase-film__poster" src={heroFilm.desktop(0)} alt="" width={1280} height={720} fetchPriority="high" data-hero-image />
         <canvas className="showcase-film__canvas" data-film aria-hidden="true" />
-        <span className="showcase-label">{heroFilm.label}</span>
-        <div className="showcase-film__spot" aria-hidden="true" />
+        <div className="showcase-film__spot" data-film-depth aria-hidden="true" />
         <div className="showcase-film__burst" aria-hidden="true" />
         <div className="showcase-film__warp" data-warp aria-hidden="true" />
-        <div className="showcase-film__bars" aria-hidden="true" />
+        
         <div className="showcase-film__intro showcase-band showcase-band--center showcase-band--drift" data-film-intro data-chapter="descent">
           <h1 id="entrance-title"><span data-entrance-line>Crafted to be</span> <span data-entrance-line>remembered.</span></h1>
           <div className="showcase-film__actions"><Link className="button button--gold" href="/designs" prefetch={false}>Explore the Design Vault</Link><button type="button" className="showcase-link" data-home-action="appointment">Plan a showroom visit</button></div>
@@ -255,7 +256,6 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         <div className="showcase-caption showcase-arc__title"><h2 id="collection-title">From the Design Vault</h2><small>Scroll to turn the collection, or tap a piece.</small></div>
         <div className="showcase-caption showcase-arc__name" aria-live="polite"><p>{pieces[centre].title}</p><small>{pieces[centre].kind} · {pieces[centre].facts[0]} · {pieces[centre].code}</small>
           <a className="showcase-pill-button" href="#closer" onClick={() => { tapped.current = true; setChosen(centre); }}>Look closer</a></div>
-        <span className="showcase-label">Sample designs, concept images. Not shop stock.</span>
       </div>
     </section>
 
@@ -276,7 +276,6 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         </ul>
         <div className="showcase-lens__facts" data-facts><b>{piece.code}</b><span>{piece.title}</span>{piece.facts.map((fact) => <span key={fact}>{fact}</span>)}<Link href={piece.href} prefetch={false}>Open in the Design Vault</Link></div>
         <div className="showcase-lens__white" data-white aria-hidden="true" />
-        <span className="showcase-label">Sample design, concept image. Not shop stock.</span>
       </div>
     </section>
   </div>;

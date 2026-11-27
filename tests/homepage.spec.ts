@@ -114,11 +114,32 @@ test("future AURIA and enquiry CTAs explain availability without submissions", a
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   page.on("request", (request) => { methods.push(request.method()); if (!new URL(request.url()).hostname.match(/^(127\.0\.0\.1|localhost)$/)) external.push(request.url()); });
   await ready(page);
-  for (const [label, title] of [["Preview AURIA", "AURIA, coming into focus"], ["Plan a private visit", "A visit, thoughtfully planned"], ["A jewellery enquiry", "Begin with a conversation"]]) {
-    await page.getByRole("button", { name: label, exact: true }).click();
-    await expect(page.getByRole("dialog", { name: title })).toBeVisible();
-    await page.keyboard.press("Escape");
-  }
+  await page.getByRole("button", { name: "Preview AURIA", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "AURIA, coming into focus" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator(".home-finale").getByRole("button", { name: "Plan a private visit", exact: true }).click();
+  const visit = page.getByRole("dialog", { name: "Plan a private visit" });
+  await expect(visit).toBeVisible();
+  await visit.getByRole("button", { name: "Request the visit" }).click();
+  await expect(visit.getByText("Choose a date.")).toBeVisible();
+  await expect(visit.getByText(/Enter a Pakistani mobile number/)).toBeVisible();
+  const day = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+  await visit.getByLabel("Preferred date").fill(day);
+  await visit.getByLabel("Preferred time").selectOption({ index: 1 });
+  await visit.getByLabel("The visit is for").selectOption("Bridal set");
+  await visit.getByLabel("Your name").fill("Ayesha Khan");
+  await visit.getByLabel("Mobile number").fill("0300 1234567");
+  await visit.getByLabel(/may contact me/).check();
+  await visit.getByRole("button", { name: "Request the visit" }).click();
+  await expect(visit.getByText("Not connected yet: this request was not sent.")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator(".home-finale").getByRole("button", { name: "A jewellery enquiry", exact: true }).click();
+  const enquiry = page.getByRole("dialog", { name: "Jewellery enquiry" });
+  await expect(enquiry).toBeVisible();
+  await enquiry.getByLabel("Design ID (optional)").fill("ABC");
+  await enquiry.getByRole("button", { name: "Send enquiry" }).click();
+  await expect(enquiry.getByText("Design IDs look like RSJ-D001.")).toBeVisible();
+  await page.keyboard.press("Escape");
   expect(methods.every((method) => method === "GET")).toBe(true);
   expect(external).toEqual([]);
   expect(errors).toEqual([]);
@@ -271,10 +292,12 @@ test("see it on: one model each, every piece listed, the camera moves to it", as
   await ready(page);
   const section = page.locator("#try-on");
   await section.scrollIntoViewIfNeeded();
-  await expect(section.getByText("AI-generated model. Jewellery is illustrative, not shop stock.")).toBeVisible();
+  await expect(section.getByText("AI-generated model", { exact: true })).toBeVisible();
   await expect(section.locator(".tryon__item")).toHaveCount(6);
   await section.locator(".tryon__item", { hasText: "Rani haar" }).click();
-  await expect(section.locator(".tryon__camera")).toHaveAttribute("style", /scale\(2\.4\)/);
+  await expect(section.locator(".tryon__camera")).toHaveAttribute("style", /scale\(1\.45\)/);
+  await expect(section.locator(".tryon__loupe")).toBeVisible();
+  await expect(section.locator(".tryon__matches li").first()).toBeVisible();
   await expect(section.locator(".tryon__focus")).toContainText("Rani haar");
   await expect(section.getByRole("link", { name: /in the Design Vault/ })).toHaveAttribute("href", /q=necklace/);
   await section.getByRole("button", { name: "See the whole look" }).click();
@@ -291,7 +314,6 @@ test("bridal box lists the bridal sets and links to them", async ({ page }) => {
   await section.scrollIntoViewIfNeeded();
   await expect(section.getByRole("heading", { name: /A promise/ })).toBeVisible();
   await expect(section.getByRole("list", { name: "Bridal sets in this box" }).getByRole("link")).toHaveCount(4);
-  await expect(section.getByText("Sample designs, concept images. Not shop stock.")).toBeVisible();
 });
 
 test("mobile showcase scrolls without pins and keeps collections reachable", async ({ page }) => {

@@ -183,12 +183,24 @@
 .tryon__dot[aria-pressed="true"] { background: #fff1c9; }
 .tryon__dot:focus-visible { outline: 2px solid var(--color-champagne); outline-offset: 3px; }
 @keyframes tryon-ping { from { transform: scale(.5); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
-.tryon__focus { position: absolute; z-index: 4; left: 14px; right: 14px; bottom: 46px; display: grid; gap: 3px; padding: 14px 16px; border-radius: 16px; background: rgb(14 11 9 / 86%); border: 1px solid rgb(232 213 166 / 22%); animation: tryon-card .7s var(--ease-luxe) both; }
-@keyframes tryon-card { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-.tryon__focus span { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--color-antique-gold); }
-.tryon__focus strong { font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: 24px; line-height: 1.1; }
-.tryon__focus a { font-size: 12.5px; color: var(--color-champagne); text-decoration: underline; text-underline-offset: 3px; }
-.tryon__focus button { justify-self: start; margin-top: 4px; padding: 0 0 3px; border: 0; border-bottom: 1px solid rgb(232 213 166 / 45%); background: none; color: var(--color-dark-muted); font-size: 12px; cursor: pointer; }
+.tryon__focus { display: grid; gap: 4px; margin-top: 22px; padding: 20px 22px; border-radius: 18px; background: linear-gradient(160deg, rgb(201 162 83 / 12%), rgb(14 11 9 / 60%) 60%); border: 1px solid rgb(232 213 166 / 22%); animation: tryon-card .6s var(--ease-luxe) both; }
+@keyframes tryon-card { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.tryon__focus > span { font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--color-antique-gold); }
+.tryon__focus strong { font-family: var(--font-editorial), Georgia, serif; font-weight: 400; font-size: 28px; line-height: 1.1; }
+.tryon__matches { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0 4px; padding: 0; }
+.tryon__matches a { display: grid; gap: 6px; font-size: 12px; line-height: 1.3; color: var(--color-ivory); }
+.tryon__matches img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; border: 1px solid rgb(232 213 166 / 18%); transition: transform .6s var(--ease-luxe), border-color .4s; }
+.tryon__matches a:hover img { transform: translateY(-3px); border-color: var(--color-antique-gold); }
+.tryon__matches a:focus-visible { outline: 2px solid var(--color-champagne); outline-offset: 3px; border-radius: 10px; }
+.tryon__none { margin: 10px 0 4px; font-size: 13px; color: var(--color-dark-muted); }
+.tryon__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 10px; }
+.tryon__actions a, .tryon__actions button { padding: 0 0 3px; border: 0; border-bottom: 1px solid rgb(232 213 166 / 45%); background: none; color: var(--color-champagne); font: inherit; font-size: 12.5px; cursor: pointer; }
+.tryon__actions button:last-child { color: var(--color-dark-muted); }
+.tryon__actions :is(a, button):focus-visible { outline: 2px solid var(--color-champagne); outline-offset: 3px; }
+.tryon__loupe { position: absolute; z-index: 4; top: 30%; width: 40%; aspect-ratio: 1; border-radius: 50%; background-repeat: no-repeat; border: 2px solid rgb(255 236 190 / 85%); box-shadow: 0 20px 50px rgb(0 0 0 / 55%), inset 0 0 30px rgb(0 0 0 / 35%); animation: tryon-loupe .7s var(--ease-luxe) both; }
+.tryon__loupe[data-side="right"] { right: 5%; } .tryon__loupe[data-side="left"] { left: 5%; }
+.tryon__loupe span { position: absolute; left: 50%; bottom: -30px; translate: -50% 0; white-space: nowrap; padding: 4px 10px; border-radius: 999px; background: rgb(14 11 9 / 85%); font-size: 11px; color: var(--color-champagne); }
+@keyframes tryon-loupe { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
 .tryon__tag { position: absolute; z-index: 5; left: 50%; bottom: 12px; translate: -50% 0; font-size: 10.5px; color: var(--color-dark-muted); background: rgb(10 9 8 / 75%); padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
 
 /* AURIA, the future concierge (design only: AI team owns the service) */
@@ -227,7 +239,7 @@
 .auria__input { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding: 12px 16px; border-radius: 999px; background: rgb(255 255 255 / 4%); border: 1px solid rgb(232 213 166 / 14%); font-size: 13px; color: var(--color-dark-muted); }
 .auria__label { position: absolute; left: 50%; bottom: -14px; translate: -50% 0; padding: 5px 12px; border-radius: 999px; background: var(--color-kohl); border: 1px solid rgb(232 213 166 / 16%); font-size: 10.5px; color: var(--color-dark-muted); white-space: nowrap; }
 @media (max-width: 860px) { .auria__grid { grid-template-columns: minmax(0, 1fr); } .auria__device { margin-top: 12px; } }
-@media (prefers-reduced-motion: reduce) { .auria__orb, .auria__typing, .auria__typing i, .auria__reply, .tryon__dot::after, .tryon__index li, .tryon__photo, .tryon__focus { animation: none; } .tryon__camera { transition: none; } .auria__typing { display: none; } }
+@media (prefers-reduced-motion: reduce) { .auria__orb, .auria__typing, .auria__typing i, .auria__reply, .tryon__dot::after, .tryon__index li, .tryon__photo, .tryon__focus, .tryon__loupe { animation: none; } .tryon__camera { transition: none; } .auria__typing { display: none; } }
 
 /* 05 Bridal: a jewellery box opened by scroll (CSS 3D, scrubbed by GSAP in bridal-box.tsx) */
 .bridal-box { --box-w: min(560px, 78vw); --wall: 64px; position: relative; color: var(--color-ivory); background: radial-gradient(60% 60% at 70% 50%, rgb(104 28 41 / 55%) 0%, transparent 70%), radial-gradient(90% 60% at 50% 120%, rgb(201 162 83 / 14%) 0%, transparent 60%), var(--color-kohl); }
@@ -297,7 +309,7 @@
   .showcase-lens__picker { left: 50%; translate: -50% 0; top: 12px; } .showcase-lens__picker label { display: none; }
   .tryon { grid-template-columns: minmax(0, 1fr); padding: 56px 20px; }
   .tryon__frame { order: -1; position: relative; top: 0; width: min(100%, 360px); }
-  .tryon__focus strong { font-size: 20px; }
+  .tryon__focus strong { font-size: 22px; } .tryon__loupe { width: 44%; }
   .tryon h2 { font-size: 2.2rem; }
 }
 @media (prefers-reduced-motion: reduce) { .tryon__camera { transition: none; } }

@@ -38,7 +38,7 @@ export function PageMotion({ page }: { page: "designs" | "collections" | "previe
         }
 
         // 3. Section headings and cards rise in sequence with a soft wipe, once.
-        const risers = gsap.utils.toArray<HTMLElement>(".catalogue-related__heading, .catalogue-section-heading, main section > .container > h2, main section h2, .catalogue-disclosure, .design-language__palette > *, .swatch");
+        const risers = gsap.utils.toArray<HTMLElement>(".catalogue-related__heading, .catalogue-section-heading, main section > .container > h2, main section h2:not(.chapter h2), .catalogue-disclosure, .design-language__palette > *, .swatch");
         risers.forEach((element) => gsap.from(element, { y: 40, opacity: 0, duration: 1, ease: "expo.out", scrollTrigger: { trigger: element, start: "top 88%", once: true } }));
         ScrollTrigger.batch(".design-card, .vault-collection-card, .product-card, .collection-card", {
           start: "top 90%", once: true,
@@ -50,18 +50,19 @@ export function PageMotion({ page }: { page: "designs" | "collections" | "previe
           gsap.fromTo(image, { yPercent: -4, scale: 1.08 }, { yPercent: 4, scale: 1.08, ease: "none", scrollTrigger: { trigger: image.parentElement, start: "top bottom", end: "bottom top", scrub: .4 } });
         });
 
-        // 5. Collections, on wide screens: the edits run sideways as you scroll down, the centred one lifts.
+        // 5. Collections, on wide screens: each chapter is sticky; as the next one slides over it, it settles back.
         if (page === "collections" && wide) {
-          const grid = document.querySelector<HTMLElement>(".vault-collection-grid");
-          const section = grid?.closest("section");
-          if (grid && section) {
-            section.classList.add("is-runway");
-            const distance = () => Math.max(0, grid.scrollWidth - grid.clientWidth);
-            gsap.to(grid, { x: () => -distance(), ease: "none", scrollTrigger: { trigger: section, start: "top top+=90", end: () => `+=${distance() + 200}`, pin: true, scrub: .6, invalidateOnRefresh: true } });
-          }
+          const cards = gsap.utils.toArray<HTMLElement>("[data-chapter-card]");
+          cards.forEach((card, i) => {
+            const next = cards[i + 1];
+            const media = card.querySelector("[data-chapter-media]"), copy = card.querySelector("[data-chapter-copy]");
+            if (media) gsap.fromTo(media, { clipPath: "inset(14% 10% 14% 10% round 24px)" }, { clipPath: "inset(0% 0% 0% 0% round 24px)", ease: "none", scrollTrigger: { trigger: card, start: "top bottom", end: "top top+=90", scrub: .5 } });
+            if (copy) gsap.fromTo(copy.children, { y: 40, opacity: 0 }, { y: 0, opacity: 1, stagger: .08, duration: .9, ease: "expo.out", scrollTrigger: { trigger: card, start: "top 55%", once: true } });
+            if (next) gsap.to(card.querySelector(".chapter__inner"), { scale: .92, opacity: .35, ease: "none", scrollTrigger: { trigger: next, start: "top bottom", end: "top top+=90", scrub: .5 } });
+          });
         }
       });
-      teardown = () => { ctx.revert(); document.querySelectorAll(".page-progress").forEach((element) => element.remove()); document.querySelector(".is-runway")?.classList.remove("is-runway"); document.documentElement.dataset.pageMotion = "static"; };
+      teardown = () => { ctx.revert(); document.querySelectorAll(".page-progress").forEach((element) => element.remove()); document.documentElement.dataset.pageMotion = "static"; };
       ScrollTrigger.refresh();
     }
     void start();

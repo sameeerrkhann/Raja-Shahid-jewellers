@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { ScrollReset } from "@/components/layout/scroll-reset";
+import { ServiceDialogs } from "@/components/services/service-dialogs";
 import { brand } from "@/config/brand";
 import "./globals.css";
 
@@ -15,5 +17,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" className={`${editorial.variable} ${interfaceFont.variable}`}><body><a className="skip-link" href="#main-content">Skip to content</a><SiteHeader />{children}<SiteFooter /></body></html>;
+  return <html lang="en" className={`${editorial.variable} ${interfaceFont.variable}`}><body><a className="skip-link" href="#main-content">Skip to content</a><ScrollReset /><SiteHeader />{children}<SiteFooter /><ServiceDialogs /></body></html>;
 }

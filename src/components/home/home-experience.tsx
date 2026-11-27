@@ -21,8 +21,9 @@ export function HomeExperience({ children }: { children: ReactNode }) {
       const button = (event.target as HTMLElement).closest<HTMLButtonElement>("button[data-home-action]");
       if (button) setExplanation(button.dataset.homeAction as Explanation);
     }}>
-      <div id="top" className="home-review-strip"><span>Royal Gold Atelier <span className="home-strip-detail">· customer website demo</span></span><label className="home-motion-toggle"><input type="checkbox" checked={reduce} onChange={(event) => { const next = event.target.checked; document.documentElement.dataset.reduceMotion = String(next); setReduce(next); }} />Reduce motion</label></div>
+      <span id="top" className="home-top-anchor" aria-hidden="true" />
       {children}
+      <div className="home-utility container"><label className="home-motion-toggle"><input type="checkbox" checked={reduce} onChange={(event) => { const next = event.target.checked; document.documentElement.dataset.reduceMotion = String(next); setReduce(next); }} />Reduce motion</label></div>
       <HomepageMotion rootRef={root} reduce={reduce} />
       <noscript><style>{`[data-home-action], .vault-controls, .home-motion-toggle, .site-header .icon-button { display: none !important; }`}</style><p className="home-noscript container">The full editorial story and sample Design Vault are available without motion. AURIA and enquiry services are not connected. Use the chapter links and footer to explore.</p></noscript>
     </main>

@@ -219,9 +219,10 @@ test("mobile filter drawer combines facets and restores focus/scroll", async ({ 
 
 test("collection index and collection-scoped browsing preserve context", async ({ page }) => {
   await page.goto("/collections");
-  await expect(page.locator(".vault-collection-card")).toHaveCount(4);
+  await expect(page.locator(".chapter")).toHaveCount(4);
+  await expect(page.locator(".chapter").first().locator(".chapter__designs li")).toHaveCount(3);
   await page.screenshot({ path: `${screenshots}/collections-1440.png`, fullPage: true });
-  await page.locator('.vault-collection-card[href="/collections/the-bridal-edit"]').click();
+  await page.locator('.chapter a.button[href="/collections/the-bridal-edit"]').click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("The Bridal Edit");
   await expect(summary(page)).toHaveText("5 sample designs found");
   await page.screenshot({ path: `${screenshots}/bridal-collection-1440.png` });

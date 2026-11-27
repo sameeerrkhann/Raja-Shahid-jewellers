@@ -62,7 +62,7 @@ export const showcase: ShowcaseEntry[] = [
 ];
 
 export type Wearer = "women" | "men";
-export type WornSpot = { name: string; note: string; x: number; y: number; zoom: number; search: string; vault: string };
+export type WornSpot = { name: string; note: string; x: number; y: number; zoom: number; search: string; vault: string; category?: string };
 export type Model = { src: string; width: number; height: number; alt: string; spots: WornSpot[] };
 /* See it on: one AI-generated model each, wearing every kind of piece we show. Spots are % of the photograph. */
 export const models: Record<Wearer, Model> = {
@@ -71,17 +71,17 @@ export const models: Record<Wearer, Model> = {
     spots: [
       { name: "Maang tikka", note: "Sits at the parting", x: 43.3, y: 6.8, zoom: 3.2, search: "tikka", vault: "tikkas" },
       { name: "Jhumkas", note: "Frames the face", x: 53.6, y: 13.4, zoom: 3, search: "jhumka", vault: "earrings" },
-      { name: "Choker", note: "Close at the collarbone", x: 51.2, y: 18.4, zoom: 2.8, search: "choker", vault: "chokers" },
-      { name: "Rani haar", note: "Falls to the waist", x: 45.9, y: 27.3, zoom: 2.4, search: "necklace", vault: "necklace sets" },
-      { name: "Bangles", note: "Stacked on both wrists", x: 35, y: 27.6, zoom: 3, search: "bangle", vault: "bangles" },
-      { name: "Rings", note: "Worn with the set", x: 40.2, y: 19.9, zoom: 3.4, search: "ring", vault: "rings" },
+      { name: "Choker", note: "Close at the collarbone", x: 51.2, y: 18.4, zoom: 2.8, search: "choker", vault: "chokers", category: "bridal" },
+      { name: "Rani haar", note: "Falls to the waist", x: 45.9, y: 27.3, zoom: 2.4, search: "necklace", vault: "necklace sets", category: "bridal" },
+      { name: "Bangles", note: "Stacked on both wrists", x: 35, y: 27.6, zoom: 3, search: "bangle", vault: "bangles", category: "bangles" },
+      { name: "Rings", note: "Worn with the set", x: 40.2, y: 19.9, zoom: 3.4, search: "ring", vault: "rings", category: "rings" },
     ] },
   men: { src: "/images/models/rsj-man.webp", width: 1024, height: 1536,
     alt: "AI-generated model in a black kurta and waistcoat wearing a gold chain, a gold watch, a gold kada and a gold ring",
     spots: [
       { name: "Gold chain", note: "Fine, at the open collar", x: 50.3, y: 22.3, zoom: 3, search: "chain", vault: "chains" },
       { name: "Watch", note: "Gold on the left wrist", x: 57.8, y: 38.7, zoom: 3.2, search: "men", vault: "men's pieces" },
-      { name: "Signet ring", note: "One bold ring", x: 49.2, y: 40.7, zoom: 3.6, search: "ring", vault: "rings" },
-      { name: "Kada", note: "Solid, on the right wrist", x: 34.7, y: 46.9, zoom: 3.2, search: "kada", vault: "kadas" },
+      { name: "Signet ring", note: "One bold ring", x: 49.2, y: 40.7, zoom: 3.6, search: "ring", vault: "rings", category: "rings" },
+      { name: "Kada", note: "Solid, on the right wrist", x: 34.7, y: 46.9, zoom: 3.2, search: "kada", vault: "kadas", category: "bangles" },
     ] },
 };

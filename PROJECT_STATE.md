@@ -257,6 +257,18 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-27 — Claude (Saad's session) — Client polish pass: text, scroll reset, footer, forms, See it on, collections, hero (S-26)
+
+- **Text removed:** "Concept film made with Google Flow" film label, the "Royal Gold Atelier · customer website demo" strip (Reduce motion moved to a slim bar before the footer), repeated "Sample… Not shop stock" captions in the showcase and bridal box, the homepage "Service previews only" note, and the Collections disclosure strip. One disclosure stays in the footer, the AI-model tag stays on See it on.
+- **Pages opening at the footer:** confirmed (homepage bottom → Collections opened at scrollY 1961). `src/components/layout/scroll-reset.tsx` sets manual scroll restoration and returns to the top on every route change (hash links keep their target). Re-tested: scrollY 0.
+- **Footer:** rebuilt `site-footer.tsx`: gold CTA band (hidden on the homepage, which has its own finale CTA), deep bronze body, Explore / Services / Showroom columns (address and hours "to be confirmed"), bottom bar with disclosure and back to top.
+- **Visit and enquiry forms:** `src/components/services/service-dialogs.tsx` + `src/config/services.ts`. Any `data-service="visit|enquiry"` button (and the old homepage `data-home-action` appointment/enquiry) opens them. Visit: date (today or later), time slot, purpose, group size, notes, name, PK mobile, contact preference, consent. Enquiry: topic, optional design ID (RSJ-D###), message, contact. Validated; success says "Not connected yet: this … was not sent." Shop facts stay null until approved. No network submission.
+- **See it on:** camera push capped at 1.45× (was up to 3.6×), round loupe shows the piece close up, detail panel in the side column with up to three matching published sample designs, Vault link, "Ask about this piece".
+- **Collections:** horizontal runway replaced by full-height sticky chapters (`collection-chapters.tsx`): image clip-reveal, copy rise, the chapter underneath settles back as the next slides over; design count and three design thumbnails per collection. Phones: plain stacked chapters.
+- **Hero:** same Flow film kept as requested; chapter headlines now fade sequentially (no overlap), letterbox bars removed, scroll-linked fly-over push (scale 1.05→1.10 with lateral glide) and a depth drift on the light layer.
+- **Tests:** tsc, eslint, build PASS; full Playwright 87/87 PASS (tests updated for the new forms, try-on, collections).
+- **Waiting on:** scroll-craft / `nateherk-design` plugin folder (not in any connected folder); client-approved shop address, hours and contact; hero re-shoot only if the client still wants it after this pass.
+
 ### 2026-11-27 — Claude (Saad's session) — Live Pakistan gold rates, client point 3 (S-25)
 
 - **Scope:** Client feedback point 3 only (live gold rates). The installment plan (point 4) is held back for its own task; its draft files are not in this commit.
@@ -731,7 +743,7 @@ No customer requirement or journey is missing from the Phase 01 baseline. Remain
 
 ### Active snapshot — Phase 04 verified / STOP before Phase 05
 
-- **Latest (2026-11-27, S-25):** Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
+- **Latest (2026-11-27, S-26):** Client polish pass done (see S-26). Earlier S-25: Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
 
 - **Last agent:** Codex, sole writer after user confirmation; internal review/QA only, no delegation or independent review.
 - **Completed scope:** Phase04 customer-facing Design Vault.118 publishable files;11 original image-backed SAMPLE designs,14 unpublished drafts; /designs, /collections,4 collection slugs and five read-only API route families. No full product/quotation/admin/AI/voice/gold backend. Preserve all Phase02/03 functionality and prior logs/assets.
