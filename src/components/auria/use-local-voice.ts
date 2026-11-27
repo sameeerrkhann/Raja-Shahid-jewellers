@@ -58,6 +58,13 @@ export function useLocalVoice() {
     setState("idle");
   }
 
+  function resetVoiceFeedback() {
+    stopVoice();
+    setVoiceNotice("");
+    setRetryDictation(false);
+    setVoiceReload(false);
+  }
+
   function timeoutVoice(ticket: number, duration: number, message: string) {
     if (deadline.current) clearTimeout(deadline.current);
     deadline.current = setTimeout(() => {
@@ -205,5 +212,5 @@ export function useLocalVoice() {
     try { window.speechSynthesis.speak(utterance); }
     catch { stopVoice(); setVoiceNotice("This device could not start local playback."); }
   }
-  return { state, voiceActivity, voiceNotice, voiceReload, dictate, finishDictation, cancelDictation, retryDictation, stopVoice, readAloud, installLanguage, installVoicePack };
+  return { state, voiceActivity, voiceNotice, voiceReload, dictate, finishDictation, cancelDictation, retryDictation, stopVoice, resetVoiceFeedback, readAloud, installLanguage, installVoicePack };
 }

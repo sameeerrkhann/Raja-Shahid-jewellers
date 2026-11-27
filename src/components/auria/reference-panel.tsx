@@ -13,8 +13,7 @@ import { JewelleryPicture } from "./jewellery-stage";
 type ReferenceResult = { file: File; url: string; colors: ImageColors };
 type PaletteMatch = { card: DesignCardData; distance: number };
 
-export function ReferencePanel({ onSelect, disabled, visionToken }: { onSelect: (card: DesignCardData, note: string) => void; disabled: boolean; visionToken?: string }) {
-  const [open, setOpen] = useState(false);
+export function ReferencePanel({ onSelect, disabled, visionToken, open, setOpen }: { onSelect: (card: DesignCardData, note: string) => void; disabled: boolean; visionToken?: string; open: boolean; setOpen: (open: boolean) => void }) {
   const [result, setResult] = useState<ReferenceResult | null>(null);
   const [localState, setLocalState] = useState<"idle" | "opening" | "matching">("idle");
   const [matches, setMatches] = useState<PaletteMatch[]>([]);

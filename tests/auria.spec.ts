@@ -67,6 +67,7 @@ for (const width of [320, 390, 768, 1440]) test(`workspace responsive, accessibl
   await expect(page.getByLabel("Message AURIA")).toBeVisible(); await expect(page.getByText("Restoring your atelier…")).toBeHidden();
   await expect(page.getByRole("button", { name: /^Send/ })).toBeDisabled();
   if (width <= 900) await page.getByRole("button", { name: "Design & draft", exact: true }).click();
+  await page.getByRole("button", { name: "Browse sample designs" }).click();
   await page.locator(".auria-discovery button").first().click(); await expect(page.getByLabel("Requested changes")).toBeVisible();
   await page.getByLabel("Requested changes").fill("A fictional test detail"); await page.getByRole("button", { name: "Save demo draft", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Review saved draft" })).toBeVisible(); await expect(page.getByRole("button", { name: "Confirm demo enquiry" })).toBeDisabled();

@@ -1,4 +1,5 @@
 import type { Language } from "@/types/auria";
+import { handoffIntent } from "./demo-intent";
 
 // Only fill these fields with shop-approved information. They are shared by the local and live tools.
 export const storeKnowledge: Record<string, string | null> = {
@@ -35,8 +36,8 @@ export function businessReply(prompt: string, locale: Exclude<Language, "auto">)
   if (/\b((?:gold|sona) (?:rate|price)|per tola|tola rate)\b|سونے کا ریٹ|سونے کی قیمت|فی تولہ/i.test(prompt)) return tr(
     "Live gold rates are unavailable in this demo.", "اس ڈیمو میں سونے کا تازہ ریٹ دستیاب نہیں۔", "Is demo mein live gold rate dastiyab nahin.",
   ) + handoff;
-  if (/\b(appointment|showroom visit|book a visit)\b|ملاقات/i.test(prompt)) return tr(
-    "Showroom visits require confirmation from the jeweller.", "شوروم کی ملاقات کے لیے جیولر سے تصدیق چاہیے۔", "Showroom visit jeweller ki tasdeeq se hoti hai.",
+  if (handoffIntent.test(prompt)) return tr(
+    "Direct contact and showroom visits can be arranged once the jeweller confirms the details.", "شوروم کی ملاقات کے لیے جیولر سے تصدیق چاہیے۔", "Rabtay aur showroom visit ki tafseel jeweller se tasdeeq hogi.",
   ) + handoff;
   const matched = topics.filter(([, pattern]) => pattern.test(prompt));
   if (!matched.length) return null;

@@ -37,7 +37,7 @@ for (const [width, height] of [[1440, 900], [1280, 660], [768, 900], [390, 844],
 test("local catalogue conversation persists and can lead to a saved, trackable enquiry", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/ai-atelier");
-  await page.getByRole("button", { name: "22K gold rings" }).click();
+  await page.getByRole("button", { name: "Find Jewellery", exact: true }).click();
   await expect(page.getByLabel("Message AURIA")).toHaveValue("Show me 22K gold rings.");
   await page.getByRole("button", { name: "Send", exact: true }).click();
   const reply = page.getByRole("article", { name: "AURIA response" }).last();
@@ -45,6 +45,10 @@ test("local catalogue conversation persists and can lead to a saved, trackable e
   await expect(reply.getByText("These pieces come from the sample catalogue.")).toBeVisible();
   const jali = reply.locator(".auria-recommendations button").filter({ hasText: "RSJ-D007" });
   await jali.click();
+  const selection = page.getByRole("region", { name: "Selected jewellery" });
+  await expect(selection).toContainText("Jali Arch Ring");
+  await expect(page.getByLabel("Message AURIA")).toBeVisible();
+  await selection.getByRole("button", { name: "Request quote" }).click();
   await expect(page.getByRole("heading", { name: "Jali Arch Ring", exact: true })).toBeVisible();
   await page.getByLabel("Requested changes").fill("A finer pattern for fictional review");
   await page.getByRole("button", { name: "Save demo draft" }).click();
@@ -72,8 +76,9 @@ test("local catalogue conversation persists and can lead to a saved, trackable e
 test("the image stage cycles and opens keyboard-dismissable photo zoom", async ({ page }) => {
   await page.goto("/ai-atelier");
   const stage = page.getByRole("complementary", { name: "Selected design and quotation" });
+  await stage.getByRole("button", { name: "Browse sample designs" }).click();
   const first = await stage.getByRole("heading", { level: 2 }).textContent();
-  await stage.getByRole("button", { name: "Next design image" }).click();
+  await stage.getByRole("button", { name: "Next design", exact: true }).click();
   await expect(stage.getByRole("heading", { level: 2 })).not.toHaveText(first!);
   const inspect = stage.getByRole("button", { name: /Inspect image of/ });
   await inspect.click();

@@ -8,10 +8,10 @@ import { geminiProvider, providerCapability, providerError } from "./provider";
 import { executeTool } from "./tools";
 import { findPublicDesign } from "@/lib/server/catalogue";
 import { noStore } from "./http";
-import { catalogueDemoProvider } from "./catalogue-demo";
+import { catalogueDemoProvider, isGuidedRequest } from "./catalogue-demo";
 import { canUseLocalFallback, isTransientProviderFailure, providerOrder, upstreamRetryAfter, upstreamStatus } from "@/lib/auria/provider-policy";
 import { setTimeout as wait } from "node:timers/promises";
-import { budgetFrom, demoTitle } from "@/lib/auria/demo-intent";
+import { budgetFrom, demoTitle, purityFrom } from "@/lib/auria/demo-intent";
 import { providerHistory } from "@/lib/auria/provider-history";
 import { ollamaModel, ollamaProvider } from "./ollama";
 import { healthFor, recordProviderFailure, recordProviderSuccess } from "./provider-health";
@@ -37,7 +37,7 @@ export async function chat(request: Request, owner: string) {
   const body = await readJson(request, chatInput);
   const diagnostic = process.env.AURIA_TEST_STORE === "true" ? body.mode : undefined;
   const catalogueOnly = diagnostic === "catalogue";
-  const hash = createHash("sha256").update(JSON.stringify({ message: body.message, version: body.expectedVersion, ...(catalogueOnly ? { mode: "catalogue" } : {}), ...(body.retryOf ? { retryOf: body.retryOf } : {}) })).digest("hex");
+  const hash = createHash("sha256").update(JSON.stringify({ message: body.message, version: body.expectedVersion, ...(catalogueOnly ? { mode: "catalogue" } : {}), ...(body.retryOf ? { retryOf: body.retryOf } : {}), ...(body.recommendationId ? { recommendationId: body.recommendationId } : {}), ...(body.language ? { language: body.language } : {}) })).digest("hex");
   const replay = withOwner(owner, (s) => { const c = ownedConversation(s, body.conversationId); const previous = c.requests[body.requestId]; if (previous && previous.hash !== hash) throw new AuriaError("IDEMPOTENCY_CONFLICT", "This request ID belongs to another message.", 409); return previous ? c : null; });
   if (replay) {
     if (replay.activeTurn) throw new AuriaError("TURN_ACTIVE", "This response is still running. Reload history or stop it.", 409);
@@ -59,6 +59,7 @@ export async function chat(request: Request, owner: string) {
     else c.messages.push({ id: randomUUID(), role: "user", text: body.message, createdAt: now, state: "COMPLETE", cards: [] });
     c.messages.push({ id: assistantId, role: "assistant", text: "", createdAt: now, state: "STREAMING", cards: [] });
     if (c.messages.length === 2 && !body.retryOf) c.title = demoTitle(body.message);
+    c.language = body.language ?? c.language;
     c.updatedAt = now; c.version++;
     c.requests[body.requestId] = { hash, assistantId }; c.activeTurn = { id: body.requestId, assistantId, expiresAt: Date.now() + 95_000 };
     return c;
@@ -92,8 +93,14 @@ export async function chat(request: Request, owner: string) {
       try {
         const history = providerHistory(conversation.messages);
         const describe = (id: string) => { const d = findPublicDesign(id); return d ? { id, designCode: d.designCode, title: d.title, category: d.categorySlug, purities: d.variants.flatMap((variant) => variant.karat ? [variant.karat] : []) } : null; };
-        const context = { language: conversation.language, selectedDesign: conversation.selectedDesignId ? describe(conversation.selectedDesignId) : null, displayedDesigns: conversation.recentDesignIds.flatMap((id, i) => { const d = describe(id); return d ? [{ position: i + 1, ...d }] : []; }), budgetPreferencePKR: conversation.messages.filter((message) => message.role === "user").map((message) => budgetFrom(message.text)).findLast((budget) => budget !== null) ?? null, shortlistDesigns: conversation.shortlistDesignIds?.flatMap((id) => { const design = describe(id); return design ? [design] : []; }), referenceNote: conversation.referenceNote ?? null, draft: conversation.draft ? { status: conversation.draft.status, designId: conversation.draft.designId, reference: conversation.draft.reference } : null };
-        const providers: NamedProvider[] = choices.filter((kind) => !healthFor(kind)).map(hostedOrLocal);
+        const displayed = body.recommendationId
+          ? conversation.messages.find((message) => message.id === body.recommendationId && message.role === "assistant" && message.state === "COMPLETE")?.cards.map(({ id }) => id) ?? []
+          : conversation.recentDesignIds;
+        const userMessages = conversation.messages.filter((message) => message.role === "user");
+        const preferred = userMessages.map((message) => purityFrom(message.text)).findLast(Boolean);
+        const guided = diagnostic !== "live" && isGuidedRequest(body.message, !!body.recommendationId);
+        const context = { language: conversation.language, selectedDesign: conversation.selectedDesignId ? describe(conversation.selectedDesignId) : null, displayedDesigns: displayed.flatMap((id, i) => { const d = describe(id); return d ? [{ position: i + 1, ...d }] : []; }), purityPreference: preferred ? Number(preferred) : undefined, budgetPreferencePKR: userMessages.map((message) => budgetFrom(message.text)).findLast((budget) => budget !== null) ?? null, shortlistDesigns: (body.recommendationId ? undefined : conversation.shortlistDesignIds)?.flatMap((id) => { const design = describe(id); return design ? [design] : []; }), referenceNote: conversation.referenceNote ?? null, draft: conversation.draft ? { status: conversation.draft.status, designId: conversation.draft.designId, reference: conversation.draft.reference } : null };
+        const providers: NamedProvider[] = (guided ? [] : choices).filter((kind) => !healthFor(kind)).map(hostedOrLocal);
         const hasModelAlternative = providers.length > 1;
         if (diagnostic !== "live") providers.push({ kind: "catalogue", model: "catalogue", provider: catalogueDemoProvider(body.message, context, history) });
         const greeting = /^(?:hi|hello|hey|salaam|salam|assalam(?:u)? alaikum|السلام علیکم|thank you|thanks|shukriya|شکریہ)[.!؟!\s]*$/iu.test(body.message.trim());
@@ -129,7 +136,7 @@ export async function chat(request: Request, owner: string) {
                 if (!visible) {
                   visible = true;
                   source = provenance;
-                  fallback = isCatalogue && !catalogueOnly;
+                  fallback = isCatalogue && !catalogueOnly && !guided;
                   yield { type: "source", source, ...(fallback ? { assistance: { retryable: choices.length > 0 } } : {}) };
                   yield* pending;
                 }

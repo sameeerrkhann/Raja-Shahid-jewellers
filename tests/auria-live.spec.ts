@@ -117,6 +117,10 @@ test("photo sharing is opt-in, local matching survives upstream quota, and a sel
   await page.screenshot({ path: "artifacts/auria-live/reference-mobile.png" });
   await vision.getByRole("button", { name: /RSJ-D007/ }).click();
   await expect(dialog).toHaveCount(0);
+  const selection = page.getByRole("region", { name: "Selected jewellery" });
+  await expect(selection).toContainText("RSJ-D007");
+  await expect(page.getByLabel("Message AURIA")).toBeInViewport({ ratio: 1 });
+  await selection.getByRole("button", { name: "Request quote" }).click();
   await expect(page.getByRole("button", { name: "Include photo appearance note" })).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: "Design & draft", exact: true }).click();

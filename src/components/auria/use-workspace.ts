@@ -130,9 +130,9 @@ export function useWorkspace() {
   async function openConversation(id: string) { setError(""); setNotice(""); setInput(""); setNewReply(false); setLoading(true); try { await loadConversation(id); setView("conversation"); window.history.replaceState(null, "", `/ai-atelier?conversation=${id}`); } catch (e) { setError((e as Error).message); } finally { setLoading(false); } }
   async function selectDesign(design: DesignCardData, referenceNote?: string) {
     if (busy) return; setBusy(true); setError("");
-    try { const c = conversation ?? await api<Conversation>("conversations", { language }); const updated = await api<Conversation>(`conversations/${c.id}/selection`, { selectedDesignId: design.id, expectedVersion: c.version, ...(referenceNote ? { referenceNote } : {}) }); setConversation(updated); const response = await fetch(`/api/designs/${design.id}`); const data = await response.json(); if (!response.ok) throw new Error("Design details unavailable."); setSelected(data.data); setView("selection"); await refreshHistory(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+    try { const c = conversation ?? await api<Conversation>("conversations", { language }); const updated = await api<Conversation>(`conversations/${c.id}/selection`, { selectedDesignId: design.id, expectedVersion: c.version, ...(referenceNote ? { referenceNote } : {}) }); setConversation(updated); const response = await fetch(`/api/designs/${design.id}`); const data = await response.json(); if (!response.ok) throw new Error("Design details unavailable."); setSelected(data.data); window.history.replaceState(null, "", `/ai-atelier?conversation=${c.id}`); await refreshHistory(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
-  async function send(text = input, retry = false) {
+  async function send(text = input, retry = false, recommendationId?: string) {
     const retryOf = retry ? retryId.current : undefined;
     if (!retry) retryId.current = undefined;
     if (busy || loading || sendLock.current || conversation?.activeTurn || !csrf || !text.trim()) return;
@@ -151,7 +151,7 @@ export function useWorkspace() {
       const now = new Date().toISOString(); const user: ChatMessage = { id: crypto.randomUUID(), role: "user", text, createdAt: now, state: "COMPLETE", cards: [] };
       setConversation({ ...c, messages: retryOf ? c.messages.slice(0, -1) : [...c.messages, user] });
       setStreaming({ id: "stream", role: "assistant", text: "", createdAt: now, state: "STREAMING", cards: [] }); setInput("");
-      const response = await fetch("/api/ai/chat", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify({ conversationId: c.id, expectedVersion: c.version, requestId: crypto.randomUUID(), message: text, ...(retryOf ? { retryOf } : {}) }), signal: controller.signal });
+      const response = await fetch("/api/ai/chat", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify({ conversationId: c.id, expectedVersion: c.version, requestId: crypto.randomUUID(), message: text, language, ...(recommendationId ? { recommendationId } : {}), ...(retryOf ? { retryOf } : {}) }), signal: controller.signal });
       if (!response.ok) {
         const data = await response.json();
         setRetryAllowed(!!data.error?.retryable);

@@ -28,10 +28,14 @@ export function budgetFrom(text: string) {
   const amount = match ? Number(match[1].replaceAll(",", "")) * (unit === "k" ? 1000 : unit ? 100_000 : 1) : 0;
   return Number.isSafeInteger(amount) && amount >= 1 && amount <= 10_000_000 ? amount : null;
 }
+export const quoteIntent = /\b(prepare|draft|start|create|make|request)\b.*\b(quote|quotation|enquiry|inquiry)\b|\b(quote|quotation|enquiry)\b.*\b(banao|banayen|bana\s+(?:do|den|de))\b|(?:کوٹیشن|انکوائری).*?(?:بنا|تیار)/i;
+
+export const handoffIntent = /\b(appointment|showroom visit|visit the showroom|book a visit|call back|callback|whatsapp|human|salesperson|team member|rabta|(?:jeweller|dukaan|team) se baat)\b|ملاقات|رابطہ|جیولر سے بات/i;
+
 export function demoLanguage(text: string, preference: Language) {
   if (preference !== "auto") return preference;
   if (/[\u0600-\u06ff]/.test(text)) return "ur";
-  return /\b(dikha[oy]?|chahiye|waali|wali|pehl[ai]|doosr[ai]|bata[oy]?|kya|mujhe|salam)\b/i.test(text) ? "roman-ur" : "en";
+  return /\b(dikha[oy]?|chahiye|waali|wali|pehl[ai]|doosr[ai]|bata[oy]?|kya|mujhe|salam|iski|uski|rabta|bana do)\b/i.test(text) ? "roman-ur" : "en";
 }
 export function demoTitle(text: string) {
   const design = text.match(/\bRSJ-D\d{3,6}\b/i)?.[0];

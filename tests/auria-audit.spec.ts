@@ -188,6 +188,7 @@ test("atelier stays in the viewport, opens history and supports wheel image zoom
   await expect(page.getByRole("complementary", { name: "Conversation history" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(toggle).toBeFocused();
+  await page.getByRole("button", { name: "Browse sample designs" }).click();
   await page.getByRole("button", { name: /Inspect image of/ }).click();
   const viewport = page.getByRole("region", { name: "Jewellery photo" });
   await viewport.hover();

@@ -2,9 +2,10 @@ import "server-only";
 import type { ChatProvider, Language, ProviderTurn, ToolCall } from "@/types/auria";
 import type { DesignCardData, DisplayStatus, PublicDesign } from "@/types/catalogue";
 import { catalogueCategories, categoryLabel, occasionOptions, purityOptions, statusLabels, styleOptions } from "@/config/catalogue";
-import { budgetFrom, categoryFrom, demoLanguage, purityFrom } from "@/lib/auria/demo-intent";
-import { collections } from "@/lib/server/catalogue";
+import { budgetFrom, categoryFrom, demoLanguage, handoffIntent, purityFrom, quoteIntent } from "@/lib/auria/demo-intent";
+import { collections, findPublicDesign, queryCatalogue } from "@/lib/server/catalogue";
 import { businessReply } from "@/lib/auria/knowledge";
+import { resolveDesign } from "@/lib/auria/catalogue-tools";
 
 type DemoDesign = { designCode: string; category: string; purities: number[] };
 type DemoContext = {
@@ -14,13 +15,21 @@ type DemoContext = {
   shortlistDesigns?: DemoDesign[];
   referenceNote?: string | null;
   budgetPreferencePKR?: number | null;
+  purityPreference?: number;
   draft?: { status: string } | null;
 };
 type Locale = Exclude<Language, "auto">;
 type Reply = (en: string, ur: string, roman: string) => string;
-const ordinals = [/\b(first|pehl[ai])\b|پہل[یای]/i, /\b(second|doosr[ai]|dusr[ai])\b|دوسر[یای]/i, /\b(third|teesr[ai]|tisr[ai])\b|تیسر[یای]/i];
+const ordinals = [/\b(first|pehl[ai])\b|پہل[یای]/i, /\b(second|doosr[ai]|dusr[ai])\b|دوسر[یای]/i, /\b(third|teesr[ai]|tisr[ai])\b|تیسر[یای]/i, /\b(fourth|chauth[ai])\b|چوتھ[یای]/i, /\b(fifth|panchw[ai]|paanchw[ai])\b|پانچو[یای]/i];
 const comparePattern = /\b(compare|comparison|lighter|heavier|cheaper|difference between|muqabla|sasta|halka)\b|موازنہ|فرق|سستا|ہلکا/i;
-const preparePattern = /\b(prepare|draft|start|create|make)\b.*\b(quote|quotation|enquiry|inquiry)\b|\b(quote|quotation|enquiry)\b.*\b(banao|banayen)\b|کوٹیشن بنا|انکوائری بنا/i;
+const selectedReference = /\b(?:this|that) (?:one|design|piece|ring|bangle|necklace)\b|\b(?:iski|uski|iss wali|is wali|yeh wali|woh wali)\b|یہ ڈیزائن|وہ ڈیزائن|اس کی/i;
+
+export function isGuidedRequest(prompt: string, archived: boolean) {
+  const hasOrdinal = ordinals.some((pattern) => pattern.test(prompt));
+  const exactReference = selectedReference.test(prompt) || hasOrdinal && (archived || !!categoryFrom(prompt));
+  return quoteIntent.test(prompt) || handoffIntent.test(prompt) || exactReference
+    || (comparePattern.test(prompt) && (hasOrdinal || /\bRSJ-D\d{3,6}\b/i.test(prompt)));
+}
 const relatedPattern = /\b(similar|like this|something like|milta julta|isi jaisa)\b|ملتا جلتا|جیسا/i;
 const quotePattern = /\b(quote|quotation|budget|customiz(?:e|ation)|customise)\b|بجٹ|قیمت/i;
 
@@ -37,35 +46,45 @@ function plan(prompt: string, context: DemoContext, locale: Locale, say: Reply, 
     "Sample catalogue mein bachon ke zewarat nahin hain. Workshop custom enquiry dekh sakti hai.",
   );
   const category = categoryFrom(prompt);
-  const shown = context.displayedDesigns.length >= 2 ? context.displayedDesigns : context.shortlistDesigns?.length ? context.shortlistDesigns : context.displayedDesigns;
+  const shown = context.displayedDesigns.length ? context.displayedDesigns : context.shortlistDesigns ?? [];
   const candidates = shown.filter((item) => !category || item.category === category);
   const ordinalMatches = ordinals.map((pattern, index) => ({ index, at: prompt.search(pattern) })).filter(({ at }) => at >= 0).sort((a, b) => a.at - b.at);
   const resolved = ordinalMatches.map(({ index }) => shown[index]).filter((item) => item && (!category || item.category === category));
-  if (preparePattern.test(prompt)) {
-    const design = resolved[0] ?? context.selectedDesign;
+  const clarify = () => say("Which design do you mean? Select a design or enter its catalogue code.", "کون سا ڈیزائن؟ اسے منتخب کریں یا اس کا کوڈ بتائیں۔", "Kaunsa design? Design chunen ya us ka code batayen.");
+  if (resolved.length !== ordinalMatches.length) return clarify();
+  if (quoteIntent.test(prompt)) {
+    const explicitDesign = ids.length === 1 ? resolveDesign(ids[0], { get: findPublicDesign, search: queryCatalogue }) : null;
+    const design = ids.length ? explicitDesign && {
+      designCode: explicitDesign.designCode,
+      purities: explicitDesign.variants.flatMap((variant) => variant.karat ?? []),
+    } : resolved[0] ?? context.selectedDesign;
     const designCode = ids[0] ?? design?.designCode;
-    if (!designCode || ids.length > 1 || ordinalMatches.length > 1) return say("Choose one design for the draft, or share its RSJ code.", "کوٹیشن کے لیے ایک ڈیزائن یا اس کا کوڈ بتائیں۔", "Draft ke liye ek design ya us ka RSJ code batayen.");
+    if (!designCode || ids.length > 1 || ordinalMatches.length > 1 || (ids.length && ordinalMatches.length)) return say("Choose one design for the draft, or share its RSJ code.", "کوٹیشن کے لیے ایک ڈیزائن یا اس کا کوڈ بتائیں۔", "Draft ke liye ek design ya us ka RSJ code batayen.");
     if (context.draft?.status === "DRAFT") return say("There’s already a saved draft. Open Design & draft to review or edit it.", "محفوظ کوٹیشن میں تبدیلی کے لیے Design & draft کھولیں۔", "Saved draft dekhne ya badalne ke liye Design & draft kholen.");
     if (context.draft) return say("This conversation already has a submitted enquiry. Start a new conversation for a new draft.", "اس گفتگو میں انکوائری محفوظ ہے۔ نئی کوٹیشن کے لیے نئی گفتگو شروع کریں۔", "Is conversation mein enquiry save hai. Naye draft ke liye nayi conversation shuru karen.");
-    const purity = purityFrom(prompt);
-    return { name: "createQuoteDraft", args: { designId: designCode, ...(purity ? { goldPurity: Number(purity) } : {}), budgetPKR: context.budgetPreferencePKR ?? null } };
+    const purity = Number(purityFrom(prompt)) || context.purityPreference;
+    if (purity && design && !design.purities.includes(purity)) return say(
+      "That purity is not recorded for the selected design. Choose one of its listed options to continue.",
+      "منتخب ڈیزائن میں یہ قیراط درج نہیں ہے۔ موجودہ آپشنز میں سے منتخب کریں۔",
+      "Is design ke liye yeh karat darj nahin hai. Darj options mein se chunen.",
+    );
+    return { name: "createQuoteDraft", args: { designId: designCode, ...(purity ? { goldPurity: purity } : {}), budgetPKR: context.budgetPreferencePKR ?? null } };
   }
   if (comparePattern.test(prompt)) {
-    const contextCodes = (ordinalMatches.length ? resolved : candidates.slice(0, 2)).map((item) => item.designCode);
-    const designIds = (ids.length ? [...ids, ...(ordinalMatches.length ? contextCodes : [])] : contextCodes).slice(0, 4);
+    const explicit = ids.length || ordinalMatches.length || selectedReference.test(prompt);
+    const contextCodes = (explicit ? resolved : candidates.slice(0, 2)).map((item) => item.designCode);
+    const selectedCode = selectedReference.test(prompt) ? context.selectedDesign?.designCode : undefined;
+    if (selectedReference.test(prompt) && !selectedCode) return clarify();
+    const designIds = [...new Set([...ids, ...contextCodes, ...(selectedCode ? [selectedCode] : [])])].slice(0, 4);
     if (designIds.length >= 2) return { name: "compareDesigns", args: { designIds } };
     return say("Choose two catalogue designs or enter their RSJ design codes and I’ll compare them.", "موازنے کے لیے دو ڈیزائن یا ان کے آر ایس جے کوڈ بتائیں۔", "Muqable ke liye do designs ya un ke RSJ codes batayen.");
   }
 
   if (ids[0]) return { name: "getProductDetails", args: { designId: ids[0] } };
   if (relatedPattern.test(prompt) && context.selectedDesign && !purityFrom(prompt)) return { name: "getRelatedDesigns", args: { designId: context.selectedDesign.designCode } };
-  const ordinal = ordinals.findIndex((pattern) => pattern.test(prompt));
-  const refersToSelection = /\b(this|that) (one|design|piece|ring|bangle|necklace)\b|یہ ڈیزائن|وہ ڈیزائن/i.test(prompt);
-  if (ordinal >= 0 || refersToSelection) {
-    const shown = context.displayedDesigns.filter((item) => !category || item.category === category);
-    const shortlist = context.shortlistDesigns?.filter((item) => !category || item.category === category) ?? [];
-    const design = ordinal >= 0 ? (shown.length >= 2 ? shown : shortlist.length ? shortlist : shown)[ordinal] : context.selectedDesign;
-    if (!design || (category && category !== design.category)) return say("Which design do you mean? Select a design or enter its catalogue code.", "کون سا ڈیزائن؟ اسے منتخب کریں یا اس کا کوڈ بتائیں۔", "Kaunsa design? Design chunen ya us ka code batayen.");
+  if (resolved.length || selectedReference.test(prompt)) {
+    const design = resolved[0] ?? context.selectedDesign;
+    if (resolved.length > 1 || !design || (category && category !== design.category)) return clarify();
     return { name: "getProductDetails", args: { designId: design.designCode } };
   }
 
@@ -165,6 +184,11 @@ export function catalogueDemoProvider(prompt: string, context: DemoContext, hist
       if (items.some((card) => matchedVariantStatus?.some((match) => match.id === card.id && match.displayStatus !== card.displayStatus))) {
         text += " " + say("The badges show design-level sample availability. Confirm your chosen purity in the quotation.", "بیج پورے ڈیزائن کی نمونہ دستیابی بتاتے ہیں۔ مطلوبہ قیراط کی کوٹیشن میں تصدیق کریں۔", "Badge design ki sample availability dikhata hai. Pasandida karat quotation mein tasdeeq karen.");
       }
+      if (items.length && /\bengagement\b|منگنی/i.test(prompt)) text += " " + say(
+        "These are a starting point for your engagement ring. Do you prefer a plain band or a stone setting?",
+        "یہ منگنی کی انگوٹھی کے لیے ابتدائی انتخاب ہیں۔ آپ سادہ بینڈ پسند کریں گے یا پتھر والی انگوٹھی؟",
+        "Mangni ki angoothi ke liye yeh ibtidayi options hain. Saada band chahiye ya pathar wali angoothi?",
+      );
       const budget = budgetFrom(prompt);
       if (budget && items.length) text += " " + say("Select a piece to carry your PKR budget into the quotation draft. Pricing is quote-only.", "اپنا بجٹ کوٹیشن میں شامل کرنے کے لیے ڈیزائن منتخب کریں۔", "Budget quotation mein rakhne ke liye design chunen.");
       else if (items.length && quotePattern.test(prompt)) text += " " + say("Select a design to enter your preferences and review a quotation draft.", "کوٹیشن کے لیے ایک ڈیزائن منتخب کریں۔", "Quotation ke liye design chunen.");

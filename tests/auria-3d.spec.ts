@@ -42,6 +42,7 @@ test("desktop 3D lazily loads real geometry, respects reduced motion, and suppor
   });
   await page.goto("/ai-atelier");
   const visual = stage(page);
+  await visual.getByRole("button", { name: "Browse sample designs" }).click();
   await visual.getByRole("button", { name: /Inspect image of/ }).click();
   await expect(page.getByRole("region", { name: "Jewellery photo" })).toBeVisible();
   await page.keyboard.press("Escape");
@@ -126,6 +127,7 @@ test("Data Saver holds back the engine and the photo path survives an asset fail
   await expect(dialog.getByText("3D model ready", { exact: true })).toBeVisible({ timeout: 30_000 });
   expect(attempts).toBe(2);
   await dialog.getByRole("button", { name: "Back to catalogue photos" }).click();
+  await visual.getByRole("button", { name: "Browse sample designs" }).click();
   await visual.getByRole("button", { name: /Inspect image of/ }).click();
   await expect(page.getByRole("region", { name: "Jewellery photo" })).toBeVisible();
 });
