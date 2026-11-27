@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { mkdir } from "node:fs/promises";
 
-const scenes = ["entrance", "craft", "bridal", "vault", "auria", "gold"];
+const scenes = ["entrance", "collection", "closer", "try-on", "bridal", "vault", "auria", "gold"];
 const screenshotFolder = "artifacts/phase03/final";
 
 async function ready(page: Page) {
@@ -21,14 +21,14 @@ async function scene(page: Page, id: string) {
   await page.waitForTimeout(700); // allow bounded scrub/reveal to settle before a screenshot
 }
 
-test("homepage has six honest connected scenes and proper metadata", async ({ page, request }) => {
+test("homepage has eight honest connected scenes and proper metadata", async ({ page, request }) => {
   await ready(page);
   await expect(page).toHaveURL(/\/$/);
-  await expect(page).toHaveTitle("Raja Shahid Jewellers — Beyond the Moment");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Beyond the moment.");
-  await expect(page.locator("[data-scene]")).toHaveCount(6);
-  await expect(page.getByText("Illustrative rate preview · Not live")).toBeVisible();
-  await expect(page.getByText(/Hand-authored illustration → reference photograph/)).toBeVisible();
+  await expect(page).toHaveTitle("Raja Shahid Jewellers · Beyond the Moment");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Crafted to be remembered.");
+  await expect(page.locator("[data-scene]")).toHaveCount(8);
+  await expect(page.locator("#gold .gold-rates")).toContainText(/Live gold rates are not connected yet|Rate unavailable|Live rate|Sample figures/);
+  await expect(page.getByText("Not connected yet. No message, photo or voice leaves this page.")).toBeAttached();
   expect((await request.get("/admin")).status()).toBe(404);
   expect((await request.get("/designs")).status()).toBe(200);
   expect((await request.get("/ai-atelier")).status()).toBe(404);
@@ -60,10 +60,10 @@ for (const width of [320, 375, 390, 768, 1024, 1440]) {
   });
 }
 
-test("two bounded pins and horizontal gallery controls", async ({ page }) => {
+test("one bounded pin (vault) and horizontal gallery controls", async ({ page }) => {
   await ready(page);
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "desktop");
-  await expect(page.locator(".pin-spacer")).toHaveCount(2);
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
   await expect(page.locator("#vault")).toHaveAttribute("data-scroll-start", /\d/);
   const travel = await page.locator("[data-pin-travel]").evaluateAll((elements) => elements.reduce((total, element) => total + Number((element as HTMLElement).dataset.pinTravel), 0));
   expect(travel).toBeLessThanOrEqual(1802);
@@ -85,7 +85,7 @@ test("offscreen category focus remains visible and opens an honest study", async
   await last.focus();
   await expect.poll(() => last.evaluate((element) => { const r = element.getBoundingClientRect(); return r.left >= -1 && r.right <= innerWidth + 1; })).toBe(true);
   await page.keyboard.press("Enter");
-  const dialog = page.getByRole("dialog", { name: "Men’s Jewellery — a direction to explore" });
+  const dialog = page.getByRole("dialog", { name: "Men’s Jewellery: a direction to explore" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(/clearly labelled synthetic samples/)).toBeVisible();
   await expect(dialog.getByRole("link", { name: "Browse Men’s Jewellery sample designs" })).toHaveAttribute("href", "/designs?category=mens");
@@ -114,11 +114,32 @@ test("future AURIA and enquiry CTAs explain availability without submissions", a
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   page.on("request", (request) => { methods.push(request.method()); if (!new URL(request.url()).hostname.match(/^(127\.0\.0\.1|localhost)$/)) external.push(request.url()); });
   await ready(page);
-  for (const [label, title] of [["Design with AURIA", "AURIA, coming into focus"], ["Plan a private visit", "A visit, thoughtfully planned"], ["A jewellery enquiry", "Begin with a conversation"]]) {
-    await page.getByRole("button", { name: label, exact: true }).click();
-    await expect(page.getByRole("dialog", { name: title })).toBeVisible();
-    await page.keyboard.press("Escape");
-  }
+  await page.getByRole("button", { name: "Preview AURIA", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "AURIA, coming into focus" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator(".home-finale").getByRole("button", { name: "Plan a private visit", exact: true }).click();
+  const visit = page.getByRole("dialog", { name: "Plan a private visit" });
+  await expect(visit).toBeVisible();
+  await visit.getByRole("button", { name: "Request the visit" }).click();
+  await expect(visit.getByText("Choose a date.")).toBeVisible();
+  await expect(visit.getByText(/Enter a Pakistani mobile number/)).toBeVisible();
+  const day = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+  await visit.getByLabel("Preferred date").fill(day);
+  await visit.getByLabel("Preferred time").selectOption({ index: 1 });
+  await visit.getByLabel("The visit is for").selectOption("Bridal set");
+  await visit.getByLabel("Your name").fill("Ayesha Khan");
+  await visit.getByLabel("Mobile number").fill("0300 1234567");
+  await visit.getByLabel(/may contact me/).check();
+  await visit.getByRole("button", { name: "Request the visit" }).click();
+  await expect(visit.getByText("Not connected yet: this request was not sent.")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator(".home-finale").getByRole("button", { name: "A jewellery enquiry", exact: true }).click();
+  const enquiry = page.getByRole("dialog", { name: "Jewellery enquiry" });
+  await expect(enquiry).toBeVisible();
+  await enquiry.getByLabel("Design ID (optional)").fill("ABC");
+  await enquiry.getByRole("button", { name: "Send enquiry" }).click();
+  await expect(enquiry.getByText("Design IDs look like RSJ-D001.")).toBeVisible();
+  await page.keyboard.press("Escape");
   expect(methods.every((method) => method === "GET")).toBe(true);
   expect(external).toEqual([]);
   expect(errors).toEqual([]);
@@ -126,7 +147,7 @@ test("future AURIA and enquiry CTAs explain availability without submissions", a
 
 test("OS and site reduced-motion preferences remove pins and retain all categories", async ({ page }) => {
   await ready(page);
-  await expect(page.locator(".pin-spacer")).toHaveCount(2);
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "reduced");
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
@@ -136,24 +157,24 @@ test("OS and site reduced-motion preferences remove pins and retain all categori
   await page.getByRole("checkbox", { name: "Reduce motion", exact: true }).uncheck();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(page.locator(".pin-spacer")).toHaveCount(2);
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
   await page.getByRole("checkbox", { name: "Reduce motion", exact: true }).check();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
 });
 
 test("resize and short landscape clean up pins without duplicates", async ({ page }) => {
   await ready(page);
-  await expect(page.locator(".pin-spacer")).toHaveCount(2);
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
   for (const [width, height] of [[390, 844], [1024, 600], [1440, 1000]]) {
     await page.setViewportSize({ width, height });
-    await expect(page.locator(".pin-spacer")).toHaveCount(width === 1440 ? 2 : 0);
+    await expect(page.locator(".pin-spacer")).toHaveCount(width === 1440 ? 1 : 0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   }
 });
 
 test("client navigation removes homepage motion and restores it on return", async ({ page }) => {
   await ready(page);
-  await expect(page.locator(".pin-spacer")).toHaveCount(2);
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
   await page.evaluate(() => { document.documentElement.dataset.routeSentinel = "same-document"; });
   await page.getByRole("link", { name: "Design preview", exact: true }).click();
   await expect(page).toHaveURL(/\/design-preview$/);
@@ -161,7 +182,7 @@ test("client navigation removes homepage motion and restores it on return", asyn
   await expect(page.locator("html")).toHaveAttribute("data-route-sentinel", "same-document");
   await page.getByRole("link", { name: "Raja Shahid JEWELLERS", exact: true }).click();
   await expect(page).toHaveURL(/\/#top$/);
-  await expect(page.locator(".pin-spacer")).toHaveCount(2);
+  await expect(page.locator(".pin-spacer")).toHaveCount(1);
   await expect(page.locator("html")).not.toHaveAttribute("data-reduce-motion");
 });
 
@@ -170,23 +191,24 @@ test("no-JavaScript story and native links remain readable", async ({ browser })
   try {
     const page = await context.newPage();
     await page.goto("http://127.0.0.1:3100/");
-    await expect(page.locator("[data-scene]")).toHaveCount(6);
+    await expect(page.locator("[data-scene]")).toHaveCount(8);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.locator(".pin-spacer")).toHaveCount(0);
-    await page.getByRole("link", { name: "Enter the Design Vault" }).click();
-    await expect(page).toHaveURL(/#vault$/);
+    await expect(page.locator(".begin").getByRole("link", { name: /^Bridal/ })).toBeVisible();
+    await page.getByRole("link", { name: "Explore the Design Vault" }).click();
+    await expect(page).toHaveURL(/\/designs$/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     await page.screenshot({ path: `${screenshotFolder}/no-js-mobile.png`, fullPage: true });
   } finally { await context.close(); }
 });
 
 test("missing hero media becomes an honest designed fallback", async ({ page }) => {
-  await page.route("**/images/editorial/derivatives/home-hero-*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
+  // The vault film is the hero media; its failure must disable the page motion and keep the story readable.
+  await page.route("**/images/hero/vault/*.webp", (route) => route.fulfill({ status: 404, body: "Test image unavailable" }));
   await ready(page);
   await expect(page.locator("main")).toHaveAttribute("data-motion-state", "fallback");
-  await expect(page.locator(".home-hero [data-media-failed]")).toBeVisible();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Enter the Design Vault" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Explore the Design Vault" })).toBeVisible();
   await page.screenshot({ path: `${screenshotFolder}/missing-media.png` });
 });
 
@@ -196,29 +218,24 @@ for (const width of [390, 1440]) {
     await ready(page);
     const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(results.violations).toEqual([]);
-    await page.getByRole("button", { name: "Design with AURIA", exact: true }).click();
+    await page.getByRole("button", { name: "Preview AURIA", exact: true }).click();
     const dialogResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(dialogResults.violations).toEqual([]);
   });
 }
 
-test("scrubbed entrance and labelled sketch/reference reveal change with scroll", async ({ page }) => {
+test("scrubbed entrance changes with scroll and AURIA stays honestly unconnected", async ({ page }) => {
   await ready(page);
-  const scale = () => page.locator("[data-hero-visual]").evaluate((element) => new DOMMatrix(getComputedStyle(element).transform).a);
-  const before = await scale();
-  await page.evaluate(() => window.scrollTo({ top: 450, behavior: "instant" }));
-  await expect.poll(scale).toBeGreaterThan(before + .005);
+  const intro = page.locator("[data-film-intro]");
+  await expect(intro).toHaveCSS("opacity", "1");
+  await page.locator("#entrance").evaluate((element) => { const { scrollStart, scrollEnd } = (element as HTMLElement).dataset; window.scrollTo({ top: Number(scrollStart) + (Number(scrollEnd) - Number(scrollStart)) * .45, behavior: "instant" }); });
+  await expect.poll(() => intro.evaluate((element) => Number(getComputedStyle(element).opacity))).toBeLessThan(.05);
+  await expect.poll(() => page.locator("[data-film-caption]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
   await page.screenshot({ path: `${screenshotFolder}/entrance-transition-1440.png` });
-  const geometry = await page.locator("#auria").evaluate((element) => { const r = element.getBoundingClientRect(); const top = r.top + scrollY; return { start: top - innerHeight * .7, end: top + r.height / 2 - innerHeight * .4 }; });
-  const masks: string[] = [];
-  for (const [label, progress] of [["sketch", 0], ["midpoint", .5], ["reference", 1]] as const) {
-    await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), geometry.start + (geometry.end - geometry.start) * progress);
-    await page.waitForTimeout(700);
-    masks.push(await page.locator("[data-concept-photo]").evaluate((element) => getComputedStyle(element).clipPath));
-    await page.screenshot({ path: `${screenshotFolder}/auria-${label}-1440.png` });
-  }
-  expect(new Set(masks).size).toBe(3);
-  await expect(page.getByText(/not AI output, CAD or a manufacturing guarantee/)).toBeVisible();
+  // AURIA is a design-only preview: it must say plainly that nothing is connected.
+  await page.locator("#auria").scrollIntoViewIfNeeded();
+  await expect(page.getByText("Not connected yet. No message, photo or voice leaves this page.")).toBeVisible();
+  await expect(page.getByText("Illustrative conversation · not connected")).toBeVisible();
 });
 
 test("cold local home transfer and animation profiling evidence", async ({ page }, testInfo) => {
@@ -243,4 +260,67 @@ test("cold local home transfer and animation profiling evidence", async ({ page 
   expect(initial.transferBytes).toBeLessThanOrEqual(1_500_000);
   expect(initial.scriptBytes).toBeLessThanOrEqual(250_000);
   expect(initial.cls).toBeLessThanOrEqual(.1);
+});
+
+test("showcase: gold film, collection arc, lens and dropdown work both ways", async ({ page }) => {
+  await ready(page);
+  await expect(page.locator(".showcase")).toHaveAttribute("data-showcase", "live");
+  const go = (id: string, at: number) => page.locator(`#${id}`).evaluate((element, progress) => { const { scrollStart, scrollEnd } = (element as HTMLElement).dataset; window.scrollTo({ top: Number(scrollStart) + (Number(scrollEnd) - Number(scrollStart)) * progress, behavior: "instant" }); }, at);
+  const range = await page.locator("#entrance").evaluate((element) => Number((element as HTMLElement).dataset.scrollEnd) - Number((element as HTMLElement).dataset.scrollStart));
+  expect(range).toBeGreaterThan(1700);
+  // The collection arc: the centred piece is named and chosen.
+  await go("collection", .15);
+  await expect(page.locator(".showcase-arc__name p")).toHaveText("Mehr Crescent Collar");
+  await go("collection", .85);
+  await expect(page.locator(".showcase-arc__name p")).toHaveText("Lotus Rhythm Kada");
+  await page.screenshot({ path: `${screenshotFolder}/showcase-arc-1440.png` });
+  // The lens: notes and catalogue facts for the chosen piece, then the dropdown swaps the piece.
+  await go("closer", .8);
+  await expect.poll(() => page.locator("[data-notes]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
+  await expect(page.locator("[data-notes]").getByText("Lotus motifs")).toBeVisible();
+  await expect(page.locator("[data-facts]").getByText("22K gold")).toBeVisible();
+  await page.locator("#closer-piece").selectOption({ label: "Petal Seal Ring" });
+  await expect(page.locator("[data-notes]").getByText("Polished centre")).toBeVisible();
+  await expect(page.locator("[data-facts]").getByText("RSJ-D005")).toBeVisible();
+  await page.screenshot({ path: `${screenshotFolder}/showcase-lens-1440.png` });
+  // And back up: the film caption returns.
+  await go("entrance", .4);
+  await expect.poll(() => page.locator("[data-film-caption]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(.9);
+});
+
+test("see it on: one model each, every piece listed, the camera moves to it", async ({ page }) => {
+  await ready(page);
+  const section = page.locator("#try-on");
+  await section.scrollIntoViewIfNeeded();
+  await expect(section.getByText("AI-generated model", { exact: true })).toBeVisible();
+  await expect(section.locator(".tryon__item")).toHaveCount(6);
+  await section.locator(".tryon__item", { hasText: "Rani haar" }).click();
+  await expect(section.locator(".tryon__camera")).toHaveAttribute("style", /scale\(1\.45\)/);
+  await expect(section.locator(".tryon__loupe")).toBeVisible();
+  await expect(section.locator(".tryon__matches li").first()).toBeVisible();
+  await expect(section.locator(".tryon__focus")).toContainText("Rani haar");
+  await expect(section.getByRole("link", { name: /in the Design Vault/ })).toHaveAttribute("href", /q=necklace/);
+  await section.getByRole("button", { name: "See the whole look" }).click();
+  await expect(section.locator(".tryon__focus")).toHaveCount(0);
+  await section.getByRole("button", { name: "Men", exact: true }).click();
+  await expect(section.locator(".tryon__item")).toHaveCount(4);
+  await expect(section.locator(".tryon__item", { hasText: "Watch" })).toBeVisible();
+  await page.screenshot({ path: `${screenshotFolder}/see-it-on-1440.png` });
+});
+
+test("bridal box lists the bridal sets and links to them", async ({ page }) => {
+  await ready(page);
+  const section = page.locator("#bridal");
+  await section.scrollIntoViewIfNeeded();
+  await expect(section.getByRole("heading", { name: /A promise/ })).toBeVisible();
+  await expect(section.getByRole("list", { name: "Bridal sets in this box" }).getByRole("link")).toHaveCount(4);
+});
+
+test("mobile showcase scrolls without pins and keeps collections reachable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await ready(page);
+  await expect(page.locator(".pin-spacer")).toHaveCount(0);
+  await expect(page.locator(".showcase")).toHaveAttribute("data-showcase", "live");
+  await expect(page.locator(".begin").getByRole("link", { name: /^Bridal/ })).toBeAttached();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 });

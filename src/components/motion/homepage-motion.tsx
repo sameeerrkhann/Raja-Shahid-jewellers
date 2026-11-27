@@ -22,9 +22,11 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
         await Promise.all([document.fonts.ready, hero?.decode().catch(() => undefined)]);
         if (disposed || current !== generation) return;
         if (!hero?.naturalWidth) { root!.dataset.motionState = "fallback"; return; }
-        const [{ gsap }, { ScrollTrigger }] = await Promise.all([import("gsap"), import("gsap/ScrollTrigger")]);
+        const [{ gsap }, { ScrollTrigger }, { default: Lenis }] = await Promise.all([import("gsap"), import("gsap/ScrollTrigger"), import("lenis")]);
         if (disposed || current !== generation) return;
         gsap.registerPlugin(ScrollTrigger);
+        // House easing for reveals: cubic-bezier(0.22, 1, 0.36, 1), a long, quiet settle with no overshoot.
+        if (!gsap.parseEase("luxe")) gsap.registerEase("luxe", (t: number) => { let lo = 0, hi = 1; for (let i = 0; i < 18; i++) { const m = (lo + hi) / 2; const x = 3 * .22 * m * (1 - m) ** 2 + 3 * .36 * m * m * (1 - m) + m ** 3; if (x < t) lo = m; else hi = m; } const m = (lo + hi) / 2; return 3 * m * (1 - m) ** 2 + 3 * m * m * (1 - m) + m ** 3; });
         const media = gsap.matchMedia();
         removeMotion = () => {
           media.revert();
@@ -37,7 +39,6 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
           const desktop = Boolean(context.conditions?.desktop);
           root!.dataset.motionState = desktop ? "desktop" : "mobile";
           const headerHeight = () => document.querySelector(".site-header")?.getBoundingClientRect().height ?? 108;
-          const craft = root!.querySelector<HTMLElement>("[data-craft-pin]")!;
           const vault = root!.querySelector<HTMLElement>("[data-vault-pin]")!;
           const viewport = root!.querySelector<HTMLElement>("[data-vault-viewport]")!;
           const track = root!.querySelector<HTMLElement>("[data-vault-track]")!;
@@ -46,11 +47,14 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
           gsap.fromTo(root!.querySelectorAll("[data-entrance-line]"), { y: desktop ? 12 : 6, opacity: .9 }, { y: 0, opacity: 1, duration: .6, stagger: .075, ease: "power2.out", clearProps: "transform,opacity" });
 
           if (desktop) {
-            gsap.to(root!.querySelector("[data-hero-visual]"), { scale: 1.03, yPercent: 2, ease: "none", scrollTrigger: { trigger: "#entrance", start: "top top", end: "bottom top", scrub: .5 } });
-            gsap.timeline({ scrollTrigger: { id: "home-craft", trigger: craft, start: () => `top ${headerHeight()}`, end: () => `+=${innerHeight * .8}`, pin: true, pinSpacing: true, scrub: .5, invalidateOnRefresh: true, onRefresh: (self) => { craft.dataset.pinTravel = String(self.end - self.start); } } })
-              .fromTo(root!.querySelector("[data-craft-media]"), { scale: 1, yPercent: 0 }, { scale: 1.03, yPercent: -4, ease: "none" })
-              .fromTo(root!.querySelector(".craft-frame-line"), { scaleY: .4 }, { scaleY: 1, ease: "none" }, 0);
-            gsap.fromTo(root!.querySelector("[data-bridal-media]"), { yPercent: -2, scale: 1.03 }, { yPercent: 2, scale: 1, ease: "none", scrollTrigger: { trigger: "#bridal", start: "top bottom", end: "bottom top", scrub: .6 } });
+            // Smooth, weighted scrolling for the cinematic page (desktop pointer only; touch keeps native scrolling).
+            const lenis = new Lenis({ duration: 1.15, smoothWheel: true, easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+            lenis.on("scroll", ScrollTrigger.update);
+            const raf = (time: number) => lenis.raf(time * 1000);
+            gsap.ticker.add(raf);
+            gsap.ticker.lagSmoothing(0);
+            cleanups.push(() => { gsap.ticker.remove(raf); gsap.ticker.lagSmoothing(500, 33); lenis.destroy(); });
+
             const overflow = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
             if (overflow() > 0) {
               viewport.scrollLeft = 0;
@@ -74,18 +78,16 @@ export function HomepageMotion({ rootRef, reduce }: { rootRef: RefObject<HTMLEle
               viewport.addEventListener("focusin", focus);
               cleanups.push(() => { viewport.removeEventListener("rsj:gallery-step", step); viewport.removeEventListener("focusin", focus); delete vault.dataset.pinned; delete vault.dataset.pinTravel; delete vault.dataset.scrollStart; delete vault.dataset.scrollEnd; viewport.scrollLeft = 0; });
             }
-            // Downstream triggers must be measured after the gallery pin adds its spacing.
-            gsap.fromTo(root!.querySelector("[data-concept-photo]"), { clipPath: "inset(0 0 0 100%)" }, { clipPath: "inset(0 0 0 0%)", ease: "none", scrollTrigger: { trigger: "#auria", start: "top 70%", end: "center 40%", scrub: .4 } });
           }
           root!.querySelectorAll<HTMLElement>("[data-home-reveal]").forEach((element) => {
-            gsap.fromTo(element, { y: desktop ? 12 : 6 }, { y: 0, duration: .6, ease: "power2.out", clearProps: "transform", scrollTrigger: { trigger: element, start: "top 92%", once: true } });
+            gsap.fromTo(element, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1, ease: "luxe", clearProps: "transform,opacity", scrollTrigger: { trigger: element, start: "top 90%", once: true } });
           });
           // Refresh once after geometry settles, not continuously from a scroll handler.
           let timer: ReturnType<typeof setTimeout>;
           const refresh = () => { clearTimeout(timer); timer = setTimeout(() => ScrollTrigger.refresh(), 160); };
           window.addEventListener("resize", refresh);
           refresh();
-          return () => { clearTimeout(timer); window.removeEventListener("resize", refresh); cleanups.forEach((fn) => fn()); delete craft.dataset.pinTravel; };
+          return () => { clearTimeout(timer); window.removeEventListener("resize", refresh); cleanups.forEach((fn) => fn()); };
         }, root!);
       } catch {
         removeMotion();

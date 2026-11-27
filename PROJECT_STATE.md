@@ -257,6 +257,138 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-28 — Claude (Saad's session) — Hero blur while scrolling (S-29)
+
+- **Feedback:** the hero still blurred while scrolling.
+- **Causes found:** (1) the canvas blended two neighbouring frames with partial alpha, a double image during motion; (2) the S-26 fly-over scaled the canvas 1.05→1.10, so every frame was resampled; (3) a velocity "punch" scaled the canvas up to 6% and the warp streak overlay reached 0.9 opacity on fast scrolls.
+- **Fix:** paint one whole frame at a time (nearest frame, skips redundant repaints), removed the canvas scale and punch, warp capped at 0.35. Frames, chapters and text are unchanged.
+- **Tests:** tsc, eslint, build PASS; Playwright 87/87 PASS. Mid-scroll capture shows no ghosting; the remaining softness in the light chapter is the bloom in the Flow source itself.
+
+### 2026-11-28 — Claude (Saad's session) — Hero clarity and weight fix (S-28)
+
+- **Feedback:** hero looked dull and low resolution, scrolling felt heavy; the Reduce motion bar showed a cream block.
+- **Cause and fix:** the S-27 gold-dust plane (full-screen `mix-blend-mode: screen`) lifted the blacks and added a large blended layer on every scroll frame. Removed it with the pointer depth. Hero frames re-encoded from the lossless graded PNGs (Flow source is 1280x720): Lanczos to 1440x810, light unsharp mask, WebP q66 (~75 KB each, was 1280 q60 ~48 KB). Canvas backing store capped at about 1600 px wide with high-quality smoothing. Opening prefetch reduced to every 16th frame up to 96, so the cold load stays under the 1.5 MB budget. Chapter fade-in shortened, still sequential (no overlap).
+- **Reduce motion bar:** the row inherited `.container` width and left the page background showing; now full width. Finale caption shortened to "AI-generated image".
+- **Limit:** true sharpness needs a 1080p source (Flow upscale or a higher-quality render); 720p frames can only be cleaned up, not given new detail.
+- **Tests:** tsc, eslint, build PASS; Playwright 87/87 PASS.
+
+### 2026-11-28 — Claude (Saad's session) — scroll-craft principles applied (S-27)
+
+- **Source:** Saad copied `scroll-craft-effects-main` (nateherk-design plugin, MIT) into the project folder. Read SKILL.md, hero-depth.md and the engine. The engine is a standalone-page runtime and its asset route uses paid kie.ai, so its principles were applied inside the existing Next.js/GSAP code instead of adding the engine. The plugin folder itself is not part of this branch.
+- **Hero depth (hero-depth.md):** a near plane of out-of-focus gold dust (`public/images/hero/planes/dust-near*.webp`, generated locally, desktop 57 KB / phone 32 KB) sits in front of the headline and travels faster than the film (yPercent 4→-26, scale 1.04→1.24), so film (far), light (mid), headline and dust (near) move at different rates. Desktop fine-pointer depth: the near plane shifts with the cursor more than the film does, which moves slightly the other way. Reduced motion keeps a static plane.
+- **Signature move, Collections:** a jeweller's lamp. Warm light follows the cursor across each chapter image (desktop only).
+- **Hard-rule cleanup:** visible em dashes removed (tab titles, catalogue hero copy, preview karat labels, category dialog title), the "Scroll to turn the collection" cue replaced, the 01/02 counters removed from the hero rail and See it on.
+- **Tests:** tsc, eslint, build PASS; Playwright 87/87 PASS (cold transfer budget still under 1.5 MB after shrinking the dust plane).
+
+### 2026-11-27 — Claude (Saad's session) — Client polish pass: text, scroll reset, footer, forms, See it on, collections, hero (S-26)
+
+- **Text removed:** "Concept film made with Google Flow" film label, the "Royal Gold Atelier · customer website demo" strip (Reduce motion moved to a slim bar before the footer), repeated "Sample… Not shop stock" captions in the showcase and bridal box, the homepage "Service previews only" note, and the Collections disclosure strip. One disclosure stays in the footer, the AI-model tag stays on See it on.
+- **Pages opening at the footer:** confirmed (homepage bottom → Collections opened at scrollY 1961). `src/components/layout/scroll-reset.tsx` sets manual scroll restoration and returns to the top on every route change (hash links keep their target). Re-tested: scrollY 0.
+- **Footer:** rebuilt `site-footer.tsx`: gold CTA band (hidden on the homepage, which has its own finale CTA), deep bronze body, Explore / Services / Showroom columns (address and hours "to be confirmed"), bottom bar with disclosure and back to top.
+- **Visit and enquiry forms:** `src/components/services/service-dialogs.tsx` + `src/config/services.ts`. Any `data-service="visit|enquiry"` button (and the old homepage `data-home-action` appointment/enquiry) opens them. Visit: date (today or later), time slot, purpose, group size, notes, name, PK mobile, contact preference, consent. Enquiry: topic, optional design ID (RSJ-D###), message, contact. Validated; success says "Not connected yet: this … was not sent." Shop facts stay null until approved. No network submission.
+- **See it on:** camera push capped at 1.45× (was up to 3.6×), round loupe shows the piece close up, detail panel in the side column with up to three matching published sample designs, Vault link, "Ask about this piece".
+- **Collections:** horizontal runway replaced by full-height sticky chapters (`collection-chapters.tsx`): image clip-reveal, copy rise, the chapter underneath settles back as the next slides over; design count and three design thumbnails per collection. Phones: plain stacked chapters.
+- **Hero:** same Flow film kept as requested; chapter headlines now fade sequentially (no overlap), letterbox bars removed, scroll-linked fly-over push (scale 1.05→1.10 with lateral glide) and a depth drift on the light layer.
+- **Tests:** tsc, eslint, build PASS; full Playwright 87/87 PASS (tests updated for the new forms, try-on, collections).
+- **Waiting on:** scroll-craft / `nateherk-design` plugin folder (not in any connected folder); client-approved shop address, hours and contact; hero re-shoot only if the client still wants it after this pass.
+
+### 2026-11-27 — Claude (Saad's session) — Live Pakistan gold rates, client point 3 (S-25)
+
+- **Scope:** Client feedback point 3 only (live gold rates). The installment plan (point 4) is held back for its own task; its draft files are not in this commit.
+- **Source:** `/api/gold-rate` (no-store) reads GoldPriceZ PKR through `src/lib/server/gold-rate.ts`. Settings: `GOLD_RATE_MODE` live|sample|unset (unset = off), `GOLD_RATE_API_KEY` (server only, `.env.local`, never committed), `GOLD_RATE_API_URL`, `GOLD_RATE_REFRESH_SECONDS` (900), `GOLD_RATE_STALE_SECONDS` (3600). In-memory cache, request de-duplication, 8 s timeout, stale marking. No key or mode off returns `unavailable` with no numbers. Sample mode is labelled "Sample figures, not live".
+- **Figures:** 24K from the source; 22K/21K/18K by purity ratio; tola = 11.6638038 g. Shown per tola, per 10 g, per gram, with "Last updated … PKT · N min ago" and source credit.
+- **Placement:** (1) `/gold-rates` page: hero with a headline 24K/22K per tola card, a rates-by-karat table (purity under each karat, Tola/10 g/Gram switch on phones) and a sticky value calculator beside it; reading notes. (2) Homepage `#gold` scene: the old "Illustrative rate preview · Not live" study is replaced by a compact 24K/22K panel. (3) Header: a "24K Rs … /tola" chip on desktop ≥1280 px, shown only for live or stale readings, never sample or missing. (4) "Gold rates" in desktop nav, the homepage menu and the catalogue menu (replaces "Gold & value" and "Bridal edit" in the desktop trio).
+- **Files:** `src/lib/gold/rates.ts`, `src/lib/server/gold-rate.ts`, `src/app/api/gold-rate/route.ts`, `src/components/gold/use-gold-rate.ts` (one shared client reading, 5 min polling while visible), `src/components/gold/gold-rates.tsx`, `src/app/gold-rates/page.tsx`, `src/app/gold.css`, `src/app/page.tsx`, `src/app/globals.css` (chip), `src/components/layout/site-header.tsx`, `src/config/home.ts`, `src/config/catalogue.ts`, `src/components/motion/page-motion.tsx`, `tests/gold-rates.spec.ts` (new), `tests/homepage.spec.ts`.
+- **Tests:** tsc, eslint, `pnpm build` PASS. Full Playwright 87/87 PASS. Gold tests mock the API: live figures (PKR 419,897 for 24K/tola at 36,000/g), calculator (2 g 22K = PKR 66,000), hero card, header chip, stale and unavailable states, phone unit switch, axe at 390 px, no horizontal overflow. Screenshots: test-results/gold-rates-1440.png, gold-rates-390.png.
+- **Not verified:** A real GoldPriceZ response with a real key (none in this environment). GoldPriceZ gives an international-price conversion; Karachi Sarafa/bazaar rates can differ, and the page says so.
+- **Next:** Saad adds a free GoldPriceZ key to `.env.local` (`GOLD_RATE_MODE=live`, `GOLD_RATE_API_KEY=…`), checks one live reading, then the installment plan task (point 4) with the client's confirmed terms.
+
+### 2026-11-26 — Claude (Saad's session) — Inner pages design and scroll pass (S-24)
+- New `src/components/motion/page-motion.tsx` (GSAP ScrollTrigger, reduced-motion aware, start states set by JS only) mounted on /designs, /collections and /design-preview: gold scroll-progress line; hero heading words rise on load and the hero media settles/drifts as you scroll; headings and cards (design, collection, study) rise in sequence with a soft wipe; images drift inside their frames on wide screens; on /collections (wide screens) the four edits run sideways in a pinned row driven by vertical scroll.
+- Design: the Design Vault and Collections heroes are now dark "vault" stages in the homepage film's charcoal and gold (ending frame of the film as a masked backdrop); gold sheen sweeps across card images on hover, cards lift.
+- Tests: full suite passes except the known flaky catalogue fallback test (passes alone); design-preview search test now searches "necklace".
+
+### 2026-11-26 — Claude (Saad's session) — Editorial images replaced (S-23, client point 2)
+- Image audit: the 11 catalogue product shots (gold on cream stone) are consistent and kept. The three Unsplash editorial photos were off-brief (diamond studs on a hand, violet-toned necklace, busy pendant) and are replaced with AI-generated images in the site's charcoal and gold palette: `public/images/editorial/bridal-set.webp`, `rani-haar.webp`, `jhumkas.webp` (Figma AI). Used by the homepage category cards and finale, the design-preview hero and its three studies.
+- Labels and credits updated: "AI-generated image" on cards, captions, alts and footer; the Unsplash photographer links are removed; docs/ASSETS.md updated. Unused `editorial/derivatives/` removed.
+- Tests: homepage and design-preview specs pass (preview search and a11y label updated); full suite 83/83 before this change.
+
+### 2026-11-26 — Claude (Saad's session) — Hero regrade and speed (S-22b)
+- After Saad's review: the film is regraded without maroon (velvet and silk now deep warm charcoal; gold kept) so it matches the site's kohl and gold palette; the outlined "Raja Shahid" name over the film and the chain-curtain layer are removed; the film now runs at normal scroll speed (14 px per frame, scrub .5, frame-rate independent easing, canvas capped at 1.5x DPR). The unveiled headline uses a soft gold glow instead of the shimmer.
+- Tests: Playwright 83/83 (fallback test now blocks the vault frames).
+
+### 2026-11-26 — Claude (Saad's session) — Hero vault film and one-model See it on (S-22)
+- Hero (scene 01) rebuilt to the 10k-websites scroll standard Saad supplied: a 16 s concept film in two Google Flow shots (Veo 3.1 Lite, 720p) joined frame to frame (seam PSNR 34.6 dB): the camera descends through hanging gold chains and a gold-dust burst to a silk-covered bust; the silk settles and a gold bridal set is revealed. Graded with `scripts/hero-film-grade.py` (filmic curve, split tone, bloom, streaks, light sweep, rays, dust, vignette, grain). 190 frames per size in `public/images/hero/vault/` (r = 1280 desktop, m = 720 mobile); the ring and molten-gold frames are removed.
+- Hero bands (`heroFilm.chapters` in `src/config/showcase.ts`): Descent (h1 + actions), Light ("Gold, in every sense.", word punch), Promise (blur-in, left), Unveiled (split, rise + gold shimmer, bridal designs link + visit). Each band has a riding scrim, eased edges, and a --k assembly value; the film plays forward once and rests on the composed ending. Scroll effects: chain-curtain parallax, dust-burst flash, closing spotlight, cinema bars that open at the ending, speed warp, chapter rail. Frames load in a window around the camera; initial transfer stays under the 1.5 MB test budget.
+- See it on (scene 04, `src/components/home/try-on.tsx`): one AI-generated woman (maroon lehenga; tikka, jhumkas, choker, rani haar, bangles, rings) and one man (black kurta and waistcoat; chain, watch, signet ring, kada), made with Figma AI (`public/images/models/rsj-woman.webp`, `rsj-man.webp`). A numbered piece index moves the camera to each piece and links to a Design Vault search. Labelled "AI-generated model. Jewellery is illustrative, not shop stock." The Pexels looks and `src/data/demo/model-photography.ts` are removed.
+- Verification: tsc, eslint, build pass; Playwright 83/83 (one catalogue test flaked once and passed on rerun).
+- Open: the film is 720p (Flow free tier). Mobile shows the same film cover-cropped (subject is centred); a native 9:16 version was not made. Client approval of the hero and the AI model imagery is needed before any public use.
+
+### 2026-11-22 — Claude (Saad's session) — Homepage polish after Saad's review (S-21)
+- Review strip ("Royal Gold Atelier · customer website demo" + Reduce motion) restyled dark to match the header; the checkbox is now a gold switch (`src/app/home.css`, `home-experience.tsx`).
+- "See it on" (scene 04) rebuilt on Saad's choice of real worn photographs + zoom (`src/components/home/try-on.tsx`, `wornLooks` in `src/config/showcase.ts`): Women/Men, three looks each (Pexels reference photography, credits in `src/data/demo/model-photography.ts`), named spots per look; choosing a spot moves the camera to it and opens a card linking to a Design Vault search. Labelled "Reference photography. Not our jewellery." The Figma composite figures and their `public/images/models/tryon/*` files are removed.
+- Bridal (new scene 05, `src/components/home/bridal-box.tsx`): CSS 3D jewellery box scrubbed by GSAP: lid opens on its hinge, Mehr Crescent Collar rises to face the visitor, three sets follow; set names link to the Vault. Replaces the old "A promise. Beautifully kept." photo section. Static open box when motion is reduced or JS is off. Labelled as sample designs/concept images.
+- AURIA (scene 07): design-only shell, "in development" badge, illustrative conversation clearly marked "not connected"; no functional AURIA/AI code touched.
+- Scenes now 8 (entrance, collection, closer, try-on, bridal, vault, auria, gold). Nav: "See it on" and "Bridal" anchors.
+- Verification: tsc, eslint, `pnpm build` pass; Playwright 83/83 pass (homepage spec updated: worn-looks zoom test, bridal box test, 8 scenes).
+- Not done yet: themed backgrounds and CapCut video slots for /designs, /collections, /design-preview (S-22, next). Push still done by Saad from his PC (Claude GitHub App has no access to the team repo).
+
+### 2026-11-22 — Claude (Saad's session) — Long-scroll homepage showcase and try-on (S-20)
+- Saad reviewed three prototype artifacts (reference reels: a fragrance, a chocolate and a donut scroll site; his own Google Flow ring video) and asked for this direction. The Golden Assembly hero (particles) and its caption bands are removed.
+- New homepage opening (`src/components/home/scroll-showcase.tsx`, `src/app/showcase.css`, config in `src/config/showcase.ts`):
+  - 01 ring film: 95 frames from Saad's Google Flow concept video scrubbed by scroll (blended frames, eased glide, forward-back-forward), big outlined wordmark parting, camera into the stone. Labelled "Concept video made with Google Flow. Not shop stock." Frames load every eighth first, the rest once scrolling starts.
+  - 02 collection arc: five sample pieces as cut-outs on a 3D coverflow; centred or tapped piece is chosen.
+  - 03 lens: dive into the chosen piece, depth blur, light sweep, notes on visible features, catalogue facts, and a product dropdown that swaps the piece in place.
+- 04 Try it on (`src/components/home/try-on.tsx`): Women | Men toggle, all products with images grouped by category, pieces placed where they are worn, view zooms and names the piece, "See the whole look". Models are AI-generated in Saad's Figma (file "RSJ try-on models"); pieces are composited cut-outs, labelled "AI-generated model · preview placement · sample designs". Tikkas, earrings, chains, men's karas and watches show as "Coming with photographs".
+- Closing pills replace the large collection tiles ("Where would you like to begin?").
+- Lower-page images load only when their scene is near (`use-near.ts`); initial transfer stays within the 1.5 MB test budget.
+- Tests: homepage spec rewritten for eight scenes, showcase scrub, dropdown and try-on; `hero-captions.spec.ts` removed with the old hero. Verified: typecheck, lint, build, Playwright 82/82 (headless Chromium only).
+- Waiting on Saad: Google Flow photos of the two models wearing actual catalogue pieces (`public/images/models/tryon/`), after which `tryOnPhotos[*].overlay` becomes false and the slots point at the worn pieces.
+
+### 2026-11-19 — Claude (Saad's session) — Hero caption bands, legibility and flick test (S-19)
+- Saad approved `docs/DESIGN-PACKAGE.md` (written with the 10k-websites skill, applied to this Next.js site) with two decisions: hero scroll about 2,000px (decision A) and dark velvet with some ivory sections (decision B). Build step 1 of its plan is done.
+- Desktop hero now scrolls exactly 2,000px and carries four caption bands: the headline (settled on load), "Every grain finds its place." (letters scatter in while the dust gathers) then "Then the light tells the truth." (blur to sharp while light uncovers the photograph), the notes, and "Where would you like to begin?" above the collection tiles. Captions are desktop scroll only; phones, reduced motion and no-JS keep the still frame. Screen readers get each line once (visual letters are aria-hidden).
+- Legibility: per-band soft scrims, a three-layer text-shadow token, a scrim behind the headline copy (its gradient cannot take a shadow) and a stronger dust mask on the left. Style writes in the hero loop now happen only when a value changes.
+- Fixed: the "Sample design, concept image" label no longer flickers back during the exit.
+- New `tests/hero-captions.spec.ts`: wheel flicks of 120/240/360px (readable runs at 120px: headline 3, line one 6, line two 4, notes 3, question 7; no beat skipped at 360px), worst-frame audit with glyphs hidden (lowest seen: headline 4.38:1, intro 4.68:1; captions about 15–17:1), and reduced motion in both directions. `tests/homepage.spec.ts` updated for the 2,000px range.
+- Verified: typecheck, lint, build, Playwright 86/86. Headless Chromium only; not checked on real phones or a real trackpad.
+- Next (needs Saad's go-ahead): build step 2, the Dual Portal (Women | Men | Made to order) with the Pexels reference photos, labelled "Reference photography. Not our jewellery."
+
+### 2026-11-19 — Claude (Saad's session) — Hero 2.0 and velvet palette (S-18)
+- New tokens `--color-kohl`, `--color-oxblood`, `--color-antique-gold`; applied to the hero first.
+- Hero now runs five acts over ~1,100px of desktop scroll (Saad asked for a longer, more detailed scroll than the team brief's 500–800px). Notes describe only what is visible in the image; facts (22K, personalisation, weight/price on request) are read from the RSJ-D001 catalogue record in `page.tsx`.
+- Cut-out regenerated with a tighter edge. The pearls in the source image cannot be separated reliably, so no note refers to them.
+- Verified: typecheck, lint, build, Playwright 81/81; production LCP (local, headless Chromium) 0.27–0.44s desktop, 0.16–0.22s mobile; ~54fps scrolling the particle act headless without GPU. Not measured on real phones.
+
+### 2026-11-18 — Claude (Saad's session) — Step 1: remove craft/worn scenes, add reference model photos
+- Agreed six-step plan recorded in `TEAM_TASKS.md` (S-12…S-17). Step 1 done.
+- Removed `craft-loupe.tsx`, `worn-story.tsx`, `wear-figure.tsx`, `worn.css`, `on-model.ts`; homepage scenes 5, desktop pins 1 (vault).
+- Added six Pexels photos (Pexels License, credits in `src/data/demo/model-photography.ts`). They are reference photography of jewellery not made by the shop and must be labelled as such and replaced before launch. Higgsfield could not be used (0 credits; free generations unavailable through this connector).
+- Also in this session: shadcn/ui added by Saad; its tokens were namespaced so they do not override the site's `--muted`/`--accent`.
+- Verified: typecheck, lint, build, Playwright 81/81.
+
+### 2026-11-18 — Claude (Saad's session) — Golden Particles Assembly hero
+- Branch `saad-works-customer-website`. Task S-11. Team brief: placement under navigation, scroll-scrubbed and reversible, 500–800px desktop travel, ends in collections, mobile-adapted, reduced-motion fallback.
+- Built with canvas 2D + GSAP ScrollTrigger + Lenis 1.3.27 (MIT, new dependency). Particle targets are sampled from a transparent cut-out of sample design RSJ-D001 (`public/images/hero/`, derived from the existing AI concept image). No 3D assets, no paid generation.
+- Removed: showcase orbit hero and its viewer (`showcase-hero.tsx`, `showcase-viewer.tsx`, `showcase.css`). Desktop pins now 3.
+- Verified: typecheck, lint, build, Playwright 81/81 (Chromium headless). Not measured on real devices or throttled CPU.
+
+### 2026-11-18 — Claude (Saad's session) — Worn story, craft loupe, real category samples, lighter header
+- Branch `saad-works-customer-website` (not main). Owner: Saad. Tasks S-07…S-10 in `TEAM_TASKS.md`.
+- Added: worn story scene (`#worn`, fourth desktop pin), craft loupe, category gallery with published sample counts and design links, lighter header, removal of numbered section labels, collections grid of 4:5 frames, reveal/hover/CTA motion per Saad's brief.
+- Honesty: no on-model photographs exist; the worn scene shows an illustrated fitting study and says so. Necklaces, earrings and men's categories still have no published sample images.
+- Verified: typecheck, lint, production build, Playwright 81/81 (Chromium). Tests updated for 7 scenes and 4 pins.
+- Not done / needs decision: Phase 05 product detail pages (category and design links currently open the Design Vault filtered to that design); AURIA section left untouched (AI team scope).
+
+### 2026-11-17 — Claude (Saad's session) — Showcase hero, premium header, team task board
+
+- **Owner / workflow:** Saad (assigned developer, non-AI customer website) directed this task in a Claude session; Codex was not writing to the tree. Scope follows the pasted handover in `CLAUDE.md` (UI/UX & animation improvements + Phase 04 continuation). No AI/AURIA files, admin, database or later-phase features were touched. Work branch: `saad-works-customer-website` (rebased on `d8773fa`, for team review via pull request; not pushed to `main`).
+- **Scene 01 replaced with an interactive "turning vault" (DEMO / SAMPLE data):** the 11 published sample designs sit on a CSS-trigonometry 3D orbit (`--pos` is the only value JS writes per frame). Desktop (≥1024px, fine pointer, ≥700px tall): the section pins, scroll turns the orbit and snaps to each design (`inertia:false` so one scroll gesture moves one design, not the whole ring). Drag, arrow keys, prev/next and clicking a side piece turn it everywhere; clicking the front piece or "Look closer" opens a modal zoom/pan viewer (2.6×, pointer/touch aim, keyboard zooms to centre, prev/next inside). Detail panel shows category/subcategory, title, description, design code and SAMPLE status from the same fixtures/`displayStatus` as the Design Vault. Hidden back items are `inert`. Glide is time-based (identical at 30/60/144 Hz). Mobile: no pin, swipe carousel, reading order headline → products → description → CTAs. Reduced motion: instant turns, no pins. No-JS: static orbit with first design in front, links work. Image failure before/after hydration shows a designed fallback and disables pins (HomepageMotion already gates on the first image).
+- **Header:** dark gradient, fading gold hairline, glass + shadow after 8px scroll, ornamented wordmark, three curated desktop links with animated underline/`aria-current`, pill "Meet AURIA" with sparkle icon, circular search button. Height unchanged (108px) so pin math is unaffected. The homepage demo strip is now dark so no pale band separates header and hero.
+- **Files added:** `src/components/home/showcase-hero.tsx`, `src/components/home/showcase-viewer.tsx`, `src/lib/catalogue/showcase.ts`, `src/app/showcase.css`, `TEAM_TASKS.md`.
+- **Files changed:** `src/app/page.tsx` (hero section → `<ShowcaseHero>`), `src/components/motion/homepage-motion.tsx` (showcase pin/snap/goto/release events; previous hero scale kept as fallback branch), `src/components/layout/site-header.tsx`, `src/app/globals.css` (header block), `tests/homepage.spec.ts` (pin count 2→3, missing-media route now targets the showcase lead image, stale Phase 03 modal text assertion updated to current copy, two new showcase tests), `PROJECT_STATE.md`, `CLAUDE.md` (Saad pasted the developer handover; archived notice above it retained).
+- **Checks:** recorded after rebase onto `d8773fa` (see below).
+- **Next (Saad):** Phase 05 only after owner approval. The 7 Phase 04 catalogue failures were fixed upstream by Codex in `a28fdea`; Saad's parallel fix was dropped in favour of it.
 ### 2026-11-17 — Codex — Verified Phase 04 GitHub publication
 
 - Final source commit a28fdea03ee94bafd2bf73a08271b0534f741b97 (`feat: complete Phase 04 Design Vault verification`) includes exactly the11 reviewed files listed in the completion record. Staged whitespace check PASS; source/test diff inspected; final118-file audit PASS,35 screenshots present, historical log hash unchanged, secret-pattern checks clean, asset checksums valid and all33 local Markdown links resolve. Secret/build/artifact/report paths confirmed ignored. No force push or history overwrite.
@@ -633,6 +765,8 @@ No customer requirement or journey is missing from the Phase 01 baseline. Remain
 ## 10. Handoff snapshot (UPDATE AT EVERY HANDOFF)
 
 ### Active snapshot — Phase 04 verified / STOP before Phase 05
+
+- **Latest (2026-11-28, S-29):** hero scroll blur fixed (see S-29); S-28 clarity fix before it. S-26: client polish pass done. Earlier S-25: Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
 
 - **Last agent:** Codex, sole writer after user confirmation; internal review/QA only, no delegation or independent review.
 - **Completed scope:** Phase04 customer-facing Design Vault.118 publishable files;11 original image-backed SAMPLE designs,14 unpublished drafts; /designs, /collections,4 collection slugs and five read-only API route families. No full product/quotation/admin/AI/voice/gold backend. Preserve all Phase02/03 functionality and prior logs/assets.
