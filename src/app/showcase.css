@@ -313,8 +313,3 @@
   .tryon h2 { font-size: 2.2rem; }
 }
 @media (prefers-reduced-motion: reduce) { .tryon__camera { transition: none; } }
-/* Hero depth planes: far film, mid light, headline, near gold dust. Pointer adds a small differential shift. */
-.showcase-film__canvas, .showcase-film__poster { translate: calc(var(--px, 0) * -10px) calc(var(--py, 0) * -6px); }
-.showcase-film__near { position: absolute; inset: -6%; z-index: 7; pointer-events: none; background: url("/images/hero/planes/dust-near.webp") center / cover no-repeat; mix-blend-mode: screen; opacity: .85; translate: calc(var(--px, 0) * 34px) calc(var(--py, 0) * 22px); will-change: transform; }
-@media (max-width: 860px) { .showcase-film__near { background-image: url("/images/hero/planes/dust-near-m.webp"); opacity: .7; } }
-@media (prefers-reduced-motion: reduce) { .showcase-film__near { opacity: .55; } }

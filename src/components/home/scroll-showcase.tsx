@@ -53,9 +53,9 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         const source = phone() ? heroFilm.mobile : heroFilm.desktop;
         const frames: HTMLImageElement[] = Array.from({ length: heroFilm.frames }, () => new Image());
         const load = (i: number) => { const image = frames[i]; if (!image || image.src) return; image.decoding = "async"; image.onload = () => { if (Math.abs(i - current) < 1.5) paint(current); }; image.src = source(i); };
-        // Frames load lightly: every eighth frame of the opening first, then a moving window around the camera
+        // Frames load lightly: every sixteenth frame of the opening first, then a moving window around the camera
         // (coarse steps ahead first, every frame close by), so a long chain never downloads at once.
-        for (let i = 0; i < Math.min(frames.length, 120); i += 8) load(i);
+        for (let i = 0; i < Math.min(frames.length, 96); i += 16) load(i);
         let windowAt = -99;
         const loadAround = (f: number) => {
           const at = Math.round(f); if (Math.abs(at - windowAt) < 6) return; windowAt = at;
@@ -70,7 +70,8 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         };
         // Neighbouring frames are blended so the flight reads as motion rather than steps.
         const paint = (f: number) => { const a = Math.floor(f), A = near(a), B = near(Math.min(frames.length - 1, a + 1)); if (!A) return; draw(A, 1); if (B && f - a > .02) draw(B, f - a); };
-        const fit = () => { const r = Math.min(window.devicePixelRatio || 1, 1.5); canvas.width = canvas.clientWidth * r; canvas.height = canvas.clientHeight * r; paint(current); };
+        // Backing store capped near the 1440px frames: a bigger canvas costs every frame and adds no detail.
+        const fit = () => { const r = Math.min(window.devicePixelRatio || 1, 1.5, 1600 / Math.max(1, canvas.clientWidth)); canvas.width = Math.round(canvas.clientWidth * r); canvas.height = Math.round(canvas.clientHeight * r); paint2d.imageSmoothingQuality = "high"; paint(current); };
         let target = 0, current = 0;
         // The film follows the scroll with its own easing, so it glides on briefly after the wheel stops.
         // Frame-rate independent easing toward the scroll target (same feel at 60 and 120 Hz); rests when converged.
@@ -91,8 +92,8 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
             const i = chapters.findIndex((chapter) => chapter.id === element.dataset.chapter); if (i < 0) return;
             const { from: a, to: b } = chapters[i], ramp = Math.min(6, (b - a) / 3);
             // Sequential, never crossed: a band leaves before the next one arrives, so two headlines never overlap.
-            const opacity = (i === 0 ? 1 : smooth(f, a + 1, a + 1 + ramp)) * (i === chapters.length - 1 ? 1 : 1 - smooth(f, b - ramp, b - 1));
-            const k = i === 0 ? 1 : Math.min(1, Math.max(0, (f - (a + 1)) / (ramp * 2.2)));
+            const opacity = (i === 0 ? 1 : smooth(f, a, a + ramp * .6)) * (i === chapters.length - 1 ? 1 : 1 - smooth(f, b - ramp, b - 1));
+            const k = i === 0 ? 1 : Math.min(1, Math.max(0, (f - a) / (ramp * 2.2)));
             const next = `${opacity.toFixed(3)}|${k.toFixed(2)}`;
             if (cache.get(element) === next) return; cache.set(element, next);
             element.style.opacity = opacity.toFixed(3); element.style.setProperty("--k", k.toFixed(2));
@@ -120,10 +121,7 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
           .to(film, { f: last, duration: 1, onUpdate: follow }, 0)
           // Fly-over: a slow forward push with a gentle lateral glide, as if the camera travels over the scene.
           .fromTo("[data-film]", { scale: 1.05, xPercent: -1.2, yPercent: -1 }, { scale: 1.1, xPercent: 1.2, yPercent: 1, duration: 1 }, 0)
-          .fromTo("[data-film-depth]", { yPercent: 0 }, { yPercent: -18, duration: 1 }, 0)
-          // Near plane: out-of-focus gold dust in front of the headline travels faster than the film, so the
-          // scene reads as layered depth (film far, light mid, dust near) rather than one flat picture.
-          .fromTo("[data-film-near]", { yPercent: 4, scale: 1.04 }, { yPercent: -26, scale: 1.24, duration: 1 }, 0);
+          .fromTo("[data-film-depth]", { yPercent: 0 }, { yPercent: -18, duration: 1 }, 0);
         railEls.forEach((element, i) => element.addEventListener("click", () => {
           const trigger = ScrollTrigger.getById("showcase-film"); if (!trigger) return;
           const f = chapters[i].from + 8; window.scrollTo({ top: trigger.start + (trigger.end - trigger.start) * Math.min(1, f / last), behavior: "smooth" });
@@ -195,13 +193,7 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         });
         return () => { gsap.ticker.remove(glide); window.removeEventListener("resize", fit); window.removeEventListener("resize", placeNotes); scope!.removeEventListener("rsj:place-notes", placeNotes); };
       }, scope!);
-      // Pointer depth (desktop, fine pointer): the near plane follows the cursor more than the far film.
-      const film = $<HTMLElement>(".showcase-film");
-      let raf = 0, tx = 0, ty = 0, cx = 0, cy = 0;
-      const glide = () => { cx += (tx - cx) * .08; cy += (ty - cy) * .08; film.style.setProperty("--px", cx.toFixed(3)); film.style.setProperty("--py", cy.toFixed(3)); raf = Math.abs(tx - cx) + Math.abs(ty - cy) > .002 ? requestAnimationFrame(glide) : 0; };
-      const onMove = (event: PointerEvent) => { if (event.pointerType !== "mouse") return; const box = film.getBoundingClientRect(); tx = (event.clientX - box.left) / box.width - .5; ty = (event.clientY - box.top) / box.height - .5; if (!raf) raf = requestAnimationFrame(glide); };
-      if (window.matchMedia("(pointer: fine)").matches) film.addEventListener("pointermove", onMove);
-      teardown = () => { ctx.revert(); film.removeEventListener("pointermove", onMove); cancelAnimationFrame(raf); film.style.removeProperty("--px"); film.style.removeProperty("--py"); swapRef.current = () => {}; delete scope!.dataset.showcase; };
+      teardown = () => { ctx.revert(); swapRef.current = () => {}; delete scope!.dataset.showcase; };
       ScrollTrigger.refresh();
     }
     void start();
@@ -226,12 +218,11 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
     <section id="entrance" className="showcase-pin showcase-film" data-scene="01" data-tone="dark" aria-labelledby="entrance-title" style={{ "--film-scroll": `${Math.max(1800, heroFilm.frames * heroFilm.scrollPerFrame)}px` } as CSSProperties}>
       <div className="showcase-stage">
         {/* The first frame is the still poster (and the largest paint); the canvas takes over once scrolling. */}
-        <img className="showcase-film__poster" src={heroFilm.desktop(0)} alt="" width={1280} height={720} fetchPriority="high" data-hero-image />
+        <img className="showcase-film__poster" src={heroFilm.desktop(0)} alt="" width={1440} height={810} fetchPriority="high" data-hero-image />
         <canvas className="showcase-film__canvas" data-film aria-hidden="true" />
         <div className="showcase-film__spot" data-film-depth aria-hidden="true" />
         <div className="showcase-film__burst" aria-hidden="true" />
         <div className="showcase-film__warp" data-warp aria-hidden="true" />
-        <div className="showcase-film__near" data-film-near aria-hidden="true" />
         
         <div className="showcase-film__intro showcase-band showcase-band--center showcase-band--drift" data-film-intro data-chapter="descent">
           <h1 id="entrance-title"><span data-entrance-line>Crafted to be</span> <span data-entrance-line>remembered.</span></h1>

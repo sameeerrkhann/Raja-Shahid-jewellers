@@ -1,6 +1,6 @@
 /* Phase 03 only. Phase 02 tokens and preview styles remain unchanged. */
 .cinematic-home { overflow-x: clip; background: var(--color-ivory); }
-.home-utility { display: flex; justify-content: flex-end; max-width: none; margin: 0; padding: 16px max(24px, calc((100% - 1280px) / 2)); font-size: 11px; color: var(--color-dark-muted); background: var(--color-obsidian); }
+.home-utility { display: flex; justify-content: flex-end; width: auto; max-width: none; margin: 0; padding: 16px max(24px, calc((100% - 1280px) / 2)); font-size: 11px; color: var(--color-dark-muted); background: var(--color-obsidian); }
 .home-top-anchor { position: absolute; top: 0; }
 .home-motion-toggle { display: inline-flex; align-items: center; gap: 9px; min-height: 34px; cursor: pointer; white-space: nowrap; color: var(--color-champagne); }
 .home-motion-toggle input { appearance: none; width: 26px; height: 14px; margin: 0; border-radius: 999px; border: 1px solid rgb(232 213 166 / 40%); background: rgb(255 255 255 / 4%); position: relative; cursor: pointer; transition: background .3s, border-color .3s; }
