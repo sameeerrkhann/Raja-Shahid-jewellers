@@ -216,7 +216,7 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
     <section id="entrance" className="showcase-pin showcase-film" data-scene="01" data-tone="dark" aria-labelledby="entrance-title" style={{ "--film-scroll": `${Math.max(1800, heroFilm.frames * heroFilm.scrollPerFrame)}px` } as CSSProperties}>
       <div className="showcase-stage">
         {/* The first frame is the still poster (and the largest paint); the canvas takes over once scrolling. */}
-        <img className="showcase-film__poster" src={heroFilm.desktop(0)} alt="" width={1440} height={810} fetchPriority="high" data-hero-image />
+        <img className="showcase-film__poster" src={heroFilm.desktop(0)} alt="" width={1600} height={900} fetchPriority="high" data-hero-image />
         <canvas className="showcase-film__canvas" data-film aria-hidden="true" />
         <div className="showcase-film__spot" data-film-depth aria-hidden="true" />
         <div className="showcase-film__burst" aria-hidden="true" />

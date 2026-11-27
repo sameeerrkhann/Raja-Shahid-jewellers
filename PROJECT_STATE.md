@@ -257,6 +257,13 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-28 — Claude (Saad's session) — Hero frames AI-upscaled (S-30)
+
+- **Request:** sharper hero film, free route first (no Flow credits).
+- **Method:** Real-ESRGAN `realesr-general-x4v3` (open-source, CPU) on the 190 ungraded raw Flow frames, then detail transfer: the graded frame keeps its exact colour/grade and only fine luma detail is taken from the AI upscale (avoids the gritty artefacts the heavier x2plus model produced on graded grain). Output encoded at 1600x900 WebP q68 (~70 KB each, 12 MB total, smaller than S-28's 1440 frames) and 720x405 q62 for phones (~24 KB). Poster size attributes updated. Scripts stayed in the session workspace; no model or tool added to the repo.
+- **Result:** visibly crisper stand edges, drape folds and bead texture; the source is still a 720p render, so this is cleaned and sharpened detail, not native 1080p.
+- **Tests:** build PASS; Playwright 87/87 PASS (cold transfer budget still met).
+
 ### 2026-11-28 — Claude (Saad's session) — Hero blur while scrolling (S-29)
 
 - **Feedback:** the hero still blurred while scrolling.
@@ -766,7 +773,7 @@ No customer requirement or journey is missing from the Phase 01 baseline. Remain
 
 ### Active snapshot — Phase 04 verified / STOP before Phase 05
 
-- **Latest (2026-11-28, S-29):** hero scroll blur fixed (see S-29); S-28 clarity fix before it. S-26: client polish pass done. Earlier S-25: Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
+- **Latest (2026-11-28, S-30):** hero frames AI-upscaled (see S-30); S-29 scroll blur fix before it. S-26: client polish pass done. Earlier S-25: Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
 
 - **Last agent:** Codex, sole writer after user confirmation; internal review/QA only, no delegation or independent review.
 - **Completed scope:** Phase04 customer-facing Design Vault.118 publishable files;11 original image-backed SAMPLE designs,14 unpublished drafts; /designs, /collections,4 collection slugs and five read-only API route families. No full product/quotation/admin/AI/voice/gold backend. Preserve all Phase02/03 functionality and prior logs/assets.

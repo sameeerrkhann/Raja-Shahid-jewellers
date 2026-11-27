@@ -27,6 +27,7 @@
 | S-27 | 2026-11-28 | scroll-craft principles: hero near-plane depth and pointer parallax, collections lamp, em-dash/counter/scroll-cue cleanup | Done (in review) | `src/components/home/scroll-showcase.tsx`, `public/images/hero/planes/` |
 | S-28 | 2026-11-28 | Hero clarity: remove dust plane, sharper 1440 frames from lossless source, capped canvas, lighter prefetch; utility bar fix | Done (in review) | `public/images/hero/vault/`, `src/components/home/scroll-showcase.tsx` |
 | S-29 | 2026-11-28 | Hero scroll blur: single-frame paint, no canvas scale or punch, softer warp | Done (in review) | `src/components/home/scroll-showcase.tsx` |
+| S-30 | 2026-11-28 | Hero frames AI-upscaled (Real-ESRGAN + detail transfer), 1600px desktop and 720px phone | Done (in review) | `public/images/hero/vault/` |
 | S-13 | — | Design package step 2: Dual Portal (Women \| Men \| Made to order) with the reference model photos, labelled as reference photography | Next | — |
 | S-14 | — | Design package step 3: the Touchstone (gold streak, four buyer questions) and an illustrative gold-rate panel | Next | — |
 | S-15 | — | Design package step 4: Signature pieces rail and detail drawer (shadcn Sheet), real sample data only | Next | — |
