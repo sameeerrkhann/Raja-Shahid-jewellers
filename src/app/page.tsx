@@ -19,7 +19,7 @@ import "./showcase.css";
 /* eslint-disable @next/next/no-img-element -- 32px category thumbnails in the closing pills */
 
 export const metadata: Metadata = {
-  title: { absolute: "Raja Shahid Jewellers — Beyond the Moment" },
+  title: { absolute: "Raja Shahid Jewellers · Beyond the Moment" },
   description: "The provisional Royal Gold Atelier: turn a concept ring with your scroll, look closer at sample designs, see pieces on a model, then browse sample jewellery, bridal inspiration and the future AURIA atelier. Customer website demo with concept imagery, not actual stock.",
   robots: { index: false, follow: false },
 };

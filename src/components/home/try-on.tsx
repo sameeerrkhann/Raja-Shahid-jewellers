@@ -54,12 +54,12 @@ export function TryOn({ designs = [] }: { designs?: TryOnDesign[] }) {
         <ol className="tryon__index" key={wearer}>
           {model.spots.map((entry, index) => <li key={entry.name} style={{ "--i": index } as CSSProperties}>
             <button type="button" className="tryon__item" aria-pressed={index === spotIndex} onClick={() => pickSpot(index)}>
-              <b>{String(index + 1).padStart(2, "0")}</b><span>{entry.name}<small>{entry.note}</small></span><i aria-hidden="true" />
+              <span>{entry.name}<small>{entry.note}</small></span><i aria-hidden="true" />
             </button>
           </li>)}
         </ol>
         {spot && <div key={`${wearer}-${spot.name}`} className="tryon__focus" aria-live="polite">
-          <span>{String((spotIndex ?? 0) + 1).padStart(2, "0")} · {spot.note}</span>
+          <span>{spot.note}</span>
           <strong>{spot.name}</strong>
           {matches.length > 0 ? <ul className="tryon__matches" aria-label={`Sample designs for ${spot.name.toLowerCase()}`}>
             {matches.map((design) => <li key={design.slug}><a href={`/designs?q=${encodeURIComponent(design.title)}`}><img src={design.image} alt="" loading="lazy" /><span>{design.title}</span></a></li>)}

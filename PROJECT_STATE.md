@@ -257,6 +257,14 @@ Definition work can proceed with named assumptions. Authentic catalogue/imagery 
 
 > Every agent MUST add a new entry below for each task. Do not erase previous entries. If blocked, still log the blocker.
 
+### 2026-11-28 — Claude (Saad's session) — scroll-craft principles applied (S-27)
+
+- **Source:** Saad copied `scroll-craft-effects-main` (nateherk-design plugin, MIT) into the project folder. Read SKILL.md, hero-depth.md and the engine. The engine is a standalone-page runtime and its asset route uses paid kie.ai, so its principles were applied inside the existing Next.js/GSAP code instead of adding the engine. The plugin folder itself is not part of this branch.
+- **Hero depth (hero-depth.md):** a near plane of out-of-focus gold dust (`public/images/hero/planes/dust-near*.webp`, generated locally, desktop 57 KB / phone 32 KB) sits in front of the headline and travels faster than the film (yPercent 4→-26, scale 1.04→1.24), so film (far), light (mid), headline and dust (near) move at different rates. Desktop fine-pointer depth: the near plane shifts with the cursor more than the film does, which moves slightly the other way. Reduced motion keeps a static plane.
+- **Signature move, Collections:** a jeweller's lamp. Warm light follows the cursor across each chapter image (desktop only).
+- **Hard-rule cleanup:** visible em dashes removed (tab titles, catalogue hero copy, preview karat labels, category dialog title), the "Scroll to turn the collection" cue replaced, the 01/02 counters removed from the hero rail and See it on.
+- **Tests:** tsc, eslint, build PASS; Playwright 87/87 PASS (cold transfer budget still under 1.5 MB after shrinking the dust plane).
+
 ### 2026-11-27 — Claude (Saad's session) — Client polish pass: text, scroll reset, footer, forms, See it on, collections, hero (S-26)
 
 - **Text removed:** "Concept film made with Google Flow" film label, the "Royal Gold Atelier · customer website demo" strip (Reduce motion moved to a slim bar before the footer), repeated "Sample… Not shop stock" captions in the showcase and bridal box, the homepage "Service previews only" note, and the Collections disclosure strip. One disclosure stays in the footer, the AI-model tag stays on See it on.
@@ -743,7 +751,7 @@ No customer requirement or journey is missing from the Phase 01 baseline. Remain
 
 ### Active snapshot — Phase 04 verified / STOP before Phase 05
 
-- **Latest (2026-11-27, S-26):** Client polish pass done (see S-26). Earlier S-25: Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
+- **Latest (2026-11-28, S-27):** scroll-craft depth and cleanup applied (see S-27). S-26: client polish pass done. Earlier S-25: Client point 3, live Pakistan gold rates, is done on branch `saad-works-customer-website`. Off until a GoldPriceZ key is set in `.env.local`. Point 4, the installment plan, is next; the client has approved the work, and its terms still come from the client. See the S-25 entry.
 
 - **Last agent:** Codex, sole writer after user confirmation; internal review/QA only, no delegation or independent review.
 - **Completed scope:** Phase04 customer-facing Design Vault.118 publishable files;11 original image-backed SAMPLE designs,14 unpublished drafts; /designs, /collections,4 collection slugs and five read-only API route families. No full product/quotation/admin/AI/voice/gold backend. Preserve all Phase02/03 functionality and prior logs/assets.

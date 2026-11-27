@@ -279,3 +279,5 @@
   .chapter__media { aspect-ratio: 4 / 4.4; max-height: none; }
   .chapter__designs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+.chapter__media::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(circle at var(--lx, 62%) var(--ly, 32%), rgb(255 232 178 / 42%), rgb(255 232 178 / 8%) 22%, transparent 44%); mix-blend-mode: soft-light; opacity: .55; transition: opacity .5s var(--ease-luxe); }
+.chapter__media:hover::after { opacity: 1; }

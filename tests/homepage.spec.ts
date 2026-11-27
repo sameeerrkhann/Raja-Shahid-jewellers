@@ -24,7 +24,7 @@ async function scene(page: Page, id: string) {
 test("homepage has eight honest connected scenes and proper metadata", async ({ page, request }) => {
   await ready(page);
   await expect(page).toHaveURL(/\/$/);
-  await expect(page).toHaveTitle("Raja Shahid Jewellers — Beyond the Moment");
+  await expect(page).toHaveTitle("Raja Shahid Jewellers · Beyond the Moment");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Crafted to be remembered.");
   await expect(page.locator("[data-scene]")).toHaveCount(8);
   await expect(page.locator("#gold .gold-rates")).toContainText(/Live gold rates are not connected yet|Rate unavailable|Live rate|Sample figures/);
@@ -85,7 +85,7 @@ test("offscreen category focus remains visible and opens an honest study", async
   await last.focus();
   await expect.poll(() => last.evaluate((element) => { const r = element.getBoundingClientRect(); return r.left >= -1 && r.right <= innerWidth + 1; })).toBe(true);
   await page.keyboard.press("Enter");
-  const dialog = page.getByRole("dialog", { name: "Men’s Jewellery — a direction to explore" });
+  const dialog = page.getByRole("dialog", { name: "Men’s Jewellery: a direction to explore" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(/clearly labelled synthetic samples/)).toBeVisible();
   await expect(dialog.getByRole("link", { name: "Browse Men’s Jewellery sample designs" })).toHaveAttribute("href", "/designs?category=mens");

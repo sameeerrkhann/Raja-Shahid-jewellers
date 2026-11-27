@@ -6,7 +6,7 @@ import { sampleDesigns } from "@/data/demo/catalogue";
 import { PageMotion } from "@/components/motion/page-motion";
 import "../catalogue.css";
 
-export const metadata: Metadata = { title: "Collections — Editorial Edits", description: "Original sample jewellery concepts, curated by mood and silhouette. Synthetic imagery, not actual shop collections.", alternates: { canonical: "/collections" } };
+export const metadata: Metadata = { title: "Collections · Editorial Edits", description: "Original sample jewellery concepts, curated by mood and silhouette. Synthetic imagery, not actual shop collections.", alternates: { canonical: "/collections" } };
 
 const designsByCollection: Record<string, ChapterDesign[]> = Object.fromEntries(collections.map((collection) => [collection.slug,
   sampleDesigns.filter((design) => design.publicationState === "PUBLISHED" && design.collectionSlugs.includes(collection.slug) && design.images[0])

@@ -13,7 +13,7 @@ export function HomeExperience({ children }: { children: ReactNode }) {
   const [reduce, setReduce] = useState(false);
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const category = homeCategories.find((item) => item.id === explanation);
-  const title = category ? `${category.title} — a direction to explore` : explanation === "auria" ? "AURIA, coming into focus" : explanation === "appointment" ? "A visit, thoughtfully planned" : "Begin with a conversation";
+  const title = category ? `${category.title}: a direction to explore` : explanation === "auria" ? "AURIA, coming into focus" : explanation === "appointment" ? "A visit, thoughtfully planned" : "Begin with a conversation";
   useEffect(() => () => { delete document.documentElement.dataset.reduceMotion; }, []);
 
   return <>

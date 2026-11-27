@@ -11,7 +11,7 @@ const editorial = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500"
 const interfaceFont = Manrope({ subsets: ["latin"], variable: "--font-interface", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: `${brand.name} — Visual Atelier`, template: `%s | ${brand.name}` },
+  title: { default: `${brand.name} · Visual Atelier`, template: `%s | ${brand.name}` },
   description: "The proposed visual language for Raja Shahid Jewellers. An internal premium design-system preview by Neural Stack & Co.",
   robots: { index: false, follow: false },
 };

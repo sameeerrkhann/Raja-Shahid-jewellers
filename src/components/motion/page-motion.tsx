@@ -20,6 +20,7 @@ export function PageMotion({ page }: { page: "designs" | "collections" | "previe
       if (disposed || reducedMotion()) return;
       gsap.registerPlugin(ScrollTrigger);
       const wide = window.matchMedia("(min-width: 1100px) and (pointer: fine)").matches;
+      const cleanups: (() => void)[] = [];
       const ctx = gsap.context(() => {
         document.documentElement.dataset.pageMotion = "live";
 
@@ -58,11 +59,17 @@ export function PageMotion({ page }: { page: "designs" | "collections" | "previe
             const media = card.querySelector("[data-chapter-media]"), copy = card.querySelector("[data-chapter-copy]");
             if (media) gsap.fromTo(media, { clipPath: "inset(14% 10% 14% 10% round 24px)" }, { clipPath: "inset(0% 0% 0% 0% round 24px)", ease: "none", scrollTrigger: { trigger: card, start: "top bottom", end: "top top+=90", scrub: .5 } });
             if (copy) gsap.fromTo(copy.children, { y: 40, opacity: 0 }, { y: 0, opacity: 1, stagger: .08, duration: .9, ease: "expo.out", scrollTrigger: { trigger: card, start: "top 55%", once: true } });
+            // Signature move: a jeweller's lamp. The warm light follows the cursor across the piece.
+            if (media instanceof HTMLElement && window.matchMedia("(pointer: fine)").matches) {
+              const lamp = (event: PointerEvent) => { const box = media.getBoundingClientRect(); media.style.setProperty("--lx", `${((event.clientX - box.left) / box.width) * 100}%`); media.style.setProperty("--ly", `${((event.clientY - box.top) / box.height) * 100}%`); };
+              media.addEventListener("pointermove", lamp);
+              cleanups.push(() => media.removeEventListener("pointermove", lamp));
+            }
             if (next) gsap.to(card.querySelector(".chapter__inner"), { scale: .92, opacity: .35, ease: "none", scrollTrigger: { trigger: next, start: "top bottom", end: "top top+=90", scrub: .5 } });
           });
         }
       });
-      teardown = () => { ctx.revert(); document.querySelectorAll(".page-progress").forEach((element) => element.remove()); document.documentElement.dataset.pageMotion = "static"; };
+      teardown = () => { cleanups.forEach((cleanup) => cleanup()); ctx.revert(); document.querySelectorAll(".page-progress").forEach((element) => element.remove()); document.documentElement.dataset.pageMotion = "static"; };
       ScrollTrigger.refresh();
     }
     void start();

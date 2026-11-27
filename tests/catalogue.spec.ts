@@ -242,7 +242,7 @@ test("design preview displays sample variant differences without a fake enquiry 
   await opener.click();
   const dialog = page.getByRole("dialog", { name: "Petal Seal Ring", exact: true });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText(/18K — In Stock; 22K — Available to Craft/)).toBeVisible();
+  await expect(dialog.getByText(/18K: In Stock; 22K: Available to Craft/)).toBeVisible();
   await expect(dialog.getByText(/No physical stock, purity, weight or manufacturing feasibility/)).toBeVisible();
   await expect(dialog.getByText("No lead time configured")).toBeVisible();
   await expect(dialog.locator("form, input, select")).toHaveCount(0);

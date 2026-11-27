@@ -120,7 +120,10 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
           .to(film, { f: last, duration: 1, onUpdate: follow }, 0)
           // Fly-over: a slow forward push with a gentle lateral glide, as if the camera travels over the scene.
           .fromTo("[data-film]", { scale: 1.05, xPercent: -1.2, yPercent: -1 }, { scale: 1.1, xPercent: 1.2, yPercent: 1, duration: 1 }, 0)
-          .fromTo("[data-film-depth]", { yPercent: 0 }, { yPercent: -18, duration: 1 }, 0);
+          .fromTo("[data-film-depth]", { yPercent: 0 }, { yPercent: -18, duration: 1 }, 0)
+          // Near plane: out-of-focus gold dust in front of the headline travels faster than the film, so the
+          // scene reads as layered depth (film far, light mid, dust near) rather than one flat picture.
+          .fromTo("[data-film-near]", { yPercent: 4, scale: 1.04 }, { yPercent: -26, scale: 1.24, duration: 1 }, 0);
         railEls.forEach((element, i) => element.addEventListener("click", () => {
           const trigger = ScrollTrigger.getById("showcase-film"); if (!trigger) return;
           const f = chapters[i].from + 8; window.scrollTo({ top: trigger.start + (trigger.end - trigger.start) * Math.min(1, f / last), behavior: "smooth" });
@@ -192,7 +195,13 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         });
         return () => { gsap.ticker.remove(glide); window.removeEventListener("resize", fit); window.removeEventListener("resize", placeNotes); scope!.removeEventListener("rsj:place-notes", placeNotes); };
       }, scope!);
-      teardown = () => { ctx.revert(); swapRef.current = () => {}; delete scope!.dataset.showcase; };
+      // Pointer depth (desktop, fine pointer): the near plane follows the cursor more than the far film.
+      const film = $<HTMLElement>(".showcase-film");
+      let raf = 0, tx = 0, ty = 0, cx = 0, cy = 0;
+      const glide = () => { cx += (tx - cx) * .08; cy += (ty - cy) * .08; film.style.setProperty("--px", cx.toFixed(3)); film.style.setProperty("--py", cy.toFixed(3)); raf = Math.abs(tx - cx) + Math.abs(ty - cy) > .002 ? requestAnimationFrame(glide) : 0; };
+      const onMove = (event: PointerEvent) => { if (event.pointerType !== "mouse") return; const box = film.getBoundingClientRect(); tx = (event.clientX - box.left) / box.width - .5; ty = (event.clientY - box.top) / box.height - .5; if (!raf) raf = requestAnimationFrame(glide); };
+      if (window.matchMedia("(pointer: fine)").matches) film.addEventListener("pointermove", onMove);
+      teardown = () => { ctx.revert(); film.removeEventListener("pointermove", onMove); cancelAnimationFrame(raf); film.style.removeProperty("--px"); film.style.removeProperty("--py"); swapRef.current = () => {}; delete scope!.dataset.showcase; };
       ScrollTrigger.refresh();
     }
     void start();
@@ -222,6 +231,7 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         <div className="showcase-film__spot" data-film-depth aria-hidden="true" />
         <div className="showcase-film__burst" aria-hidden="true" />
         <div className="showcase-film__warp" data-warp aria-hidden="true" />
+        <div className="showcase-film__near" data-film-near aria-hidden="true" />
         
         <div className="showcase-film__intro showcase-band showcase-band--center showcase-band--drift" data-film-intro data-chapter="descent">
           <h1 id="entrance-title"><span data-entrance-line>Crafted to be</span> <span data-entrance-line>remembered.</span></h1>
@@ -240,7 +250,7 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
         </div>)}
         <ol className="showcase-film__rail" aria-label="Film chapters">
           <span className="showcase-film__rail-line" aria-hidden="true"><i data-rail-fill /></span>
-          {heroFilm.chapters.map((chapter, i) => <li key={chapter.id}><button type="button" data-rail-item tabIndex={-1} aria-hidden="true"><b>{String(i + 1).padStart(2, "0")}</b>{chapter.label}</button></li>)}
+          {heroFilm.chapters.map((chapter) => <li key={chapter.id}><button type="button" data-rail-item tabIndex={-1} aria-hidden="true">{chapter.label}</button></li>)}
         </ol>
       </div>
     </section>
@@ -253,7 +263,7 @@ export function ScrollShowcase({ pieces }: { pieces: ShowcasePiece[] }) {
             {arcNear && <img src={entry.cutout} alt="" />}
           </button>)}
         </div>
-        <div className="showcase-caption showcase-arc__title"><h2 id="collection-title">From the Design Vault</h2><small>Scroll to turn the collection, or tap a piece.</small></div>
+        <div className="showcase-caption showcase-arc__title"><h2 id="collection-title">From the Design Vault</h2><small>Tap a piece to see it up close.</small></div>
         <div className="showcase-caption showcase-arc__name" aria-live="polite"><p>{pieces[centre].title}</p><small>{pieces[centre].kind} · {pieces[centre].facts[0]} · {pieces[centre].code}</small>
           <a className="showcase-pill-button" href="#closer" onClick={() => { tapped.current = true; setChosen(centre); }}>Look closer</a></div>
       </div>
